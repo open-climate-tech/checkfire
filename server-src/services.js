@@ -33,6 +33,8 @@ async function getConfig() {
   var configStr
   if (gsPath) {
     configStr = await gcp_storage.getData(gsPath.bucket, gsPath.name);
+  } else if (!fs.existsSync(process.env.OCT_FIRE_SETTINGS)) {
+    return {};
   } else {
     configStr = fs.readFileSync(process.env.OCT_FIRE_SETTINGS);
   }

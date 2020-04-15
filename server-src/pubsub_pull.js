@@ -56,6 +56,9 @@ async function createSub(pubSubClient, topicName) {
  * @param {function} sseUpdate 
  */
 async function initPubSub(config, sseUpdate) {
+  if (!config.pubsubTopic) {
+    return;
+  }
   const options = {};
   if (config.gcpServiceKey) {
     options.keyFilename = config.gcpServiceKey;
