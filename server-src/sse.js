@@ -44,13 +44,27 @@ function sendEvent(messageJson, response) {
  * Check if given SSE request has last-event-id to restore connection
  * @param {HTTP Request} request 
  * @param {HTTP response} response 
+ * @param {db_mgr} db
  */
-function checkConnectionToRestore(request, response) {
+async function checkConnectionToRestore(request, response, db) {
+  let prevTimestamp = 0;
   if (request.headers["last-event-id"]) {
     const eventId = parseInt(request.headers["last-event-id"]);
     console.log('ConnectionToRestore', eventId);
+    prevTimestamp = eventId;
     // TODO: calculate events to resend using SQL DB and send via sendEvent()
   }
+  const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 5`;
+  const potFireEvents = await db.query(sqlStr);
+  potFireEvents.forEach(potFireEvent => {
+    sendEvent({
+      "timestamp": potFireEvent.Timestamp,
+      "cameraID": potFireEvent.CameraName,
+      "adjScore": potFireEvent.AdjScore,
+      "annotatedUrl": potFireEvent.ImageID
+    }, response);
+
+  });
 }
 
 /**
@@ -69,9 +83,10 @@ function updateFromDetect(messageData) {
  * Initialize the SSE module (setup routes) and return callback function used for new potential fires
  * @param {object} config 
  * @param {Express} app
+ * @param {db_mgr} db
  * @return {function} Callback for new messages
  */
- function initSSE(config, app) {
+ function initSSE(config, app, db) {
   app.get('/fireEvents', (request, response) => {
     console.log(`Request /fireEvents`);
     request.on("close", () => {
@@ -94,7 +109,7 @@ function updateFromDetect(messageData) {
     response.writeHead(200);
     response.flushHeaders(); // flush the headers to establish SSE with client
 
-    checkConnectionToRestore(request, response);
+    checkConnectionToRestore(request, response, db);
     connections.push(response);
 
     // fakeEvents(response);
@@ -111,8 +126,7 @@ function fakeEvents(response) {
     sendEvent({
       "timestamp": 1234567890,
       "cameraID": "testCam1",
-      "score": 0.6,
-      "histMax": .1,
+      "adjScore": 0.6,
       "annotatedUrl": "https://storage.googleapis.com/oct-fire-public/samples/ml-s-mobo-c__2020-01-07T09_33_15_Score.jpg"
     }, response);
   }, 4000);
@@ -121,8 +135,7 @@ function fakeEvents(response) {
     sendEvent({
       "timestamp": 1234567891,
       "cameraID": "testCam2",
-      "score": 0.8,
-      "histMax": .2,
+      "adjScore": 0.8,
       "annotatedUrl": "https://storage.googleapis.com/oct-fire-public/samples/bh-w-mobo-c__2020-01-30T11_48_16.jpg"
     }, response);
   }, 9000);

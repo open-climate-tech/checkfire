@@ -47,8 +47,7 @@ test('potential fire events are rendered', () => {
   let msg = {
     'timestamp': 1,
     'cameraID': cameraID,
-    "score": score,
-    "histMax": .1,
+    "adjScore": score,
     'annotatedUrl': annotatedUrl,
   };
   let msgStr = JSON.stringify(msg);

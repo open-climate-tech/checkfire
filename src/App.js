@@ -76,7 +76,7 @@ class App extends Component {
               this.state.potentialFires.map(potFire => {
               return (<li key={potFire.annotatedUrl} className="FireListElement" data-testid="FireListElement">
                   <div>
-                    Potential fire visible from camera {potFire.cameraID} with score {potFire.score} (historical {potFire.histMax})
+                    Potential fire visible from camera {potFire.cameraID} with score {potFire.adjScore}
                   </div>
                   <a href={potFire.annotatedUrl}>
                     <img width="500" src={potFire.annotatedUrl} alt="potential fire"></img>

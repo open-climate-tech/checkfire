@@ -12,7 +12,8 @@
     "express": "^4.17.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "sqlite3": "^4.1.1"
   },
   "scripts": {
     "start": "node server-main.js",

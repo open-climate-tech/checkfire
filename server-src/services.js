@@ -19,6 +19,7 @@
 // Dyanmic services for UI backend server
 
 const fs = require('fs');
+const db_mgr = require('./db_mgr');
 const apis = require('./apis');
 const sse = require('./sse');
 const pubsub = require('./pubsub_pull');
@@ -50,8 +51,9 @@ async function getConfig() {
  */
 async function initServices(app, done) {
   const config = await getConfig();
+  const db = db_mgr.initDB(config);
   apis.initApis(config, app);
-  const updateFromDetect = sse.initSSE(config, app);
+  const updateFromDetect = sse.initSSE(config, app, db);
   await pubsub.initPubSub(config, updateFromDetect);
   done();
 }
