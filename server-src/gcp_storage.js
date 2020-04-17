@@ -18,6 +18,10 @@
 'use strict';
 // Helper code for accessing GCS storage
 
+const oct_utils = require('./oct_utils');
+
+const logger = oct_utils.getLogger('gcp_storage');
+
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage();
 
@@ -50,7 +54,7 @@ async function getData(bucketName, srcFilename) {
     .file(srcFilename)
     .download();
   if (response.err) {
-    console.log('error', response.err);
+    logger.error('error', response.err);
   } else {
     return response.toString();
   }

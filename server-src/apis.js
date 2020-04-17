@@ -18,10 +18,19 @@
 'use strict';
 // API Services clients can invoke
 
+const oct_utils = require('./oct_utils');
+
+const logger = oct_utils.getLogger('api');
+
+/**
+ * Initialize all the API routes
+ * @param {object} config
+ * @param {Express} app
+ */
 function initApis(config, app) {
   // This route is just a stub for testing.
   app.get('/api', (req, res) => {
-    console.log(`Request /api`);
+    logger.info(`Request /api`);
     res
       .status(200)
       .send('Hello, m24.1610 world!')

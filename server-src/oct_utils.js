@@ -18,8 +18,27 @@
 'use strict';
 // Utility functions
 
+const winston = require('winston');
 const util = require('util');
 const sleep = util.promisify(setTimeout);
+
+/**
+ * Create a winston logger with given label
+ * @param {string} label
+ */
+function getLogger(label) {
+  const logger = winston.createLogger({
+    transports: [new winston.transports.Console()],
+    format: winston.format.combine(
+      winston.format.label({label: label}),
+      winston.format.timestamp(),
+      winston.format.json()
+    )
+  });
+  return logger;
+}
+
+const logger = oct_utils.getLogger('oct_utils');
 
 /**
  * Retry the given function up to MAX_RETRIES with increasing delays until it succeeds
@@ -32,10 +51,10 @@ async function retryWrap(mainFn) {
       return await mainFn();
     } catch (err) {
       if (retryNum < MAX_RETRIES) {
-        console.log('Failure %s.  Retry %d in %d seconds:', err.message, retryNum, retryNum);
+        logger.warn('Failure %s.  Retry %d in %d seconds:', err.message, retryNum, retryNum);
         await sleep(retryNum * 1000);  
       } else {
-        console.log('Failure %s.  No more retries', err.message);
+        logger.error('Failure %s.  No more retries', err.message);
         throw new Error(err);
       }
     }
@@ -43,3 +62,4 @@ async function retryWrap(mainFn) {
 }
 
 exports.retryWrap = retryWrap;
+exports.getLogger = getLogger;

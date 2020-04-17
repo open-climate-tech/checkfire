@@ -22,9 +22,18 @@ const express = require('express');
 const app = express();
 const helmet = require('helmet');
 const path = require('path');
+const oct_utils = require('./server-src/oct_utils');
 const services = require('./server-src/services')
 
-app.use(helmet())
+const logger = oct_utils.getLogger('main');
+
+// Setup express middle-ware to log all requests
+app.use(function (req, res, next) {
+  logger.info('URL: ' + req.originalUrl);
+  next();
+});
+
+app.use(helmet());
 
 // static webpage for /
 app.use('/', express.static(path.join(__dirname, 'webroot')));
@@ -36,8 +45,8 @@ services.initServices(app, () => {
   // Start the server
   const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
-    console.log(`WildfireCheck back listening on port ${PORT}`);
-    console.log('Press Ctrl+C to quit.');
+    logger.info(`WildfireCheck back listening on port ${PORT}`);
+    logger.info('Press Ctrl+C to quit.');
   });
 });
 

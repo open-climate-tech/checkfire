@@ -24,6 +24,9 @@ const apis = require('./apis');
 const sse = require('./sse');
 const pubsub = require('./pubsub_pull');
 const gcp_storage = require('./gcp_storage');
+const oct_utils = require('./oct_utils');
+
+const logger = oct_utils.getLogger('services');
 
 /**
  * Read and parse the JSON config file specified in environment variable OCT_FIRE_SETTINGS
@@ -40,7 +43,7 @@ async function getConfig() {
     configStr = fs.readFileSync(process.env.OCT_FIRE_SETTINGS);
   }
   const config = JSON.parse(configStr);
-  // console.log('config', config);
+  // logger.info('config', config);
   return config;
 }
 

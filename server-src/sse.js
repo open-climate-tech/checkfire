@@ -18,6 +18,10 @@
 'use strict';
 // Server-Sent Events (SSE) backend
 
+const oct_utils = require('./oct_utils');
+
+const logger = oct_utils.getLogger('sse');
+
 // Array of all the connections to the frontend
 var connections = [];
 
@@ -34,7 +38,7 @@ function sendEvent(messageJson, response) {
     '', ''  // two extra empty strings to generate \n\n at the end
   ];
   let eventString = eventParts.join('\n');
-  // console.log('SendEvent', response.finished, eventString);
+  // logger.info('SendEvent', response.finished, eventString);
   if (!response.finished) {
     response.write(eventString);
   }
@@ -50,7 +54,7 @@ async function checkConnectionToRestore(request, response, db) {
   let prevTimestamp = 0;
   if (request.headers["last-event-id"]) {
     const eventId = parseInt(request.headers["last-event-id"]);
-    console.log('ConnectionToRestore', eventId);
+    logger.info('ConnectionToRestore', eventId);
     if (Number.isInteger(eventId)) {
       prevTimestamp = eventId;
     }
@@ -88,11 +92,10 @@ function updateFromDetect(messageData) {
  */
  function initSSE(config, app, db) {
   app.get('/fireEvents', (request, response) => {
-    console.log(`Request /fireEvents`);
     request.on("close", () => {
       if (!response.finished) {
         response.end();
-        console.log("Stopped sending events.");
+        logger.info("Stopped sending events.");
       }
       // remove this response from connections array as well as any others in finished state
       connections = connections.filter(r => ((r !== response) && !r.finished));
@@ -103,7 +106,7 @@ function updateFromDetect(messageData) {
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('X-Accel-Buffering', 'no');
     if (process.env.NODE_ENV === 'development') {
-      console.log('Permissive CORS');
+      logger.info('Permissive CORS');
       response.setHeader("Access-Control-Allow-Origin", "*");
     }
     response.writeHead(200);

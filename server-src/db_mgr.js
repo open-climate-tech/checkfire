@@ -21,7 +21,16 @@
 const util = require('util');
 const sqlite3 = require('sqlite3').verbose();
 const { Pool } = require('pg');
+const oct_utils = require('./oct_utils');
 
+const logger = oct_utils.getLogger('db_mgr');
+
+/**
+ * Initilize the SQL DB connection using parameter in config
+ * Currently supports SQLite, Postgress, and "nop" DB for testing
+ * @param {object} config
+ * @return {object} db
+ */
 async function initDB(config) {
   let db = {};
   if (config.db_file) {
@@ -29,9 +38,9 @@ async function initDB(config) {
     db.dbType = 'sqlite';
     db.sqlite = new sqlite3.Database(config.db_file, sqlite3.OPEN_READWRITE, (err) => {
       if (err) {
-        console.error(err.message);
+        logger.error(err.message);
       }
-      console.log('Using sqlite %s', config.db_file);
+      logger.info('Using sqlite %s', config.db_file);
     });
   } else if (config.psqlHost) {
     // Postgres
@@ -44,13 +53,18 @@ async function initDB(config) {
       password: config.psqlPasswd
     });
     db.pool.on('error', (err, client) => {
-      console.error('Pool error', err);
+      logger.error('Pool error', err);
     });
   } else {
     // missing DB
     db.dbType = 'nop';
   }
 
+  /**
+   * Query the database with given SQL query
+   * @param {string} queryStr
+   * @return {Array} array of query results
+   */
   db.query = async function dbQuery(queryStr) {
     if (db.dbType === 'sqlite') {
       let dbAllP = util.promisify(db.sqlite.all).bind(db.sqlite);
@@ -63,6 +77,9 @@ async function initDB(config) {
     }
   }
 
+  /**
+   * Close the DB connection
+   */
   db.close = function dbClose() {
     if (db.dbType === 'sqlite') {
       return db.sqlite.close();
