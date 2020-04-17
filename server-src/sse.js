@@ -51,19 +51,19 @@ async function checkConnectionToRestore(request, response, db) {
   if (request.headers["last-event-id"]) {
     const eventId = parseInt(request.headers["last-event-id"]);
     console.log('ConnectionToRestore', eventId);
-    prevTimestamp = eventId;
-    // TODO: calculate events to resend using SQL DB and send via sendEvent()
+    if (Number.isInteger(eventId)) {
+      prevTimestamp = eventId;
+    }
   }
-  const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 5`;
+  const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 10`;
   const potFireEvents = await db.query(sqlStr);
-  potFireEvents.forEach(potFireEvent => {
+  potFireEvents.reverse().forEach(potFireEvent => {
     sendEvent({
-      "timestamp": potFireEvent.Timestamp,
-      "cameraID": potFireEvent.CameraName,
-      "adjScore": potFireEvent.AdjScore,
-      "annotatedUrl": potFireEvent.ImageID
+      "timestamp": potFireEvent.Timestamp || potFireEvent.timestamp,
+      "cameraID": potFireEvent.CameraName || potFireEvent.cameraname,
+      "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
+      "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid
     }, response);
-
   });
 }
 

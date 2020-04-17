@@ -20,8 +20,9 @@
 
 const util = require('util');
 const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 
-function initDB(config) {
+async function initDB(config) {
   let db = {};
   if (config.db_file) {
     // SQLite
@@ -35,7 +36,16 @@ function initDB(config) {
   } else if (config.psqlHost) {
     // Postgres
     db.dbType = 'psql';
-    throw new Error('psql not implemented');
+    // initialize a pool
+    db.pool = new Pool({
+      host: config.psqlHost,
+      database: config.psqlDb,
+      user: config.psqlUser,
+      password: config.psqlPasswd
+    });
+    db.pool.on('error', (err, client) => {
+      console.error('Pool error', err);
+    });
   } else {
     // missing DB
     db.dbType = 'nop';
@@ -46,7 +56,8 @@ function initDB(config) {
       let dbAllP = util.promisify(db.sqlite.all).bind(db.sqlite);
       return await dbAllP(queryStr);
     } else if (db.dbType === 'psql') {
-      throw new Error('psql not implemented');
+      const res = await db.pool.query(queryStr);
+      return res.rows;
     } else {
       return null;
     }

@@ -38,7 +38,7 @@ class App extends Component {
   componentDidMount() {
     this.eventSource = new EventSource(this.state.eventsUrl);
     this.eventSource.addEventListener("newPotentialFire", e => {
-      console.log('UpdateLEID', e.lastEventId);
+      // console.log('UpdateLEID', e.lastEventId);
       this.newPotentialFire(e)
     });
     this.eventSource.addEventListener("closedConnection", e =>
@@ -47,11 +47,20 @@ class App extends Component {
   }
 
   newPotentialFire(e) {
-    console.log('newPotentialFire', e);
+    // console.log('newPotentialFire', e);
     const parsed = JSON.parse(e.data);
+    // first check for duplicate
+    const alreadyExists = this.state.potentialFires.find(i =>
+       ((i.timestamp === parsed.timestamp) && (i.cameraID === parsed.cameraID)));
+    if (alreadyExists) {
+      return;
+    }
+
+    // now insert new fires at right timeslot
     const updatedFires = [parsed].concat(this.state.potentialFires)
       .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
+
     const newState = Object.assign({}, this.state);
     newState.potentialFires = updatedFires;
     this.setState(newState);

@@ -51,7 +51,7 @@ async function getConfig() {
  */
 async function initServices(app, done) {
   const config = await getConfig();
-  const db = db_mgr.initDB(config);
+  const db = await db_mgr.initDB(config);
   apis.initApis(config, app);
   const updateFromDetect = sse.initSSE(config, app, db);
   await pubsub.initPubSub(config, updateFromDetect);

@@ -20,8 +20,11 @@
 
 const express = require('express');
 const app = express();
+const helmet = require('helmet');
 const path = require('path');
 const services = require('./server-src/services')
+
+app.use(helmet())
 
 // static webpage for /
 app.use('/', express.static(path.join(__dirname, 'webroot')));
