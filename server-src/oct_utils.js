@@ -30,15 +30,16 @@ function getLogger(label) {
   const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
     format: winston.format.combine(
-      winston.format.label({label: label}),
+      winston.format.label({label: label}), //module label
       winston.format.timestamp(),
-      winston.format.json()
+      winston.format.splat(), // format strings e.g., %s, %d
+      winston.format.json() // JSON for structured logging
     )
   });
   return logger;
 }
 
-const logger = oct_utils.getLogger('oct_utils');
+const logger = getLogger('oct_utils');
 
 /**
  * Retry the given function up to MAX_RETRIES with increasing delays until it succeeds
