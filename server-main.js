@@ -30,7 +30,7 @@ const logger = oct_utils.getLogger('main');
 // Setup express middle-ware to log all requests
 app.use(function (req, res, next) {
   logger.info('URL: %s', req.originalUrl);
-  logger.info('reqHdrs: %s', JSON.stringify(req.headers));
+  logger.info('request Headers: %s', JSON.stringify(req.headers));
   next();
 });
 
