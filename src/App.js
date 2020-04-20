@@ -75,12 +75,12 @@ class App extends Component {
     return (
       <div className="App">
         <header className="Disclaimer">
-          Disclaimer: xxx
+          <p>
+            In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
+            dispatch center to take appropriate action.  Please note that this site does not alert the authorities directly.
+          </p>
+          <a href="/disclaimer.html">Disclaimer</a>
         </header>
-        <p>Node env is in <b>{process.env.NODE_ENV}</b> mode.</p>
-        <p>Backend port is <b>{process.env.REACT_APP_BE_PORT}</b> value.</p>
-        <p><a href={this.state.apiUrl}>/api</a></p>
-        <p><a href={this.state.eventsUrl}>eventsource</a></p>
         <ul className="FireList">
           {
               this.state.potentialFires.map(potFire => {
