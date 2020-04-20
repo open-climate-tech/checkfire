@@ -1,32 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    .oct-head-margin{margin-top:40px;}
+</style>
+
 <head>
-  <!-- Global site tag (gtag.js) - Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-163857708-1"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-163857708-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-    gtag('config', 'UA-163857708-1', {'page_path': window.location.pathname + window.location.search});
-  </script>
+        gtag('config', 'UA-163857708-1', { 'page_path': window.location.pathname + window.location.search });
+    </script>
 
-  <title>Open Climate Tech</title>
+    <title>Open Climate Tech</title>
 </head>
 
 <body>
+    <!-- Navbar -->
+    <div class="w3-top">
+        <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+            <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-hover-white w3-large w3-light-grey"
+                href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+            <div class="w3-col s3">
+                <a href="#" class="w3-button w3-block">Home</a>
+            </div>
+            <div class="w3-col s3 w3-hide-small">
+                <a href="#projects" class="w3-button w3-block">Projects</a>
+            </div>
+            <div class="w3-col s3 w3-hide-small">
+                <a href="#about" class="w3-button w3-block">About</a>
+            </div>
+            <div class="w3-col s3 w3-hide-small">
+                <a href="#contact" class="w3-button w3-block">Contact</a>
+            </div>
+        </div>
 
-<header>
-  <h1>Open Climate Tech</h1>
-</header>
+        <!-- Navbar on small screens -->
+        <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium w3-large">
+            <a href="#projects" class="w3-bar-item w3-button w3-padding-large">Projects</a>
+            <a href="#about" class="w3-bar-item w3-button w3-padding-large">About</a>
+            <a href="#contact" class="w3-bar-item w3-button w3-padding-large">Contact</a>
+        </div>
+    </div>
+      
+    <!-- Header -->
+    <header class="w3-display-container w3-content w3-wide w3-margin-top w3-center" style="max-width:1600px;" id="home">
+        <img class="w3-image oct-head-margin" src="https://storage.googleapis.com/oct-fire-public/website/oct-bk14x5.jpg" alt="Nature">
+        <div class="w3-display-middle w3-margin-top w3-center">
+            <h1 class="w3-xxlarge w3-text-white">Open Climate Tech</h1>
+        </div>
+    </header>
 
-<header className="Disclaimer">
-  Disclaimer: ...
-</header>
 
+    <h1 class="w3-padding-32 w3-row-padding" id="projects">Projects</h1>
+    <!-- First Grid -->
+    <div class="w3-row-padding w3-padding-64 w3-container w3-light-grey ">
+        <div class="w3-content">
+            <h2>Wildfire Detection and Checking</h2>
+            <p>
+                The goal of this project is to automatically detect wildfires in their initial phase, so the authorities
+                responsible for wildfires can take appropriate action while the fire is still small and easy to manage.
+                This project uses machine learning to identify potential smoke from wildfires using real-time images
+                from images installed on vantage points, such as mountain tops. The information about the potential
+                wildfires are then sent to website for people to check and confirm whether they are real fires.
+            </p>
+            <p>
+                <h3 class="w3-padding-16">Wildfire Detection</h3>
+                The detection technique used by this project relies on machine learning based system.
+                We trained a machine learning model for image object recognitionon (Inception V3) on cropped images of
+                smoke from early phases of historical fires. Real-time images are collected from
+                <a href="https://hpwren.ucsd.edu/">HPWREN cameras</a>, divided into slightly overlapping squares of
+                299x299 pixels, and the machine learning system computes a value (between 0.0 and 1.0) for each square.
+                High values are more likely to be real wildfires. The system is not perfect and regularly generates
+                false positives, which are mostly triggered by fog or clouds. We are continuously working on improving
+                the accuracy of the system. Below are sample images of both true and false positives.
+                <div class="w3-row-padding">
+                    <div class="w3-col l6 m6 w3-margin-bottom">
+                        <div class="w3-display-container">
+                            <div class="w3-display-topleft w3-black w3-padding">True Positive</div>
+                            <img src="https://storage.googleapis.com/oct-fire-public/website/true-pos800.jpg"
+                                alt="True Positive Smoke" style="width:100%">
+                        </div>
+                    </div>
+                    <div class="w3-col l6 m6 w3-margin-bottom">
+                        <div class="w3-display-container">
+                            <div class="w3-display-topleft w3-black w3-padding">False Positive</div>
+                            <img src="https://storage.googleapis.com/oct-fire-public/website/false-pos800.jpg"
+                                alt="True Positive Smoke" style="width:100%">
+                        </div>
+                    </div>
+                </div>
 
-Check <a href="/wildfirecheck">live feed</a> of notifications for potential wildfires
+                A detailed description of system and how it performed during a pilot period in Oct 2019 are published in
+                the
+                <a href="https://doi.org/10.3390/rs12010166">paper</a>
+                published in peer reviewed Remote Sensing journal.
 
+                Also, the <a href="https://github.com/open-climate-tech/firecam">source code</a>
+                for detection is available is available on Github.
+            </p>
+            <p>
+                <h3 class="w3-padding-16">Wildfire Checking</h3>
+                The detection results are displayed
+                <a href="/whildfirecheck/">here</a>.
+                This live updating site subscribes to the detections published by the detection service.
+
+                In case someone discovers a real fire that recently ignited, the users can inform the wildfire dispatch
+                center to take appropriate action.  Please note that the site does not alert the authorities directly.
+
+                The <a href="https://github.com/open-climate-tech/checkfire">source code</a> for the checking website
+                is available is available on Github.
+            </p>
+        </div>
+    </div>
+    </div>
+
+    <h1 class="w3-padding-32 w3-row-padding" id="about">About</h1>
+    <!-- Another Grid -->
+    <div class="w3-row-padding w3-padding-64 w3-container w3-light-grey ">
+        <div class="w3-content">
+            <p>
+                Open Climate Tech is a non-profit focused on building open technologies that have the potential
+                to help reduce the adverse impacts of climate change.
+            </p>
+        </div>
+    </div>
+
+    <h1 class="w3-padding-32 w3-row-padding" id="contact">Contact</h1>
+    <!-- Another Grid -->
+    <div class="w3-row-padding w3-padding-64 w3-container w3-light-grey ">
+        <div class="w3-content">
+            <p>
+                Email info @ openclimatetech.org if you have any further questions or would like to collaborate.
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w3-container w3-padding w3-center w3-opacity">
+        <p><a href="/disclaimer">Disclaimer</a></p>
+    </footer>
+
+    <script>
+        // Used to toggle the menu on small screens when clicking on the menu button
+        function myFunction() {
+          var x = document.getElementById("navDemo");
+          if (x.className.indexOf("w3-show") == -1) {
+            x.className += " w3-show";
+          } else { 
+            x.className = x.className.replace(" w3-show", "");
+          }
+        }
+    </script>
+        
 </body>
+
 </html>
