@@ -76,6 +76,10 @@ class App extends Component {
       <div className="App">
         <header className="Disclaimer">
           <p>
+            This site is currently under construction and showing old test data vs real-time feed.
+            We hope to have the real-time feed functioning soon.
+          </p>
+          <p>
             In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
             dispatch center to take appropriate action.  Please note that this site does not alert the authorities directly.
           </p>
@@ -88,7 +92,7 @@ class App extends Component {
                   <div>
                     Potential fire visible from camera {potFire.cameraID} with score {potFire.adjScore}
                   </div>
-                  <a href={potFire.annotatedUrl}>
+                  <a href={potFire.annotatedUrl} target="_blank">
                     <img width="500" src={potFire.annotatedUrl} alt="potential fire"></img>
                   </a>
                 </li>);
