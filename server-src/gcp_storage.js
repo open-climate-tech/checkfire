@@ -35,9 +35,13 @@ const GS_URL_REGEXP = /^gs:\/\/([a-z0-9_.-]+)\/(.+)$/;
 function parsePath(path) {
   const parsed = GS_URL_REGEXP.exec(path);
   if (parsed && Array.isArray(parsed)) {
+    let name = parsed[2];
+    if (name.endsWith('/')) { // strip the final / if any
+      name = name.slice(0,name.length-1);
+    }
     return {
       bucket: parsed[1],
-      name: parsed[2],
+      name: name,
     }
   }
 }

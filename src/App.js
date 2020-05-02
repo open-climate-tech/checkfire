@@ -76,8 +76,9 @@ class App extends Component {
       <div className="App">
         <header className="Disclaimer">
           <p>
-            This site is currently under construction and showing old test data vs real-time feed.
-            We hope to have the real-time feed functioning soon.
+            <h1>
+              This site is currently under construction and showing test data.
+            </h1>
           </p>
           <p>
             In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
@@ -86,11 +87,15 @@ class App extends Component {
           <a href="/disclaimer.html">Disclaimer</a>
         </header>
         <ul className="FireList">
+          <h3>
+            Potential fires
+          </h3>
           {
               this.state.potentialFires.map(potFire => {
               return (<li key={potFire.annotatedUrl} className="FireListElement" data-testid="FireListElement">
                   <div>
-                    Potential fire visible from camera {potFire.cameraID} with score {potFire.adjScore}
+                    {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:
+                    Camera {potFire.cameraID} with score {potFire.adjScore.toFixed(2)}
                   </div>
                   <a href={potFire.annotatedUrl} target="_blank">
                     <img width="500" src={potFire.annotatedUrl} alt="potential fire"></img>
