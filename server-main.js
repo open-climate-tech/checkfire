@@ -36,6 +36,14 @@ app.use(function (req, res, next) {
 
 app.use(helmet());
 
+// Redirect http to https
+app.use(function(req, res, next) {
+  if(req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === "http") {
+    return res.redirect(['https://', req.get('Host'), req.url].join(''));
+  }
+  next();
+});
+
 // static webpage for /
 app.use('/', express.static(path.join(__dirname, 'webroot')));
 // react app for /wildfirecheck
