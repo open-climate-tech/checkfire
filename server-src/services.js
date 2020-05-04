@@ -25,6 +25,7 @@ const sse = require('./sse');
 const pubsub = require('./pubsub_pull');
 const gcp_storage = require('./gcp_storage');
 const oct_utils = require('./oct_utils');
+const detectMgr = require('./detect_mgr');
 
 const logger = oct_utils.getLogger('services');
 
@@ -58,6 +59,7 @@ async function initServices(app, done) {
   apis.initApis(config, app);
   const updateFromDetect = sse.initSSE(config, app, db);
   await pubsub.initPubSub(config, updateFromDetect);
+  detectMgr.initMgr(config);
   done();
 }
 
