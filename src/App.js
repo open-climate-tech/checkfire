@@ -75,35 +75,34 @@ class App extends Component {
     return (
       <div className="App">
         <header className="Disclaimer">
-          <p>
-            <h1>
-              This site is currently under construction and showing test data.
-            </h1>
-          </p>
+          <h1>
+            This site is currently under construction and showing test data.
+          </h1>
           <p>
             In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
             dispatch center to take appropriate action.  Please note that this site does not alert the authorities directly.
           </p>
           <a href="/disclaimer.html">Disclaimer</a>
         </header>
-        <ul className="FireList">
-          <h3>
-            Potential fires
-          </h3>
-          {
-              this.state.potentialFires.map(potFire => {
-              return (<li key={potFire.annotatedUrl} className="FireListElement" data-testid="FireListElement">
-                  <div>
+        <h1 className="w3-padding-32 w3-row-padding" id="projects">Potential fires</h1>
+        {
+          this.state.potentialFires.map(potFire => {
+            return (
+              <div key={potFire.annotatedUrl} data-testid="FireListElement">
+                <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+                  <h5>
                     {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:
                     Camera {potFire.cameraID} with score {potFire.adjScore.toFixed(2)}
-                  </div>
+                  </h5>
                   <a href={potFire.annotatedUrl} target="_blank">
-                    <img width="500" src={potFire.annotatedUrl} alt="potential fire"></img>
+                    <img width="598" src={potFire.annotatedUrl} alt="potential fire"></img>
                   </a>
-                </li>);
-            })            
-          }
-        </ul>
+                </div>
+                &nbsp;
+              </div>
+            );
+          })
+        }
       </div>
     );  
   }

@@ -53,13 +53,13 @@ test('potential fire events are rendered', () => {
   let msgStr = JSON.stringify(msg);
   const { getByText, getByTestId } = render(<App />);
   eventListeners.newPotentialFire({data: msgStr});
-  let elt = getByText('Potential fire', { exact: false });
-  expect(elt).toBeInTheDocument();
+  // let elt = getByText('Potential fire', { exact: false });
+  // expect(elt).toBeInTheDocument();
 
-  assert(elt.textContent.includes(cameraID));
-  assert(elt.textContent.includes(score.toString()));
+  // assert(elt.textContent.includes(cameraID));
+  // assert(elt.textContent.includes(score.toString()));
 
-  elt = getByText(cameraID, { exact: false });
+  let elt = getByText(cameraID, { exact: false });
   expect(elt).toBeInTheDocument();
 
   elt = getByText(score.toString(), { exact: false });

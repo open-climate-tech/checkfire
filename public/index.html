@@ -13,11 +13,11 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/checkfire32.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+      .oct-head-margin{margin-top:40px;}
+    </style>
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -36,7 +36,36 @@
     <title>Wildfire Check</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <!-- Navbar -->
+    <div class="w3-top">
+      <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+          <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-hover-white w3-large w3-light-grey"
+              href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+          <div class="w3-col s3">
+              <a href="/#" class="w3-button w3-block">Home</a>
+          </div>
+          <div class="w3-col s3 w3-hide-small">
+              <a href="/#projects" class="w3-button w3-block">Projects</a>
+          </div>
+          <div class="w3-col s3 w3-hide-small">
+              <a href="/#about" class="w3-button w3-block">About</a>
+          </div>
+          <div class="w3-col s3 w3-hide-small">
+              <a href="/#contact" class="w3-button w3-block">Contact</a>
+          </div>
+      </div>
+
+      <!-- Navbar on small screens -->
+      <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium w3-large">
+          <a href="/#projects" class="w3-bar-item w3-button w3-padding-large">Projects</a>
+          <a href="/#about" class="w3-bar-item w3-button w3-padding-large">About</a>
+          <a href="/#contact" class="w3-bar-item w3-button w3-padding-large">Contact</a>
+      </div>
+  </div>
+  <div class="oct-head-margin">
+    &nbsp;
+  </div>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
     <!--
       This HTML file is a template.
@@ -48,5 +77,16 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+    <script>
+      // Used to toggle the menu on small screens when clicking on the menu button
+      function myFunction() {
+        var x = document.getElementById("navDemo");
+        if (x.className.indexOf("w3-show") == -1) {
+          x.className += " w3-show";
+        } else {
+          x.className = x.className.replace(" w3-show", "");
+        }
+      }
+    </script>
   </body>
 </html>
