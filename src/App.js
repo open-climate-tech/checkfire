@@ -92,10 +92,10 @@ class App extends Component {
                 <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
                   <h5>
                     {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:
-                    Camera {potFire.cameraID} with score {potFire.adjScore.toFixed(2)}
+                    Camera {potFire.cameraID} with score {Number(potFire.adjScore).toFixed(2)}
                   </h5>
                   <a href={potFire.annotatedUrl} target="_blank">
-                    <img width="598" src={potFire.annotatedUrl} alt="potential fire"></img>
+                    <img width="897" src={potFire.croppedUrl} alt="potential fire"></img>
                   </a>
                 </div>
                 &nbsp;

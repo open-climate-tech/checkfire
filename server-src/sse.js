@@ -66,7 +66,8 @@ async function checkConnectionToRestore(request, response, db) {
       "timestamp": potFireEvent.Timestamp || potFireEvent.timestamp,
       "cameraID": potFireEvent.CameraName || potFireEvent.cameraname,
       "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
-      "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid
+      "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid,
+      "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid
     }, response);
   });
 }
