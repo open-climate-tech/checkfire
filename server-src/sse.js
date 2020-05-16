@@ -59,7 +59,7 @@ async function checkConnectionToRestore(request, response, db) {
       prevTimestamp = eventId;
     }
   }
-  const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 10`;
+  const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 20`;
   const potFireEvents = await db.query(sqlStr);
   potFireEvents.reverse().forEach(potFireEvent => {
     sendEvent({
