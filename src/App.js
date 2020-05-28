@@ -97,8 +97,6 @@ class App extends Component {
                     <a href={potFire.annotatedUrl} target="_blank">full image</a>
                     )
                   </h5>
-                  <a href={potFire.annotatedUrl} target="_blank">Link2</a>
-                  <a href={potFire.annotatedUrl}>Link3</a>
                   <video controls autoplay muted loop width="898" height="898" poster={potFire.croppedUrl}>
                     <source src={potFire.croppedUrl} type="video/mp4" />
                     Your browser does not support the video tag
