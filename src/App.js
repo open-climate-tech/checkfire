@@ -93,10 +93,16 @@ class App extends Component {
                   <h5>
                     {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:
                     Camera {potFire.cameraID} with score {Number(potFire.adjScore).toFixed(2)}
+                    &nbsp;(
+                    <a href={potFire.annotatedUrl} target="_blank">full image</a>
+                    )
                   </h5>
-                  <a href={potFire.annotatedUrl} target="_blank">
-                    <img width="897" src={potFire.croppedUrl} alt="potential fire"></img>
-                  </a>
+                  <a href={potFire.annotatedUrl} target="_blank">Link2</a>
+                  <a href={potFire.annotatedUrl}>Link3</a>
+                  <video controls autoplay muted loop width="898" height="898" poster={potFire.croppedUrl}>
+                    <source src={potFire.croppedUrl} type="video/mp4" />
+                    Your browser does not support the video tag
+                  </video>
                 </div>
                 &nbsp;
               </div>
