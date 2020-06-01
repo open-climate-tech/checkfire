@@ -31,7 +31,7 @@ const logger = oct_utils.getLogger('db_mgr');
  * @param {object} config
  * @return {object} db
  */
-async function initDB(config) {
+async function initDB(config, useSocket=false) {
   let db = {};
   if (config.db_file) {
     // SQLite
@@ -47,7 +47,7 @@ async function initDB(config) {
     db.dbType = 'psql';
     // initialize a pool
     db.pool = new Pool({
-      host: config.psqlHost,
+      host: useSocket ? config.psqlSocket : config.psqlHost,
       database: config.psqlDb,
       user: config.psqlUser,
       password: config.psqlPasswd
