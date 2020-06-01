@@ -18,7 +18,6 @@
 'use strict';
 // Dyanmic services for UI backend server
 
-const fs = require('fs');
 const db_mgr = require('./db_mgr');
 const apis = require('./apis');
 const sse = require('./sse');
@@ -29,24 +28,6 @@ const detectMgr = require('./detect_mgr');
 
 const logger = oct_utils.getLogger('services');
 
-/**
- * Read and parse the JSON config file specified in environment variable OCT_FIRE_SETTINGS
- * The variable may point to either local file system file or GCS file
- */
-async function getConfig() {
-  const gsPath = gcp_storage.parsePath(process.env.OCT_FIRE_SETTINGS);
-  var configStr
-  if (gsPath) {
-    configStr = await gcp_storage.getData(gsPath.bucket, gsPath.name);
-  } else if (!fs.existsSync(process.env.OCT_FIRE_SETTINGS)) {
-    return {};
-  } else {
-    configStr = fs.readFileSync(process.env.OCT_FIRE_SETTINGS);
-  }
-  const config = JSON.parse(configStr);
-  // logger.info('config', config);
-  return config;
-}
 
 /**
  * Initialize all the dyanmic services for this server and then call done()
@@ -54,7 +35,7 @@ async function getConfig() {
  * @param {function} done 
  */
 async function initServices(app, done) {
-  const config = await getConfig();
+  const config = await oct_utils.getConfig(gcp_storage);
   const db = await db_mgr.initDB(config);
   apis.initApis(config, app);
   const updateFromDetect = sse.initSSE(config, app, db);

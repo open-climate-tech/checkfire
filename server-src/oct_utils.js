@@ -18,6 +18,7 @@
 'use strict';
 // Utility functions
 
+const fs = require('fs');
 const winston = require('winston');
 const util = require('util');
 const sleep = util.promisify(setTimeout);
@@ -62,5 +63,25 @@ async function retryWrap(mainFn) {
   }
 }
 
+/**
+ * Read and parse the JSON config file specified in environment variable OCT_FIRE_SETTINGS
+ * The variable may point to either local file system file or GCS file
+ */
+async function getConfig(gcp_storage) {
+  const gsPath = gcp_storage.parsePath(process.env.OCT_FIRE_SETTINGS);
+  var configStr
+  if (gsPath) {
+    configStr = await gcp_storage.getData(gsPath.bucket, gsPath.name);
+  } else if (!fs.existsSync(process.env.OCT_FIRE_SETTINGS)) {
+    return {};
+  } else {
+    configStr = fs.readFileSync(process.env.OCT_FIRE_SETTINGS);
+  }
+  const config = JSON.parse(configStr);
+  // logger.info('config', config);
+  return config;
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
+exports.getConfig = getConfig;

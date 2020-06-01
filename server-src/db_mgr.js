@@ -78,6 +78,23 @@ async function initDB(config) {
   }
 
   /**
+   * Insert given data into given table
+   * @param {string} tableName
+   * @param {Array<string>} keys - table column names
+   * @param {Array<string>} values - column values
+   */
+  db.insert = async function dbInsert(tableName, keys, values) {
+    let sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
+    console.log('sqlC', sqlCmd);
+    if (db.dbType === 'sqlite') {
+      let dbRunP = util.promisify(db.sqlite.run).bind(db.sqlite);
+      return await dbRunP(sqlCmd);
+    } else if (db.dbType === 'psql') {
+      return await db.pool.query(sqlCmd);
+    }
+  }
+
+  /**
    * Close the DB connection
    */
   db.close = function dbClose() {
