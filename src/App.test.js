@@ -44,11 +44,14 @@ test('potential fire events are rendered', () => {
   const cameraID = 'cam1';
   const score = 0.6;
   const annotatedUrl = 'https://a.b/c.jpg';
+  const croppedUrl = 'https://a.b/c.mp4';
   let msg = {
-    'timestamp': 1,
-    'cameraID': cameraID,
-    "adjScore": score,
-    'annotatedUrl': annotatedUrl,
+    timestamp: 1,
+    cameraID: cameraID,
+    camInfo: {cameraName: cameraID},
+    adjScore: score,
+    annotatedUrl: annotatedUrl,
+    croppedUrl: croppedUrl,
   };
   let msgStr = JSON.stringify(msg);
   const { getByText, getByTestId } = render(<App />);
@@ -71,6 +74,6 @@ test('potential fire events are rendered', () => {
   const href = elt.querySelector('a').getAttribute('href');
   assert.strictEqual(href, annotatedUrl);
 
-  const imgSrc = elt.querySelector('img').getAttribute('src');
-  assert.strictEqual(imgSrc, annotatedUrl);
+  const videoSrc = elt.querySelector('source').getAttribute('src');
+  assert.strictEqual(videoSrc, croppedUrl);
 });

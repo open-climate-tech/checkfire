@@ -26,11 +26,53 @@ const logger = oct_utils.getLogger('sse');
 var connections = [];
 
 /**
+ * Get information about camera (name, direction) from the cameraID
+ * @param {db_mgr} db
+ * @param {string} cameraID
+ */
+async function getCameraInfo(db, cameraID) {
+  const camInfo = {
+    cameraName: cameraID,
+    cameraDir: ''
+  };
+
+  // query DB to get human name
+  const sqlStr = `select name from cameras where cameraids like '%${cameraID}%'`
+  const camNameRes = await db.query(sqlStr);
+  if (camNameRes && (camNameRes.length > 0)) {
+    camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name
+  }
+
+  // use mapping table to get human direction
+  const cardinalHeadings = {
+    'n': [0, 'North'],
+    'e': [90, 'East'],
+    's': [180, 'South'],
+    'w': [270, 'West'],
+    'ne': [45, 'Northeast'],
+    'se': [135, 'Southeast'],
+    'sw': [225, 'Southwest'],
+    'nw': [315, 'Northwest'],
+  }
+  const regexMobo = /-([ns]?[ew]?)-mobo-c/;
+  const parsed = regexMobo.exec(cameraID);
+  if (parsed && Array.isArray(parsed)) {
+    const camDirAbbr = parsed[1];
+    camInfo.cameraDir = cardinalHeadings[camDirAbbr] ? cardinalHeadings[camDirAbbr][1] : camDirAbbr;
+  }
+  // logger.info('Camera namemap (%s -> %s,%s)', cameraID, camInfo.cameraName, camInfo.cameraDir);
+  return camInfo;
+}
+
+/**
  * Send SSE eventsource message using given client response
  * @param {object} messageJson
  * @param {HTTP response} response 
+ * @param {db_mgr} db
  */
-function sendEvent(messageJson, response) {
+async function sendEvent(messageJson, response, db) {
+  const camInfo = await getCameraInfo(db, messageJson.cameraID);
+  messageJson.camInfo = camInfo;
   let eventParts = [
     'id: ' + messageJson.timestamp,
     'event: newPotentialFire',
@@ -68,19 +110,20 @@ async function checkConnectionToRestore(request, response, db) {
       "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
       "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid,
       "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid
-    }, response);
+    }, response, db);
   });
 }
 
 /**
  * Callback function used for when new messages about potential fires are received
  * from the ML based detection service.  Forward the data to all connected clients
+ * @param {db_mgr} db
  * @param {string} messageData - JSON stringified
  */
-function updateFromDetect(messageData) {
+function updateFromDetect(db, messageData) {
   let messageJson = JSON.parse(messageData);
   connections.forEach(connection => {
-    sendEvent(messageJson, connection);
+    sendEvent(messageJson, connection, db);
   });
 }
 
@@ -118,7 +161,7 @@ function updateFromDetect(messageData) {
 
     // fakeEvents(response);
   });
-  return updateFromDetect;
+  return messageData => updateFromDetect(db, messageData);
 }
 
 /**

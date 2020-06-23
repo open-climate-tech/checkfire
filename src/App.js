@@ -91,8 +91,10 @@ class App extends Component {
               <div key={potFire.annotatedUrl} data-testid="FireListElement">
                 <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
                   <h5>
-                    {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:
-                    Camera {potFire.cameraID} with score {Number(potFire.adjScore).toFixed(2)}
+                    {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
+                    {potFire.camInfo.cameraName} camera
+                    {potFire.camInfo.cameraDir ? ' facing ' + potFire.camInfo.cameraDir : ''}
+                    &nbsp;with score {Number(potFire.adjScore).toFixed(2)}
                     &nbsp;(
                     <a href={potFire.annotatedUrl} target="_blank">full image</a>
                     )

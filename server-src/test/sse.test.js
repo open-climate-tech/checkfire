@@ -46,11 +46,14 @@ describe('WildfireCheck SSE test', function () {
             assert.strictEqual(parseInt(eventParts[0].split(':')[1]), msg.timestamp);
             assert.strictEqual(eventParts[1], 'event: newPotentialFire');
             assert.strictEqual(eventParts[2].slice(0,6), 'data: ');
-            assert.strictEqual(eventParts[2].slice(6), msgString);
+            const msgPayloadStr = eventParts[2].slice(6);
+            const msgPayload = JSON.parse(msgPayloadStr);
+            assert.strictEqual(msgPayload.timestamp, msg.timestamp);
+            assert.strictEqual(msgPayload.foo, msg.foo);
             done();
         });
         sse._testConnections([mockResp]);
-        sse._testUpdate(msgString);
+        sse._testUpdate({query: async () => null}, msgString);
     });
 
 });
