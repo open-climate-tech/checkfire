@@ -50,6 +50,7 @@ describe('WildfireCheck SSE test', function () {
             const msgPayload = JSON.parse(msgPayloadStr);
             assert.strictEqual(msgPayload.timestamp, msg.timestamp);
             assert.strictEqual(msgPayload.foo, msg.foo);
+            assert.strictEqual(msgPayload.version, sse.SSE_INTERFACE_VERSION);
             done();
         });
         sse._testConnections([mockResp]);

@@ -22,6 +22,9 @@ const oct_utils = require('./oct_utils');
 
 const logger = oct_utils.getLogger('sse');
 
+// Interface versioning to ensure browser and nodejs are synced up
+const SSE_INTERFACE_VERSION = 1;
+
 // Array of all the connections to the frontend
 var connections = [];
 
@@ -71,6 +74,7 @@ async function getCameraInfo(db, cameraID) {
  * @param {db_mgr} db
  */
 async function sendEvent(messageJson, response, db) {
+  messageJson.version = SSE_INTERFACE_VERSION;
   const camInfo = await getCameraInfo(db, messageJson.cameraID);
   messageJson.camInfo = camInfo;
   let eventParts = [
@@ -194,4 +198,5 @@ if (process.env.CI) { // special exports for testing this module
   exports._testConnections = tc => {
     connections = tc;
   };
+  exports.SSE_INTERFACE_VERSION = SSE_INTERFACE_VERSION;
 }

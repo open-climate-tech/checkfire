@@ -33,6 +33,7 @@ class App extends Component {
       this.state.eventsUrl = "/fireEvents";
       this.state.apiUrl = "/api";
     }
+    this.sseVersion = null;
   }
 
   componentDidMount() {
@@ -49,7 +50,18 @@ class App extends Component {
   newPotentialFire(e) {
     // console.log('newPotentialFire', e);
     const parsed = JSON.parse(e.data);
-    // first check for duplicate
+    // first check version number
+    if (!this.sseVersion) { // record version number on first response
+      this.sseVersion = parsed.version;
+      console.log('Checkfire SSE version', this.sseVersion);
+    }
+    if (this.sseVersion !== parsed.version) {
+      // reload page on version mismatch
+      console.log('Checkfire SSE mismatch', this.sseVersion, parsed.version);
+      window.location.reload();
+    }
+
+    // next check for duplicate
     const alreadyExists = this.state.potentialFires.find(i =>
        ((i.timestamp === parsed.timestamp) && (i.cameraID === parsed.cameraID)));
     if (alreadyExists) {
@@ -96,7 +108,7 @@ class App extends Component {
                     {potFire.camInfo.cameraDir ? ' facing ' + potFire.camInfo.cameraDir : ''}
                     &nbsp;with score {Number(potFire.adjScore).toFixed(2)}
                     &nbsp;(
-                    <a href={potFire.annotatedUrl} target="_blank">full image</a>
+                    <a href={potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
                     )
                   </h5>
                   <video controls autoPlay muted loop width="898" height="898" poster={potFire.croppedUrl}>
