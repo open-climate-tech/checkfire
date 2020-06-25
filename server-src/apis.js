@@ -30,7 +30,7 @@ const logger = oct_utils.getLogger('api');
 function initApis(config, app) {
   // This route is just a stub for testing.
   app.get('/api', (req, res) => {
-    logger.info(`Request /api`);
+    logger.info('Request /api');
     res
       .status(200)
       .send('Hello, m24.1610 world!')
