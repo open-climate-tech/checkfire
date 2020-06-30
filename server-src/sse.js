@@ -153,10 +153,6 @@ function updateFromDetect(db, messageData) {
     response.setHeader('Content-Type', 'text/event-stream');
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('X-Accel-Buffering', 'no');
-    if (process.env.NODE_ENV === 'development') {
-      logger.info('Permissive CORS');
-      response.setHeader("Access-Control-Allow-Origin", "*");
-    }
     response.writeHead(200);
     response.flushHeaders(); // flush the headers to establish SSE with client
 

@@ -19,8 +19,34 @@
 // API Services clients can invoke
 
 const oct_utils = require('./oct_utils');
-
 const logger = oct_utils.getLogger('api');
+const {google} = require('googleapis');
+const jwt = require("jsonwebtoken");
+
+const scopes = [
+  'email',
+  // 'profile'
+];
+
+/**
+ * Verify that request has a valid signed JWT cookie
+ * @param {*} req
+ * @param {*} res
+ * @param {*} config
+ */
+function verifyAuth(req, res, config) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err, decoded) => {
+      if (err) {
+        console.log('jwt verify err', err);
+        res.status(403).end();
+        reject(err);
+      } else {
+        resolve(decoded);
+      }
+    });
+  });
+}
 
 /**
  * Initialize all the API routes
@@ -29,12 +55,96 @@ const logger = oct_utils.getLogger('api');
  */
 function initApis(config, app) {
   // This route is just a stub for testing.
-  app.get('/api', (req, res) => {
-    logger.info('Request /api');
-    res
-      .status(200)
-      .send('Hello, m24.1610 world!')
-      .end();
+  app.get('/api/testGet', async (req, res) => {
+    logger.info('GET testGet');
+    try {
+      const decoded = await verifyAuth(req, res, config);
+      res
+        .status(200)
+        .send('Hello, m24.1610 world!')
+        .end();
+    } catch (err) {
+    }
+  });
+
+  app.post('/api/testPost', async (req, res) => {
+    logger.info('POST testPost');
+    try {
+      const decoded = await verifyAuth(req, res, config);
+      console.log('body', req.body);
+      res.status(200).send('success').end();
+    } catch (err) {
+    }
+  });
+
+  const redirectUrl = (process.env.NODE_ENV === 'development') ?
+                       "http://localhost:5000/oauth2callback" :
+                       config.webOauthCallbackURL;
+  const oauth2Client = new google.auth.OAuth2(
+    config.webOauthClientID,
+    config.webOauthClientSecret,
+    redirectUrl
+  );
+
+  /**
+   * Generate the Google Oauth URL to authenticate user.
+   * On successful oauth completion, this will redirect user to /oauth2callback below
+   */
+  app.get('/api/oauthUrl', async (req, res) => {
+    try {
+      logger.info('GET /api/oauthUrl %s', JSON.stringify(req.query));
+      const url = oauth2Client.generateAuthUrl({
+          scope: scopes,
+          state: req.query.path,
+          code_challenge_method: 'S256',
+          code_challenge: config.webOauthCodeChallenge,
+      });
+      logger.info('goog url %s', url);
+      res
+        .status(200)
+        .send(url)
+        .end();
+    } catch (err) {
+      logger.error('Failure %s', err.message);
+      res.status(400).end();
+    }
+  });
+
+  /**
+   * User just finished Google Oauth, now generate signed JWT as send as cookie for stateless auth.
+   * And redirect the web browser to desired client URL
+   */
+  app.get('/oauth2callback', async (req, res) => {
+    try {
+      logger.info('GET /oauth2callback: %s', JSON.stringify(req.query));
+
+      // verify code and get token.email
+      const code = req.query.code;
+      const {tokens} = await oauth2Client.getToken({code: code, codeVerifier: config.webOauthCodeVerifier});
+      // logger.info('tokens: %s', JSON.stringify(tokens));
+      const tokId = jwt.decode(tokens.id_token);
+      logger.info('tokId: %s', JSON.stringify(tokId));
+      logger.info('email: %s', tokId.email);
+
+      // now generate signed JWT to send as cookie to client
+      const expiration = '7d';
+      const signed = jwt.sign({email: tokId.email}, config.cookieJwtSecret, { expiresIn: expiration });
+      const cookieOptions = {
+        // httpOnly: true, // cannot use this because client JS checks this to see user is authenticated already
+        // expires: expiration, // expiration of cookie shoud match JWT, but currently pushing work to client JS
+      };
+      if (process.env.NODE_ENV !== 'development') {
+        cookieOptions.secure = true;
+      }
+      res.cookie('cf_token', signed, cookieOptions);
+
+      // finally, send client browser to desired URL specified in state by leveraging react redirect in client JS
+      const state = req.query.state;
+      res.redirect('/wildfirecheck?redirect=' + state);
+    } catch (err) {
+      logger.error('Failure %s', err.message);
+      res.status(400).end();
+    }
   });
 }
 

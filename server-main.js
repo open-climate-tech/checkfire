@@ -19,7 +19,8 @@
 // UI backend server
 
 const express = require('express');
-const app = express();
+const cookieParser = require('cookie-parser')
+const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const path = require('path');
 const oct_utils = require('./server-src/oct_utils');
@@ -27,14 +28,22 @@ const services = require('./server-src/services')
 
 const logger = oct_utils.getLogger('main');
 
-// Setup express middle-ware to log all requests
+const app = express();
+
+// Setup express middle-ware to log requests and allow CORS for dev environments
 app.use(function (req, res, next) {
-  logger.info('URL: %s', req.originalUrl);
+  logger.info('URL: %s', req.originalUrl || req.url);
   logger.info('request Headers: %s', JSON.stringify(req.headers));
+  if (process.env.NODE_ENV === 'development') {
+    // logger.info('Permissive CORS');
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   next();
 });
 
 app.use(helmet());
+app.use(cookieParser());
+app.use(bodyParser.json());
 
 // Redirect http to https
 app.use(function(req, res, next) {
