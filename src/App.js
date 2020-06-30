@@ -21,12 +21,36 @@ import React, { Component } from "react";
 import {
   BrowserRouter as Router,
   Switch,
-  Route
+  Route,
+  Link,
+  Redirect
 } from "react-router-dom";
 import './App.css';
 import PotentialFires from './PotentialFires';
+import Prototypes from './Prototypes';
+// prototype pages that need redirect
+import Auth from './Auth';
+
+const qs = require('qs');
+
+// check document.cookie
 
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  componentDidMount() {
+    const queryParams = qs.parse(window.location.search, {ignoreQueryPrefix: true});
+    // console.log('qp', queryParams);
+    if (queryParams.redirect && (queryParams.redirect[0] === '/')) {
+      console.log('redirecting to ', queryParams.redirect);
+      this.setState({redirect: queryParams.redirect});
+    }
+    // console.log('cookie', document.cookie);
+  }
+
   render() {
     return (
       <div className="App">
@@ -39,9 +63,17 @@ class App extends Component {
           <a href="/disclaimer.html">Disclaimer</a>
         </header>
         <Router>
+          {
+            (this.state.redirect) ? <Redirect to={this.state.redirect} /> : <span></span>
+          }
           <Switch>
+            <Route path="/auth" exact component={Auth} />
+            <Route path="/prototypes" exact component={Prototypes} />
             <Route path="/" component={PotentialFires} />
           </Switch>
+          <Link to='/prototypes'>
+            &nbsp;
+          </Link>
         </Router>
       </div>
     );  
