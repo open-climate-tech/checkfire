@@ -37,7 +37,7 @@ const logger = oct_utils.getLogger('services');
 async function initServices(app, done) {
   const config = await oct_utils.getConfig(gcp_storage);
   const db = await db_mgr.initDB(config);
-  apis.initApis(config, app);
+  apis.initApis(config, app, db);
   const updateFromDetect = sse.initSSE(config, app, db);
   await pubsub.initPubSub(config, updateFromDetect);
   detectMgr.initMgr(config);

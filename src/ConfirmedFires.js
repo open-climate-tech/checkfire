@@ -20,6 +20,9 @@
 import React, { Component } from "react";
 
 class ConfirmedFires extends Component {
+  // select * from votes inner join alerts
+  //        on votes.cameraname=alerts.cameraname and votes.timestamp=alerts.timestamp
+  //        where votes.isrealfire=1 limit 20;
   render() {
     return (
       <div>
