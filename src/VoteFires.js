@@ -74,6 +74,13 @@ class VoteFires extends Component {
     this.getOauthUrl();
   }
 
+  componentWillUnmount() {
+    if (this.eventSource) {
+      this.eventSource.close()
+      this.eventSource = null;
+    }
+  }
+
   newPotentialFire(e) {
     // console.log('newPotentialFire', e);
     const parsed = JSON.parse(e.data);
@@ -110,30 +117,47 @@ class VoteFires extends Component {
     this.eventSource.close();
   }
 
-  async voteOrAuth(potFire) {
-    if (this.state.validCookie) {
-      console.log('POST');
-      const serverUrl = this.getServerUrl('/api/voteFire');
-      const resp = await fetch(serverUrl, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json, text/plain, */*',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          cameraID: potFire.cameraID,
-          timestamp: potFire.timestamp,
-          isRealFire: true,
-        })
+  signin(potFire) {
+    window.location.href = this.oauthUrl;
+  }
+
+  async vote(potFire, isRealFire) {
+    console.log('POST');
+    const serverUrl = this.getServerUrl('/api/voteFire');
+    const resp = await fetch(serverUrl, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        cameraID: potFire.cameraID,
+        timestamp: potFire.timestamp,
+        isRealFire: isRealFire,
+      })
+    });
+    const serverRes = await resp.text();
+    console.log('post res', serverRes);
+    if (serverRes === 'success') {
+      const newState = Object.assign({}, this.state);
+      newState.potentialFires = newState.potentialFires.map(pFire => {
+        if ((pFire.cameraID !== potFire.cameraID) || (pFire.timestamp !== potFire.timestamp)) {
+          return pFire;
+        }
+        const updatedFire = Object.assign({}, pFire);
+        updatedFire.voted = isRealFire;
+        return updatedFire;
       });
-      const serverRes = await resp.text();
-      console.log('post res', serverRes);
-      if (serverRes === 'success') {
-        // TODO: record vote, display vote
-      }
-    } else {
-      window.location.href = this.oauthUrl;
+      this.setState(newState);
     }
+  }
+
+  confirmRealFire(potFire) {
+    this.vote(potFire, true);
+  }
+
+  async confirmNotFire(potFire) {
+    this.vote(potFire, false);
   }
 
   render() {
@@ -160,15 +184,20 @@ class VoteFires extends Component {
                     <source src={potFire.croppedUrl} type="video/mp4" />
                     Your browser does not support the video tag
                   </video>
-                  <button onClick={()=> this.voteOrAuth(potFire)}>
-                    {
-                      (this.state.validCookie) ? 'Confirm real fire' : (
-                        <span>
+                  {
+                    (this.state.validCookie) ?
+                      ((potFire.voted !== undefined) ?
+                        (potFire.voted ? <span>Thanks for confirming real fire</span> : <span>Thanks for confirming not fire</span>)
+                        :
+                        (<span>
+                          Is this a fire?
+                          <button onClick={()=> this.confirmRealFire(potFire)}>Yes, real fire</button>
+                          <button onClick={()=> this.confirmNotFire(potFire)}>No, not a fire</button>
+                        </span>))
+                      : (<button onClick={()=> this.signin()}>
                           <img src={googleSigninImg} alt="Sign in with Google" /> <span>to vote</span>
-                        </span>
-                      )
-                    }
-                  </button>
+                        </button>)
+                  }
                 </div>
                 &nbsp;
               </div>

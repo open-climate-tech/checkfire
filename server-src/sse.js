@@ -70,13 +70,22 @@ async function getCameraInfo(db, cameraID) {
 /**
  * Send SSE eventsource message using given client response
  * @param {object} messageJson
- * @param {HTTP response} response 
+ * @param {*} connectionInfo
  * @param {db_mgr} db
  */
-async function sendEvent(messageJson, response, db) {
+async function sendEvent(messageJson, connectionInfo, db) {
   messageJson.version = SSE_INTERFACE_VERSION;
   const camInfo = await getCameraInfo(db, messageJson.cameraID);
   messageJson.camInfo = camInfo;
+  if (connectionInfo.email) {
+    const existingVotesByUser = await oct_utils.getUserVotes(db, messageJson.cameraID, messageJson.timestamp, connectionInfo.email);
+    // console.log('sendEvent existingVotesByUser %s', JSON.stringify(existingVotesByUser));
+    if (existingVotesByUser && (existingVotesByUser.length > 0)) {
+      const isRealFire = existingVotesByUser[0]['IsRealFire'] || existingVotesByUser[0]['isrealfire'];
+      messageJson.voted = !!isRealFire;
+    }
+  }
+
   let eventParts = [
     'id: ' + messageJson.timestamp,
     'event: newPotentialFire',
@@ -85,18 +94,18 @@ async function sendEvent(messageJson, response, db) {
   ];
   let eventString = eventParts.join('\n');
   // logger.info('SendEvent', response.finished, eventString);
-  if (!response.finished) {
-    response.write(eventString);
+  if (!connectionInfo.response.finished) {
+    connectionInfo.response.write(eventString);
   }
 }
 
 /**
  * Check if given SSE request has last-event-id to restore connection
- * @param {HTTP Request} request 
- * @param {HTTP response} response 
+ * @param {HTTP Request} request
+ * @param {*} connectionInfo
  * @param {db_mgr} db
  */
-async function checkConnectionToRestore(request, response, db) {
+async function checkConnectionToRestore(request, connectionInfo, db) {
   let prevTimestamp = 0;
   if (request.headers["last-event-id"]) {
     const eventId = parseInt(request.headers["last-event-id"]);
@@ -114,7 +123,7 @@ async function checkConnectionToRestore(request, response, db) {
       "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
       "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid,
       "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid
-    }, response, db);
+    }, connectionInfo, db);
   });
 }
 
@@ -126,8 +135,8 @@ async function checkConnectionToRestore(request, response, db) {
  */
 function updateFromDetect(db, messageData) {
   let messageJson = JSON.parse(messageData);
-  connections.forEach(connection => {
-    sendEvent(messageJson, connection, db);
+  connections.forEach(connectionInfo => {
+    sendEvent(messageJson, connectionInfo, db);
   });
 }
 
@@ -139,14 +148,15 @@ function updateFromDetect(db, messageData) {
  * @return {function} Callback for new messages
  */
  function initSSE(config, app, db) {
-  app.get('/fireEvents', (request, response) => {
+  app.get('/fireEvents', async (request, response) => {
     request.on("close", () => {
       if (!response.finished) {
         response.end();
         logger.info("Stopped sending events.");
       }
       // remove this response from connections array as well as any others in finished state
-      connections = connections.filter(r => ((r !== response) && !r.finished));
+      connections = connections.filter(ci => ((ci.response !== response) && !ci.response.finished));
+      logger.info('SSE close.  Total %d', connections.length);
     });
 
     response.setHeader('Connection', 'keep-alive');
@@ -156,8 +166,16 @@ function updateFromDetect(db, messageData) {
     response.writeHead(200);
     response.flushHeaders(); // flush the headers to establish SSE with client
 
-    checkConnectionToRestore(request, response, db);
-    connections.push(response);
+    const connectionInfo = {
+      response: response
+    };
+    try {
+      const userInfo = await oct_utils.checkAuth(request, config);
+      connectionInfo.email = userInfo.email;
+    } catch (_) {}
+    logger.info('SSE add %s.  Total %d', !!connectionInfo.email, connections.length);
+    connections.push(connectionInfo);
+    checkConnectionToRestore(request, connectionInfo, db);
 
     // fakeEvents(response);
   });

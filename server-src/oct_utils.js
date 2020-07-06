@@ -22,6 +22,7 @@ const fs = require('fs');
 const winston = require('winston');
 const util = require('util');
 const sleep = util.promisify(setTimeout);
+const jwt = require("jsonwebtoken");
 
 /**
  * Create a winston logger with given label
@@ -82,6 +83,38 @@ async function getConfig(gcp_storage) {
   return config;
 }
 
+/**
+ * Check if the incoming request has a valid signed JWT cookie
+ * @param {*} req
+ * @param {*} config
+ */
+function checkAuth(req, config) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err, decoded) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(decoded);
+      }
+    });
+  });
+}
+
+/**
+ * Check the DB to get the votes cast by given user (email) for given potential fire (camera, timestamp)
+ * @param {db_mgr} db
+ * @param {string} cameraID
+ * @param {number} timestamp
+ * @param {string} email
+ */
+async function getUserVotes(db, cameraID, timestamp, email) {
+  let sqlStr = `select * from votes where cameraname='${cameraID}' and
+                timestamp=${timestamp} and userid='${email}'`;
+  return await db.query(sqlStr);
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
+exports.checkAuth = checkAuth;
+exports.getUserVotes = getUserVotes;

@@ -35,18 +35,13 @@ const scopes = [
  * @param {*} res
  * @param {*} config
  */
-function verifyAuth(req, res, config) {
-  return new Promise((resolve, reject) => {
-    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err, decoded) => {
-      if (err) {
-        console.log('jwt verify err', err);
-        res.status(403).send('Forbidden').end();
-        reject(err);
-      } else {
-        resolve(decoded);
-      }
-    });
-  });
+async function verifyAuth(req, res, config) {
+  try {
+    return await oct_utils.checkAuth(req, config);
+  } catch (err) {
+    console.log('jwt verify err', err);
+    res.status(403).send('Forbidden').end();
+  }
 }
 
 /**
@@ -97,16 +92,14 @@ function initApis(config, app, db) {
       assert(req.body.timestamp < new Date().valueOf()/1000);
 
       assert(typeof(req.body.isRealFire) === 'boolean');
-      let sqlStr = `select * from votes where cameraname='${req.body.cameraID}' and
-                      timestamp=${req.body.timestamp} and userid='${decoded.email}'`;
-      const existingVotesByUser = await db.query(sqlStr);
-      console.log('voteRes', existingVotesByUser);
+      const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
+      // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
       if (existingVotesByUser && (existingVotesByUser.length > 0)) {
         logger.warn('Multiple votes not supported %s', existingVotesByUser);
         res.status(400).send('Bad Request').end();
         return;
       }
-      sqlStr = `insert into votes (cameraname,timestamp,isrealfire,userid) values
+      const sqlStr = `insert into votes (cameraname,timestamp,isrealfire,userid) values
                       ('${req.body.cameraID}',${req.body.timestamp},${req.body.isRealFire ? 1 : 0},'${decoded.email}')`;
       await db.query(sqlStr);
       res.status(200).send('success').end();
