@@ -19,8 +19,84 @@
 
 import React, { Component } from "react";
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
+import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
 import Cookies from 'js-cookie';
 import jwt from 'jsonwebtoken';
+
+/**
+ * Show voting buttons (yes/no), or already cast vote, or signin button
+ * @param {*} props
+ */
+function VoteButtons(props) {
+  if (!props.validCookie) {
+    return (
+    <div>
+      <p>Is this a fire?</p>
+      <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> props.signin()}>
+      <img src={googleSigninImg} alt="Sign in with Google"
+         onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
+         onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
+      </button>
+      <p>to vote</p>
+    </div>
+    );
+  } else if (props.potFire.voted !== undefined) {
+    if (props.potFire.voted) {
+      return <p>Thanks for confirming this is a real fire</p>;
+    } else {
+      return <p>Thanks for confirming this is not a fire</p>;
+    }
+  } else {
+    return (
+    <div>
+      <p>Is this a fire?</p>
+      <button class="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
+        <i class="fa fa-fire" style={{color: "red"}} />
+        &nbsp;Real fire
+      </button>
+      <button class="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
+        <i class="fa fa-close" />
+        &nbsp;Not a fire
+      </button>
+    </div>
+    );
+  }
+}
+
+/**
+ * Show preview of the potential fire along with voting buttons
+ * @param {*} props
+ */
+function FirePreview(props) {
+  return (
+    <div key={props.potFire.annotatedUrl} data-testid="FireListElement">
+      <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+        <h5>
+          {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
+          {props.potFire.camInfo.cameraName} camera
+          {props.potFire.camInfo.cameraDir ? ' facing ' + props.potFire.camInfo.cameraDir : ''}
+          &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)}
+          &nbsp;(
+          <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
+          )
+        </h5>
+        <div class="w3-col m10">
+          <video controls autoPlay muted loop width="898" height="898" poster={props.potFire.croppedUrl}>
+            <source src={props.potFire.croppedUrl} type="video/mp4" />
+            Your browser does not support the video tag
+          </video>
+        </div>
+        <div class="w3-col m2">
+          <VoteButtons validCookie={props.validCookie} potFire={props.potFire}
+            onVote={props.onVote}
+            signin={props.signin}
+           />
+        </div>
+      </div>
+      &nbsp;
+    </div>
+  );
+}
 
 class VoteFires extends Component {
   constructor(props) {
@@ -152,14 +228,6 @@ class VoteFires extends Component {
     }
   }
 
-  confirmRealFire(potFire) {
-    this.vote(potFire, true);
-  }
-
-  async confirmNotFire(potFire) {
-    this.vote(potFire, false);
-  }
-
   render() {
     return (
       <div>
@@ -167,42 +235,12 @@ class VoteFires extends Component {
           Potential fires (with votes)
         </h1>
         {
-          this.state.potentialFires.map(potFire => {
-            return (
-              <div key={potFire.annotatedUrl} data-testid="FireListElement">
-                <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
-                  <h5>
-                    {new Date(potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
-                    {potFire.camInfo.cameraName} camera
-                    {potFire.camInfo.cameraDir ? ' facing ' + potFire.camInfo.cameraDir : ''}
-                    &nbsp;with score {Number(potFire.adjScore).toFixed(2)}
-                    &nbsp;(
-                    <a href={potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
-                    )
-                  </h5>
-                  <video controls autoPlay muted loop width="898" height="898" poster={potFire.croppedUrl}>
-                    <source src={potFire.croppedUrl} type="video/mp4" />
-                    Your browser does not support the video tag
-                  </video>
-                  {
-                    (this.state.validCookie) ?
-                      ((potFire.voted !== undefined) ?
-                        (potFire.voted ? <span>Thanks for confirming real fire</span> : <span>Thanks for confirming not fire</span>)
-                        :
-                        (<span>
-                          Is this a fire?
-                          <button onClick={()=> this.confirmRealFire(potFire)}>Yes, real fire</button>
-                          <button onClick={()=> this.confirmNotFire(potFire)}>No, not a fire</button>
-                        </span>))
-                      : (<button onClick={()=> this.signin()}>
-                          <img src={googleSigninImg} alt="Sign in with Google" /> <span>to vote</span>
-                        </button>)
-                  }
-                </div>
-                &nbsp;
-              </div>
-            );
-          })
+          this.state.potentialFires.map(potFire =>
+            <FirePreview potFire={potFire} validCookie={this.state.validCookie}
+             onVote={(f,v) => this.vote(f,v)}
+             signin={() => this.signin()}
+            />
+          )
         }
       </div>
     );
