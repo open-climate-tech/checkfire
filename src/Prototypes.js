@@ -25,7 +25,7 @@ import {
   Link,
 } from "react-router-dom";
 import Auth from './Auth';
-import VoteFires from './VoteFires';
+import PotentialFires from './PotentialFires';
 import ConfirmedFires from './ConfirmedFires';
 
 class Prototypes extends Component {
@@ -36,11 +36,11 @@ class Prototypes extends Component {
           Prototypes
         </h1>
         <Link to='/auth'><li>Auth</li></Link>
-        <Link to='/vote'><li>VoteFires</li></Link>
+        <Link to='/potential'><li>Original Potential Fires</li></Link>
         <Link to='/confirmed'><li>Confirmed Fires</li></Link>
         <Switch>
           <Route path="/auth" exact component={Auth} />
-          <Route path="/vote" exact component={VoteFires} />
+          <Route path="/potential" exact component={PotentialFires} />
           <Route path="/confirmed" exact component={ConfirmedFires} />
         </Switch>
       </Router>

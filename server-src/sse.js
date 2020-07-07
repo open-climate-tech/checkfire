@@ -23,7 +23,7 @@ const oct_utils = require('./oct_utils');
 const logger = oct_utils.getLogger('sse');
 
 // Interface versioning to ensure browser and nodejs are synced up
-const SSE_INTERFACE_VERSION = 1;
+const SSE_INTERFACE_VERSION = 2;
 
 // Array of all the connections to the frontend
 var connections = [];

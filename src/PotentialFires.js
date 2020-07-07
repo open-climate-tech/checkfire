@@ -86,7 +86,7 @@ class PotentialFires extends Component {
     return (
       <div>
         <h1 className="w3-padding-32 w3-row-padding" id="projects">
-          Potential fires
+          Potential fires (without votes)
         </h1>
         {
           this.state.potentialFires.map(potFire => {

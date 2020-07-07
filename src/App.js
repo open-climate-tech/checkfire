@@ -26,7 +26,7 @@ import {
   Redirect
 } from "react-router-dom";
 import './App.css';
-import PotentialFires from './PotentialFires';
+import VoteFires from './VoteFires';
 import Prototypes from './Prototypes';
 // prototype pages that need redirect
 import Auth from './Auth';
@@ -69,7 +69,7 @@ class App extends Component {
           <Switch>
             <Route path="/auth" exact component={Auth} />
             <Route path="/prototypes" exact component={Prototypes} />
-            <Route path="/" component={PotentialFires} />
+            <Route path="/" component={VoteFires} />
           </Switch>
           <Link to='/prototypes'>
             &nbsp;
