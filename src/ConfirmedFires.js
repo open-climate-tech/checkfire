@@ -20,9 +20,11 @@
 import React, { Component } from "react";
 
 class ConfirmedFires extends Component {
-  // select * from votes inner join alerts
-  //        on votes.cameraname=alerts.cameraname and votes.timestamp=alerts.timestamp
-  //        where votes.isrealfire=1 limit 20;
+  // select vt.cameraname, vt.timestamp, alerts.adjscore, alerts.imageid, alerts.croppedid from
+  //       (select distinct cameraname,timestamp from votes where isrealfire=1 order by timestamp desc limit 20) as vt
+  //       inner join alerts
+  //       on vt.cameraname=alerts.cameraname and vt.timestamp=alerts.timestamp
+  //       order by vt.timestamp desc limit 20;
   render() {
     return (
       <div>
