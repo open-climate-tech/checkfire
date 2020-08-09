@@ -80,17 +80,21 @@ function FirePreview(props) {
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
           )
         </h5>
-        <div class="w3-col m10">
+        <div class="w3-col m8">
           <video controls autoPlay muted loop width="898" height="898" poster={props.potFire.croppedUrl}>
             <source src={props.potFire.croppedUrl} type="video/mp4" />
             Your browser does not support the video tag
           </video>
         </div>
-        <div class="w3-col m2">
+        <div class="w3-col m4">
           <VoteButtons validCookie={props.validCookie} potFire={props.potFire}
             onVote={props.onVote}
             signin={props.signin}
            />
+          <div class="w3-padding-64">
+            <p>View area</p>
+            <img width="320" height="320" src={props.potFire.mapUrl} />
+          </div>
         </div>
       </div>
       &nbsp;

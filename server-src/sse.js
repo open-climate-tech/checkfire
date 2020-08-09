@@ -23,7 +23,7 @@ const oct_utils = require('./oct_utils');
 const logger = oct_utils.getLogger('sse');
 
 // Interface versioning to ensure browser and nodejs are synced up
-const SSE_INTERFACE_VERSION = 2;
+const SSE_INTERFACE_VERSION = 3;
 
 // Array of all the connections to the frontend
 var connections = [];
@@ -122,7 +122,8 @@ async function checkConnectionToRestore(request, connectionInfo, db) {
       "cameraID": potFireEvent.CameraName || potFireEvent.cameraname,
       "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
       "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid,
-      "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid
+      "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid,
+      "mapUrl": potFireEvent.MapID || potFireEvent.mapid
     }, connectionInfo, db);
   });
 }
