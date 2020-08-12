@@ -81,7 +81,7 @@ function FirePreview(props) {
           )
         </h5>
         <div class="w3-col m8">
-          <video controls autoPlay muted loop width="898" height="898" poster={props.potFire.croppedUrl}>
+          <video controls autoPlay muted loop width="800" height="600" poster={props.potFire.croppedUrl}>
             <source src={props.potFire.croppedUrl} type="video/mp4" />
             Your browser does not support the video tag
           </video>
@@ -91,7 +91,7 @@ function FirePreview(props) {
             onVote={props.onVote}
             signin={props.signin}
            />
-          <div class="w3-padding-64">
+          <div class="w3-padding-32">
             <p>View area</p>
             <img width="320" height="320" src={props.potFire.mapUrl} />
           </div>
