@@ -229,6 +229,8 @@ class VoteFires extends Component {
         return updatedFire;
       });
       this.setState(newState);
+    } else {
+      this.setState({validCookie: false});
     }
   }
 
