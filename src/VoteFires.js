@@ -20,8 +20,6 @@
 import React, { Component } from "react";
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
-import Cookies from 'js-cookie';
-import jwt from 'jsonwebtoken';
 
 /**
  * Show voting buttons (yes/no), or already cast vote, or signin button
@@ -50,12 +48,12 @@ function VoteButtons(props) {
     return (
     <div>
       <p>Is this a fire?</p>
-      <button class="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
-        <i class="fa fa-fire" style={{color: "red"}} />
+      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
+        <i className="fa fa-fire" style={{color: "red"}} />
         &nbsp;Real fire
       </button>
-      <button class="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
-        <i class="fa fa-close" />
+      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
+        <i className="fa fa-close" />
         &nbsp;Not a fire
       </button>
     </div>
@@ -80,18 +78,18 @@ function FirePreview(props) {
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
           )
         </h5>
-        <div class="w3-col m8">
+        <div className="w3-col m8">
           <video controls autoPlay muted loop width="800" height="600" poster={props.potFire.croppedUrl}>
             <source src={props.potFire.croppedUrl} type="video/mp4" />
             Your browser does not support the video tag
           </video>
         </div>
-        <div class="w3-col m4">
+        <div className="w3-col m4">
           <VoteButtons validCookie={props.validCookie} potFire={props.potFire}
             onVote={props.onVote}
             signin={props.signin}
            />
-          <div class="w3-padding-32">
+          <div className="w3-padding-32">
             <p>View area</p>
             <img width="320" height="320" src={props.potFire.mapUrl} />
           </div>
@@ -107,7 +105,6 @@ class VoteFires extends Component {
     super(props);
     this.state = {
       potentialFires: [],
-      validCookie: false,
     };
     if (process.env.NODE_ENV === 'development') {
       this.state.eventsUrl = `http://localhost:${process.env.REACT_APP_BE_PORT}/fireEvents`;
@@ -125,15 +122,12 @@ class VoteFires extends Component {
     return serverPrefix + path;
   }
 
-  async getOauthUrl () {
-    const serverUrl = this.getServerUrl('/api/oauthUrl?path=' + encodeURIComponent(window.location.pathname));
-    const oauthUrlResp = await fetch(serverUrl);
-    this.oauthUrl = await oauthUrlResp.text();
-    console.log('got url', this.oauthUrl);
-  }
-
   componentDidMount() {
-    this.eventSource = new EventSource(this.state.eventsUrl);
+    const sseConfig = {};
+    if (process.env.NODE_ENV === 'development') {
+      sseConfig.withCredentials = true; //send cookies to dev server on separate port
+    }
+    this.eventSource = new EventSource(this.state.eventsUrl, sseConfig);
     this.eventSource.addEventListener("newPotentialFire", e => {
       // console.log('UpdateLEID', e.lastEventId);
       this.newPotentialFire(e)
@@ -141,17 +135,6 @@ class VoteFires extends Component {
     this.eventSource.addEventListener("closedConnection", e =>
       this.stopUpdates(e)
     );
-
-    const cf_token = Cookies.get('cf_token');
-    if (cf_token) {
-      const decoded = jwt.decode(cf_token);
-      const now = new Date().valueOf()/1000;
-      console.log('now', now, decoded.exp, now < decoded.exp);
-      const newState = Object.assign({}, this.state);
-      newState.validCookie = now < decoded.exp;
-      this.setState(newState);
-    }
-    this.getOauthUrl();
   }
 
   componentWillUnmount() {
@@ -197,14 +180,10 @@ class VoteFires extends Component {
     this.eventSource.close();
   }
 
-  signin(potFire) {
-    window.location.href = this.oauthUrl;
-  }
-
   async vote(potFire, isRealFire) {
     console.log('POST');
     const serverUrl = this.getServerUrl('/api/voteFire');
-    const resp = await fetch(serverUrl, {
+    const postParams = {
       method: 'POST',
       headers: {
         'Accept': 'application/json, text/plain, */*',
@@ -215,7 +194,11 @@ class VoteFires extends Component {
         timestamp: potFire.timestamp,
         isRealFire: isRealFire,
       })
-    });
+    }
+    if (process.env.NODE_ENV === 'development') {
+      postParams.credentials = 'include'; //send cookies to dev server on separate port
+    }
+    const resp = await fetch(serverUrl, postParams);
     const serverRes = await resp.text();
     console.log('post res', serverRes);
     if (serverRes === 'success') {
@@ -230,7 +213,7 @@ class VoteFires extends Component {
       });
       this.setState(newState);
     } else {
-      this.setState({validCookie: false});
+      this.props.invalidateCookie();
     }
   }
 
@@ -242,9 +225,10 @@ class VoteFires extends Component {
         </h1>
         {
           this.state.potentialFires.map(potFire =>
-            <FirePreview potFire={potFire} validCookie={this.state.validCookie}
+            <FirePreview key={potFire.annotatedUrl}
+             potFire={potFire} validCookie={this.props.validCookie}
              onVote={(f,v) => this.vote(f,v)}
-             signin={() => this.signin()}
+             signin={this.props.signin}
             />
           )
         }
