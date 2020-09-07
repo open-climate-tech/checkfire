@@ -35,8 +35,10 @@ app.use(function (req, res, next) {
   logger.info('URL: %s', req.originalUrl || req.url);
   logger.info('request Headers: %s', JSON.stringify(req.headers));
   if (process.env.NODE_ENV === 'development') {
-    // logger.info('Permissive CORS');
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    // Permissive CORS to allow for testing with server on differnt port
+    res.setHeader("Access-Control-Allow-Origin", req.header('origin'));
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Headers","origin, content-type, accept");
   }
   next();
 });

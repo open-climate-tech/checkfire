@@ -180,6 +180,20 @@ function initApis(config, app, db) {
       res.status(400).end();
     }
   });
+
+  if (process.env.NODE_ENV === 'development') {
+    // For easier testing, this endpoint creates a valid JWT without Oauth
+    app.get('/api/devlogin', async (req, res) => {
+      logger.info('GET /devlogin: %s', JSON.stringify(req.query));
+
+      // now generate signed JWT to send as cookie to client
+      const expiration = '1d';
+      const signed = jwt.sign({email: req.query.email}, config.cookieJwtSecret, { expiresIn: expiration });
+      const cookieOptions = {};
+      res.cookie('cf_token', signed, cookieOptions);
+      res.status(200).send('success').end();
+    });
+  }
 }
 
 exports.initApis = initApis;
