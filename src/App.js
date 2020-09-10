@@ -142,7 +142,7 @@ class App extends Component {
       <div className="App">
         <Router>
           {
-            (this.state.redirect) ? <Redirect to={this.state.redirect} /> : <span></span>
+            (this.state.redirect && <Redirect to={this.state.redirect} />)
           }
           <FirePagesHeader validCookie={this.state.validCookie} signin={()=> this.signin()}/>
           <Switch>

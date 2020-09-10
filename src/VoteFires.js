@@ -72,7 +72,7 @@ function FirePreview(props) {
         <h5>
           {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
           {props.potFire.camInfo.cameraName} camera
-          {props.potFire.camInfo.cameraDir ? ' facing ' + props.potFire.camInfo.cameraDir : ''}
+          {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
           &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)}
           &nbsp;(
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
@@ -91,7 +91,7 @@ function FirePreview(props) {
            />
           <div className="w3-padding-32">
             <p>View area</p>
-            <img width="320" height="320" src={props.potFire.mapUrl} />
+            <img width="320" height="320" src={props.potFire.mapUrl} alt="Viewshed" />
           </div>
         </div>
       </div>
