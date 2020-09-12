@@ -24,7 +24,6 @@ import {
   Route,
   Link,
 } from "react-router-dom";
-import Auth from './Auth';
 import PotentialFires from './PotentialFires';
 import ConfirmedFires from './ConfirmedFires';
 
@@ -35,11 +34,9 @@ class Prototypes extends Component {
         <h1>
           Prototypes
         </h1>
-        <Link to='/auth'><li>Auth</li></Link>
         <Link to='/potential'><li>Original Potential Fires</li></Link>
         <Link to='/confirmed'><li>Confirmed Fires</li></Link>
         <Switch>
-          <Route path="/auth" exact component={Auth} />
           <Route path="/potential" exact component={PotentialFires} />
           <Route path="/confirmed" exact component={ConfirmedFires} />
         </Switch>

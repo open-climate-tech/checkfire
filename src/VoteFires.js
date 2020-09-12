@@ -20,6 +20,7 @@
 import React, { Component } from "react";
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
+import {getServerUrl, serverPost} from './OctReactUtils';
 
 /**
  * Show voting buttons (yes/no), or already cast vote, or signin button
@@ -116,12 +117,6 @@ class VoteFires extends Component {
     this.sseVersion = null;
   }
 
-  getServerUrl(path) {
-    const serverPrefix = (process.env.NODE_ENV === 'development') ?
-      `http://localhost:${process.env.REACT_APP_BE_PORT}` : '';
-    return serverPrefix + path;
-  }
-
   componentDidMount() {
     const sseConfig = {};
     if (process.env.NODE_ENV === 'development') {
@@ -181,25 +176,12 @@ class VoteFires extends Component {
   }
 
   async vote(potFire, isRealFire) {
-    console.log('POST');
-    const serverUrl = this.getServerUrl('/api/voteFire');
-    const postParams = {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        cameraID: potFire.cameraID,
-        timestamp: potFire.timestamp,
-        isRealFire: isRealFire,
-      })
-    }
-    if (process.env.NODE_ENV === 'development') {
-      postParams.credentials = 'include'; //send cookies to dev server on separate port
-    }
-    const resp = await fetch(serverUrl, postParams);
-    const serverRes = await resp.text();
+    const serverUrl = getServerUrl('/api/voteFire');
+    const serverRes = await serverPost(serverUrl, {
+      cameraID: potFire.cameraID,
+      timestamp: potFire.timestamp,
+      isRealFire: isRealFire,
+    });
     console.log('post res', serverRes);
     if (serverRes === 'success') {
       const newState = Object.assign({}, this.state);

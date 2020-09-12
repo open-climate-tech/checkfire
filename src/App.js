@@ -35,6 +35,7 @@ import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
 import Cookies from 'js-cookie';
 import jwt from 'jsonwebtoken';
+import {getServerUrl, serverGet} from './OctReactUtils';
 
 const qs = require('qs');
 
@@ -108,23 +109,17 @@ class App extends Component {
     this.getOauthUrl();
   }
 
-  getServerUrl(path) {
-    const serverPrefix = (process.env.NODE_ENV === 'development') ?
-      `http://localhost:${process.env.REACT_APP_BE_PORT}` : '';
-    return serverPrefix + path;
-  }
-
   async getOauthUrl () {
-    const serverUrl = this.getServerUrl('/api/oauthUrl?path=' + encodeURIComponent(window.location.pathname));
-    const oauthUrlResp = await fetch(serverUrl);
+    const serverUrl = getServerUrl('/api/oauthUrl?path=' + encodeURIComponent(window.location.pathname));
+    const oauthUrlResp = await serverGet(serverUrl);
     this.oauthUrl = await oauthUrlResp.text();
     console.log('got url', this.oauthUrl);
   }
 
   async signin() {
     if (process.env.NODE_ENV === 'development') {
-      const serverUrl = this.getServerUrl('/api/devlogin?email=secret@example.com');
-      const resp = await fetch(serverUrl, {credentials: 'include'});
+      const serverUrl = getServerUrl('/api/devlogin?email=secret@example.com');
+      const resp = await serverGet(serverUrl);
       const serverRes = await resp.text();
       console.log('get res', serverRes);
       this.checkCookie();
