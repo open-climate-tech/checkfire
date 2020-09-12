@@ -113,8 +113,20 @@ async function getUserVotes(db, cameraID, timestamp, email) {
   return await db.query(sqlStr);
 }
 
+/**
+ * Return the geographical region on interest (if any) saved by the given user
+ * @param {db_mgr} db
+ * @param {string} userID
+ */
+async function getUserRegion(db, userID) {
+  let sqlStr = `select * from user_preferences where userid='${userID}'`;
+  const dbRes = await db.query(sqlStr);
+  return dbRes[0] || {};
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
 exports.checkAuth = checkAuth;
 exports.getUserVotes = getUserVotes;
+exports.getUserRegion = getUserRegion;

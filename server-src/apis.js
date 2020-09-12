@@ -23,6 +23,7 @@ const logger = oct_utils.getLogger('api');
 const {google} = require('googleapis');
 const jwt = require("jsonwebtoken");
 const { assert } = require('chai');
+const { sql } = require('googleapis/build/src/apis/sql');
 
 const scopes = [
   'email',
@@ -194,6 +195,66 @@ function initApis(config, app, db) {
       res.status(200).send('success').end();
     });
   }
+
+  /**
+   * Return the geographical region on interest (if any) saved by the user
+   */
+  app.get('/api/getRegion', async (req, res) => {
+    logger.info('GET getRegion');
+    let decoded;
+    try {
+      decoded = await verifyAuth(req, res, config);
+
+      const userRegion = await oct_utils.getUserRegion(db, decoded.email);
+      console.log('getRegion existing %s', JSON.stringify(userRegion));
+      res.status(200).send(userRegion).end();
+    } catch (err) {
+      logger.error('getRegion failures', err);
+      if (decoded) {
+        res.status(400).send('Bad Request').end();
+      }
+    }
+  });
+
+  /**
+   * Save the given geographical region for future reference for current user.
+   * If top/left/bottom/right are all 1, that indicates special value to delete the region.
+   */
+  app.post('/api/setRegion', async (req, res) => {
+    logger.info('POST setRegion');
+    let decoded;
+    try {
+      decoded = await verifyAuth(req, res, config);
+      assert(req.body.topLat && req.body.leftLong && req.body.bottomLat && req.body.rightLong);
+      assert(typeof(req.body.topLat) === 'number');
+      assert(typeof(req.body.leftLong) === 'number');
+      assert(typeof(req.body.bottomLat) === 'number');
+      assert(typeof(req.body.rightLong) === 'number');
+
+      const userRegion = await oct_utils.getUserRegion(db, decoded.email);
+      console.log('setRegion existing %s', JSON.stringify(userRegion));
+
+      let sqlStr;
+      if ((req.body.topLat === 1) && (req.body.leftLong === 1) && (req.body.bottomLat === 1) && (req.body.rightLong === 1)) {
+        sqlStr = `delete from user_preferences where userid='${decoded.email}'`;
+      } else if (userRegion && userRegion.toplat) {
+        sqlStr = `update user_preferences set toplat=${req.body.topLat}, leftlong=${req.body.leftLong},
+          bottomlat=${req.body.bottomLat}, rightlong=${req.body.rightLong}
+          where userid='${decoded.email}'`;
+      } else {
+        sqlStr = `insert into user_preferences (userid, toplat, leftlong, bottomlat, rightlong) values
+          ('${decoded.email}',${req.body.topLat}, ${req.body.leftLong}, ${req.body.bottomLat}, ${req.body.rightLong})`;
+      }
+      await db.query(sqlStr);
+      res.status(200).send('success').end();
+    } catch (err) {
+      logger.error('setRegion failures', err);
+      if (decoded) {
+        res.status(400).send('Bad Request').end();
+      }
+    }
+  });
+
 }
 
 exports.initApis = initApis;
