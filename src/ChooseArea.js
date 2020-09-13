@@ -22,14 +22,14 @@ import ResizeObserver from 'react-resize-observer';
 
 import {getServerUrl, serverGet, serverPost} from './OctReactUtils';
 import hpwren20 from './hpw-20.jpg';
-const mapTopLat = 34.918;
-const mapLeftLong = -120.675;
-const mapBottomLat = 32.489;
-const mapRightLong = -115.259
+const mapTopLat = 34.89;
+const mapLeftLong = -120.53;
+const mapBottomLat = 32.45;
+const mapRightLong = -115.75;
 const mapLongWidth = mapRightLong - mapLeftLong;
 const mapLatHeight = mapTopLat - mapBottomLat;
-const mapPixelWidth = 2396;
-const mapPixelHeight = 1294;
+const mapPixelWidth = 1762;
+const mapPixelHeight = 1080;
 
 class ChooseArea extends Component {
   constructor(props) {
