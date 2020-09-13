@@ -41,19 +41,26 @@ const qs = require('qs');
 
 function FirePagesHeader(props) {
   return (<div>
-    {/* <div className="w3-bar w3-wide w3-padding w3-card">
+    <div className="w3-bar w3-wide w3-padding w3-card">
       <div className="w3-col s3 w3-button w3-block">
         <Link to='/'>Potential fires</Link>
       </div>
-      <div className="w3-col s3 w3-button w3-block">
+      {/* <div className="w3-col s3 w3-button w3-block">
         <Link to='/confirmed'>Confirmed fires</Link>
-      </div>
+      </div> */}
       <div className="w3-col s3 w3-button w3-block">
-        <Link to='/chooseArea'>Choose area</Link>
+        {props.validCookie ?
+          <Link to='/chooseArea'>Choose area</Link>
+        :
+          <span className="w3-disabled">
+            Choose area (sign-in required)
+          </span>
+        }
       </div>
       <div className="w3-col s3 w3-block">
         {props.validCookie ?
-          'Logged in' :
+          <span className="w3-button w3-disabled">Logged in</span>
+        :
           <button style={{padding: 0, outline: "none", border: "none"}} onClick={props.signin}>
             <img src={googleSigninImg} alt="Sign in with Google"
               onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
@@ -61,7 +68,7 @@ function FirePagesHeader(props) {
           </button>
         }
       </div>
-    </div> */}
+    </div>
     <header className="Disclaimer">
       <p>
         This site detects fires from real-time images between 8AM and 8PM California time.
@@ -143,14 +150,11 @@ class App extends Component {
           <Switch>
             <Route path="/prototypes" exact component={Prototypes} />
             <Route path="/confirmed" exact component={ConfirmedFires} />
-            <Route path="/chooseArea" exact component={ChooseArea} />
-            <Route path="/"
-                   render={props =>
-                     <VoteFires {...props}
-                       validCookie={this.state.validCookie}
-                       signin={() => this.signin()}
-                       invalidateCookie={() => this.invalidateCookie()}
-                       />} />
+            <Route path="/chooseArea" exact render={props =>
+                    <ChooseArea {...props} validCookie={this.state.validCookie} />} />
+           <Route path="/" render={props =>
+                    <VoteFires {...props} validCookie={this.state.validCookie}
+                      signin={() => this.signin()} invalidateCookie={() => this.invalidateCookie()} />} />
           </Switch>
         </Router>
       </div>

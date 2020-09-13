@@ -88,12 +88,16 @@ class ChooseArea extends Component {
       return;
     }
     const bcr = this.imgElt.getBoundingClientRect();
-    const pageX = Math.round(bcr.left + window.scrollX);
-    const pageY = Math.round(bcr.top + window.scrollY);
-    if ((this.imgLeft !== pageX) || (this.imgTop !== pageY)) {
-      this.imgLeft = pageX;
-      this.imgTop = pageY;
-      console.log('img pageXY', pageX, pageY);
+    const left = Math.round(bcr.left + window.scrollX);
+    const top = Math.round(bcr.top + window.scrollY);
+    const right = Math.round(bcr.right + window.scrollX);
+    const bottom = Math.round(bcr.bottom + window.scrollY);
+    if ((this.imgLeft !== left) || (this.imgTop !== top) || (this.imgRight !== right) || (this.imgBottom !== bottom)) {
+      this.imgLeft = left;
+      this.imgTop = top;
+      this.imgRight = right;
+      this.imgBottom = bottom;
+      console.log('img l,t,r,b', left, top, right, bottom);
     }
   }
 
@@ -103,7 +107,10 @@ class ChooseArea extends Component {
    */
   handleMouseDown(e) {
     // console.log('hm down', e.nativeEvent.pageX, e.nativeEvent.pageY);
-    this.setState({startX: e.nativeEvent.pageX, startY: e.nativeEvent.pageY, minX: null});
+    if ((e.nativeEvent.pageX > this.imgLeft) && (e.nativeEvent.pageY > this.imgTop) &&
+        (e.nativeEvent.pageX < this.imgRight) && (e.nativeEvent.pageY < this.imgBottom)) {
+      this.setState({startX: e.nativeEvent.pageX, startY: e.nativeEvent.pageY, minX: null});
+    }
   }
 
   /**
@@ -115,12 +122,14 @@ class ChooseArea extends Component {
       return;
     }
     // console.log('hm move', e.nativeEvent.pageX, e.nativeEvent.pageY);
+    const eventX = Math.min(Math.max(e.nativeEvent.pageX, this.imgLeft), this.imgRight);
+    const eventY = Math.min(Math.max(e.nativeEvent.pageY, this.imgTop), this.imgBottom);
     const newState = {
-      minX: Math.min(this.state.startX, e.nativeEvent.pageX),
-      minY: Math.min(this.state.startY, e.nativeEvent.pageY),
+      minX: Math.min(this.state.startX, eventX),
+      minY: Math.min(this.state.startY, eventY),
     }
-    newState.width = Math.max(this.state.startX, e.nativeEvent.pageX) - newState.minX;
-    newState.height = Math.max(this.state.startY, e.nativeEvent.pageY) - newState.minY;
+    newState.width = Math.max(Math.max(this.state.startX, eventX) - newState.minX, 20);
+    newState.height = Math.max(Math.max(this.state.startY, eventY) - newState.minY, 20);
     this.setState(newState);
   }
 
@@ -173,61 +182,70 @@ class ChooseArea extends Component {
         <h1>
           Choose region of interest
         </h1>
-        <p>
-          Mark (click and drag) a rectangle on top of the map below to select the geographical region
-          where you are interested in monitoring potential fires.  You can restart anytime by marking
-          a new rectangle.  When satisfied, click the Save button below the map.
-        </p>
-        <p>
-          The red dots show the location of the cameras, and partially shaded red circles around each
-          dot represent a 20 mile radius circlular region that should be visible from each camera location.
-          Actual visible area depends on terrain occlusions and atmospheric visibility conditions.
-        </p>
-        <div
-          onMouseDown={e => this.handleMouseDown(e)}
-          onMouseUp={e => this.handleMouseUp(e)}
-          onMouseMove={e => this.handleMouseMove(e)}
-        >
-          <ResizeObserver
-            onReflow={r=>this.checkImgLocation(r)}
-          />
-          <img src={hpwren20} alt="Map" draggable={false}
-            ref={e => this.saveImgRef(e)}
-          />
-          {this.state.minX && (
-            <div style={{zIndex: 10, position: 'absolute',
-              left: this.state.minX + 'px', top: this.state.minY + 'px',
-              width: this.state.width + 'px', height: this.state.height + 'px',
-              backgroundColor: 'transparent', border: '1px solid blue'}}
+        {
+          this.props.validCookie ?
+          (<div>
+            <p>
+              Mark (click and drag) a rectangle on top of the map below to select the geographical region
+              where you are interested in monitoring potential fires.  You can restart anytime by marking
+              a new rectangle.  When satisfied, click the Save button below the map.
+            </p>
+            <p>
+              The red dots show the location of the cameras, and partially shaded red circles around each
+              dot represent a 20 mile radius circlular region that should be visible from each camera location.
+              Actual visible area depends on terrain occlusions and atmospheric visibility conditions.
+            </p>
+            <div
+              onMouseDown={e => this.handleMouseDown(e)}
+              onMouseUp={e => this.handleMouseUp(e)}
+              onMouseMove={e => this.handleMouseMove(e)}
             >
+              <ResizeObserver
+                onReflow={r=>this.checkImgLocation(r)}
+              />
+              <img src={hpwren20} alt="Map" draggable={false}
+                ref={e => this.saveImgRef(e)}
+              />
+              {this.state.minX && (
+                <div style={{zIndex: 10, position: 'absolute',
+                  left: this.state.minX + 'px', top: this.state.minY + 'px',
+                  width: this.state.width + 'px', height: this.state.height + 'px',
+                  backgroundColor: 'transparent', border: '1px solid blue'}}
+                >
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        {
-          (this.state.minX ?
-            <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.saveRegion()}>
-              Save selected region
+            {
+              (this.state.minX ?
+                <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.saveRegion()}>
+                  Save selected region
+                </button>
+              :
+                <button className="w3-button w3-border w3-round-large w3-black w3-disabled">
+                  Save selected region
+                </button>
+              )
+            }
+            {
+              ((this.state.existingRegion && this.state.existingRegion.topLat) ?
+                <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.showRegion(this.state.existingRegion)}>
+                  Restore saved region
+                </button>
+              :
+                <button className="w3-button w3-border w3-round-large w3-black w3-disabled">
+                  Restore saved region
+                </button>
+              )
+            }
+            <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.removeSelection()}>
+              Remove selection
             </button>
+          </div>)
           :
-            <button className="w3-button w3-border w3-round-large w3-black w3-disabled">
-              Save selected region
-            </button>
-          )
+          (<p>
+              Sign in above to store your preferred area.
+          </p>)
         }
-        {
-          ((this.state.existingRegion && this.state.existingRegion.topLat) ?
-            <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.showRegion(this.state.existingRegion)}>
-              Restore saved region
-            </button>
-          :
-            <button className="w3-button w3-border w3-round-large w3-black w3-disabled">
-              Restore saved region
-            </button>
-          )
-        }
-        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.removeSelection()}>
-          Remove selection
-        </button>
       </div>
     );
   }
