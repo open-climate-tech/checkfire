@@ -121,7 +121,14 @@ async function getUserVotes(db, cameraID, timestamp, email) {
 async function getUserRegion(db, userID) {
   let sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
-  return dbRes[0] || {};
+  const region = {};
+  if (dbRes[0] && dbRes[0].toplat) {
+    region.topLat = dbRes[0].toplat;
+    region.leftLong = dbRes[0].leftlong;
+    region.bottomLat = dbRes[0].bottomlat;
+    region.rightLong = dbRes[0].rightlong;
+  }
+  return region;
 }
 
 exports.retryWrap = retryWrap;

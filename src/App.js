@@ -28,7 +28,7 @@ import {
 import './App.css';
 import VoteFires from './VoteFires';
 import ConfirmedFires from './ConfirmedFires';
-import ChooseCameras from './ChooseCameras';
+import ChooseArea from './ChooseArea';
 import Prototypes from './Prototypes';
 
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
@@ -49,7 +49,7 @@ function FirePagesHeader(props) {
         <Link to='/confirmed'>Confirmed fires</Link>
       </div>
       <div className="w3-col s3 w3-button w3-block">
-        <Link to='/chooseCameras'>Choose cameras</Link>
+        <Link to='/chooseArea'>Choose area</Link>
       </div>
       <div className="w3-col s3 w3-block">
         {props.validCookie ?
@@ -143,7 +143,7 @@ class App extends Component {
           <Switch>
             <Route path="/prototypes" exact component={Prototypes} />
             <Route path="/confirmed" exact component={ConfirmedFires} />
-            <Route path="/chooseCameras" exact component={ChooseCameras} />
+            <Route path="/chooseArea" exact component={ChooseArea} />
             <Route path="/"
                    render={props =>
                      <VoteFires {...props}

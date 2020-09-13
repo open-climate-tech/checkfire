@@ -237,7 +237,7 @@ function initApis(config, app, db) {
       let sqlStr;
       if ((req.body.topLat === 1) && (req.body.leftLong === 1) && (req.body.bottomLat === 1) && (req.body.rightLong === 1)) {
         sqlStr = `delete from user_preferences where userid='${decoded.email}'`;
-      } else if (userRegion && userRegion.toplat) {
+      } else if (userRegion && userRegion.topLat) {
         sqlStr = `update user_preferences set toplat=${req.body.topLat}, leftlong=${req.body.leftLong},
           bottomlat=${req.body.bottomLat}, rightlong=${req.body.rightLong}
           where userid='${decoded.email}'`;
