@@ -75,8 +75,17 @@ async function getCameraInfo(db, cameraID) {
  */
 async function sendEvent(messageJson, connectionInfo, db) {
   messageJson.version = SSE_INTERFACE_VERSION;
+
+  // add camera metadata
   const camInfo = await getCameraInfo(db, messageJson.cameraID);
   messageJson.camInfo = camInfo;
+
+  // parse polygon
+  if (messageJson.polygon) {
+    messageJson.polygon = JSON.parse(messageJson.polygon);
+  }
+
+  // add user votes (if any)
   if (connectionInfo.email) {
     const existingVotesByUser = await oct_utils.getUserVotes(db, messageJson.cameraID, messageJson.timestamp, connectionInfo.email);
     // console.log('sendEvent existingVotesByUser %s', JSON.stringify(existingVotesByUser));
@@ -123,7 +132,8 @@ async function checkConnectionToRestore(request, connectionInfo, db) {
       "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
       "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid,
       "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid,
-      "mapUrl": potFireEvent.MapID || potFireEvent.mapid
+      "mapUrl": potFireEvent.MapID || potFireEvent.mapid,
+      "polygon": potFireEvent.polygon
     }, connectionInfo, db);
   });
 }

@@ -59,3 +59,9 @@ export async function serverPost(serverUrl, body) {
   const resp = await fetch(serverUrl, postParams);
   return await resp.text();
 }
+
+export async function getUserRegion() {
+  const serverUrl = getServerUrl('/api/getRegion');
+  const resp = await serverGet(serverUrl);
+  return await resp.json();
+}

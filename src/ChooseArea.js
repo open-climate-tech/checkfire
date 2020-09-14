@@ -20,7 +20,7 @@
 import React, { Component } from "react";
 import ResizeObserver from 'react-resize-observer';
 
-import {getServerUrl, serverGet, serverPost} from './OctReactUtils';
+import {getServerUrl, serverGet, serverPost, getUserRegion} from './OctReactUtils';
 import hpwren20 from './hpw-20.jpg';
 const mapTopLat = 34.89;
 const mapLeftLong = -120.53;
@@ -39,9 +39,7 @@ class ChooseArea extends Component {
 
   async componentDidMount() {
     // Load and display any earlier saved region from backend
-    const serverUrl = getServerUrl('/api/getRegion');
-    const resp = await serverGet(serverUrl);
-    const existingRegion = await resp.json();
+    const existingRegion = await getUserRegion();
     this.setState({existingRegion: existingRegion});
     if (!this.state.startX && !this.state.minX) {
       this.showRegion(existingRegion);
