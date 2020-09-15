@@ -20,7 +20,7 @@
 import React, { Component } from "react";
 import ResizeObserver from 'react-resize-observer';
 
-import {getServerUrl, serverGet, serverPost, getUserRegion} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserRegion} from './OctReactUtils';
 import hpwren20 from './hpw-20.jpg';
 const mapTopLat = 34.89;
 const mapLeftLong = -120.53;
@@ -95,7 +95,7 @@ class ChooseArea extends Component {
       this.imgTop = top;
       this.imgRight = right;
       this.imgBottom = bottom;
-      console.log('img l,t,r,b', left, top, right, bottom);
+      // console.log('img l,t,r,b', left, top, right, bottom);
     }
   }
 
