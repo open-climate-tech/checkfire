@@ -41,6 +41,9 @@ async function initServices(app, done) {
   const updateFromDetect = sse.initSSE(config, app, db);
   await pubsub.initPubSub(config, updateFromDetect);
   detectMgr.initMgr(config);
+
+  // redirects
+  app.get('/chooseArea', (req,res) => {res.redirect('/wildfirecheck?redirect=/chooseArea');});
   done();
 }
 

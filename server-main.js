@@ -36,7 +36,9 @@ app.use(function (req, res, next) {
   logger.info('request Headers: %s', JSON.stringify(req.headers));
   if (process.env.NODE_ENV === 'development') {
     // Permissive CORS to allow for testing with server on differnt port
-    res.setHeader("Access-Control-Allow-Origin", req.header('origin'));
+    if (req.header('origin')) {
+      res.setHeader("Access-Control-Allow-Origin", req.header('origin'));
+    }
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Headers","origin, content-type, accept");
   }
@@ -59,6 +61,7 @@ app.use(function(req, res, next) {
 app.use('/', express.static(path.join(__dirname, 'webroot')));
 // react app for /wildfirecheck
 app.use('/wildfirecheck', express.static(path.join(__dirname, 'build')));
+app.use('/static', express.static(path.join(__dirname, 'build/static')));
 
 // initialize dyanmic services
 services.initServices(app, () => {
