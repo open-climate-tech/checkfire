@@ -108,6 +108,7 @@ class VoteFires extends Component {
     super(props);
     this.state = {
       potentialFires: [],
+      hoursLimit: (process.env.NODE_ENV === 'development') ? 9999 : 5, // 5 hours
     };
     this.sseVersion = null;
   }
@@ -244,8 +245,11 @@ class VoteFires extends Component {
       return;
     }
 
-    // now insert new fires at right timeslot
+    // now insert new fires at right timeslot and remove old fires
+    const nowSeconds = Math.round(new Date().valueOf()/1000);
+    const earliestTimestamp = nowSeconds - 3600*this.state.hoursLimit;
     const updatedFires = [parsed].concat(this.state.potentialFires)
+      .filter(f => f.timestamp > earliestTimestamp)
       .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
 
@@ -314,13 +318,15 @@ class VoteFires extends Component {
             </p>
         }
         {
-          this.state.potentialFires.map(potFire =>
-            <FirePreview key={potFire.annotatedUrl}
-             potFire={potFire} validCookie={this.props.validCookie}
-             onVote={(f,v) => this.vote(f,v)}
-             signin={this.props.signin}
-            />
-          )
+          this.state.potentialFires.length ?
+            this.state.potentialFires.map(potFire =>
+              <FirePreview key={potFire.annotatedUrl}
+              potFire={potFire} validCookie={this.props.validCookie}
+              onVote={(f,v) => this.vote(f,v)}
+              signin={this.props.signin}
+              />)
+          :
+            <p>No fire starts detected in last {this.state.hoursLimit} hours.</p>
         }
       </div>
     );
