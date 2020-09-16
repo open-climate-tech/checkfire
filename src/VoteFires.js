@@ -109,7 +109,6 @@ class VoteFires extends Component {
     this.state = {
       potentialFires: [],
       hoursLimit: 2, // 2 hours
-      earliestTimestamp: 0,
       numRecentFires: 0,
       numOldFires: 0,
       showOldFires: false,
@@ -118,6 +117,7 @@ class VoteFires extends Component {
   }
 
   componentDidMount() {
+    // setup SSE connection with backend to get updates on new detections
     const sseConfig = {};
     if (process.env.NODE_ENV === 'development') {
       sseConfig.withCredentials = true; //send cookies to dev server on separate port
@@ -132,6 +132,7 @@ class VoteFires extends Component {
       this.stopUpdates(e)
     );
 
+    // filter potential fires with user specified region of interest
     getUserRegion().then(userRegion => {
       // console.log('userRegion', userRegion);
       this.setState({userRegion: userRegion});
@@ -143,6 +144,11 @@ class VoteFires extends Component {
         }
       }
     });
+
+    // update recent vs. old fires periodically
+    setInterval(() => {
+      this.updateRecentCounts(this.state.potentialFires);
+    }, 30 * 60 * 1000); // check every 30 minutes (long period to reduce energy usage and we don't need high precision)
   }
 
   stopUpdates(e) {
@@ -255,18 +261,24 @@ class VoteFires extends Component {
     }
 
     // now insert new fires at right timeslot and remove old fires
-    const nowSeconds = Math.round(new Date().valueOf()/1000);
-    const earliestTimestamp = nowSeconds - 3600*this.state.hoursLimit;
     const updatedFires = [parsed].concat(this.state.potentialFires)
       .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
 
     this.setState({
       potentialFires: updatedFires,
-      earliestTimestamp: earliestTimestamp,
-      numRecentFires: updatedFires.filter(f => f.timestamp >= earliestTimestamp).length,
-      numOldFires: updatedFires.filter(f => f.timestamp < earliestTimestamp).length
     });
+    this.updateRecentCounts(updatedFires);
+  }
+
+  updateRecentCounts(potentialFires) {
+    const nowSeconds = Math.round(new Date().valueOf()/1000);
+    const earliestTimestamp = nowSeconds - 3600*this.state.hoursLimit;
+    const newState = {
+      numRecentFires: potentialFires.filter(f => f.timestamp >= earliestTimestamp).length,
+      numOldFires: potentialFires.filter(f => f.timestamp < earliestTimestamp).length
+    };
+    this.setState(newState);
   }
 
   toggleOldFires() {
@@ -303,7 +315,8 @@ class VoteFires extends Component {
           Potential fires
         </h1>
         <h5>
-          There's no need to reload this page because it automatically updates to display newly detected fires.
+          There's no need to refresh this page to see new fires because it automatically updates to display new detections.
+          The real-time detection is only active between 8AM and 8PM California time.
         </h5>
         <p>
           This page shows recent potential fires as detected by the automated system.
@@ -334,7 +347,7 @@ class VoteFires extends Component {
         }
         {
           (this.state.numRecentFires > 0) ?
-            this.state.potentialFires.filter(f => f.timestamp >= this.state.earliestTimestamp).map(potFire =>
+            this.state.potentialFires.slice(0, this.state.numRecentFires).map(potFire =>
               <FirePreview key={potFire.annotatedUrl}
               potFire={potFire} validCookie={this.props.validCookie}
               onVote={(f,v) => this.vote(f,v)}
@@ -354,7 +367,7 @@ class VoteFires extends Component {
                 Potential fires older than {this.state.hoursLimit} hours
               </p>
               {
-                this.state.potentialFires.filter(f => f.timestamp < this.state.earliestTimestamp).map(potFire =>
+                this.state.potentialFires.slice(this.state.numRecentFires).map(potFire =>
                   <FirePreview key={potFire.annotatedUrl}
                   potFire={potFire} validCookie={this.props.validCookie}
                   onVote={(f,v) => this.vote(f,v)}

@@ -71,9 +71,6 @@ function FirePagesHeader(props) {
     </div>
     <header className="Disclaimer">
       <p>
-        This site detects fires from real-time images between 8AM and 8PM California time.
-      </p>
-      <p>
         Please note that this site does not alert the fire authorities directly.
         If you discover a real fire that recently ignited,
         consider informing the fire department to take appropriate action.
