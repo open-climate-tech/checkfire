@@ -213,6 +213,7 @@ class ChooseArea extends Component {
                 </div>
               )}
             </div>
+            <div className="w3-padding"></div>
             {
               (this.state.minX ?
                 <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.saveRegion()}>
@@ -238,6 +239,7 @@ class ChooseArea extends Component {
             <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.removeSelection()}>
               Remove selection
             </button>
+            <div className="w3-padding"></div>
           </div>)
           :
           (<p>

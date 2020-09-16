@@ -108,7 +108,11 @@ class VoteFires extends Component {
     super(props);
     this.state = {
       potentialFires: [],
-      hoursLimit: (process.env.NODE_ENV === 'development') ? 9999 : 5, // 5 hours
+      hoursLimit: 2, // 2 hours
+      earliestTimestamp: 0,
+      numRecentFires: 0,
+      numOldFires: 0,
+      showOldFires: false,
     };
     this.sseVersion = null;
   }
@@ -139,6 +143,11 @@ class VoteFires extends Component {
         }
       }
     });
+  }
+
+  stopUpdates(e) {
+    console.log('stopUpdates', e);
+    this.eventSource.close();
   }
 
   componentWillUnmount() {
@@ -249,16 +258,19 @@ class VoteFires extends Component {
     const nowSeconds = Math.round(new Date().valueOf()/1000);
     const earliestTimestamp = nowSeconds - 3600*this.state.hoursLimit;
     const updatedFires = [parsed].concat(this.state.potentialFires)
-      .filter(f => f.timestamp > earliestTimestamp)
       .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
 
-    this.setState({potentialFires: updatedFires});
+    this.setState({
+      potentialFires: updatedFires,
+      earliestTimestamp: earliestTimestamp,
+      numRecentFires: updatedFires.filter(f => f.timestamp >= earliestTimestamp).length,
+      numOldFires: updatedFires.filter(f => f.timestamp < earliestTimestamp).length
+    });
   }
 
-  stopUpdates(e) {
-    console.log('stopUpdates', e);
-    this.eventSource.close();
+  toggleOldFires() {
+    this.setState({showOldFires: !this.state.showOldFires});
   }
 
   async vote(potFire, isRealFire) {
@@ -290,6 +302,9 @@ class VoteFires extends Component {
         <h1 className="w3-padding-32 w3-row-padding" id="projects">
           Potential fires
         </h1>
+        <h5>
+          There's no need to reload this page because it automatically updates to display newly detected fires.
+        </h5>
         <p>
           This page shows recent potential fires as detected by the automated system.
           Each potential fire event displays a five minute time-lapse video of portion of the camera image
@@ -305,10 +320,10 @@ class VoteFires extends Component {
         </p>
         {
           (this.state.userRegion && this.state.userRegion.topLat) ?
-            <p>
+            <h5>
               Only potential fires in selected region are being shown.  To see potential fires across all
               cameras, remove the selection in the <Link to='/chooseArea'>Choose area</Link> page.
-            </p>
+            </h5>
           :
             <p>
               Signed-in users can specify their region of interest on the&nbsp;
@@ -318,8 +333,8 @@ class VoteFires extends Component {
             </p>
         }
         {
-          this.state.potentialFires.length ?
-            this.state.potentialFires.map(potFire =>
+          (this.state.numRecentFires > 0) ?
+            this.state.potentialFires.filter(f => f.timestamp >= this.state.earliestTimestamp).map(potFire =>
               <FirePreview key={potFire.annotatedUrl}
               potFire={potFire} validCookie={this.props.validCookie}
               onVote={(f,v) => this.vote(f,v)}
@@ -327,6 +342,28 @@ class VoteFires extends Component {
               />)
           :
             <p>No fire starts detected in last {this.state.hoursLimit} hours.</p>
+        }
+        {(this.state.numOldFires > 0) &&
+          (<div>
+            <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.toggleOldFires()}>
+              {this.state.showOldFires ? 'Hide old fires' : 'Show old fires'}
+            </button>
+            <div className="w3-padding">
+            </div>
+            {this.state.showOldFires && (<div>
+              <p>
+                Potential fires older than {this.state.hoursLimit} hours
+              </p>
+              {
+                this.state.potentialFires.filter(f => f.timestamp < this.state.earliestTimestamp).map(potFire =>
+                  <FirePreview key={potFire.annotatedUrl}
+                  potFire={potFire} validCookie={this.props.validCookie}
+                  onVote={(f,v) => this.vote(f,v)}
+                  signin={this.props.signin}
+                  />)
+              }
+            </div>)}
+          </div>)
         }
       </div>
     );
