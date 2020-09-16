@@ -32,8 +32,9 @@ const app = express();
 
 // Setup express middle-ware to log requests and allow CORS for dev environments
 app.use(function (req, res, next) {
-  logger.info('URL: %s', req.originalUrl || req.url);
-  logger.info('request Headers: %s', JSON.stringify(req.headers));
+  const headers = Object.assign({}, req.headers);
+  headers.url = req.originalUrl || req.url;
+  logger.info('request Headers: %s', JSON.stringify(headers));
   if (process.env.NODE_ENV === 'development') {
     // Permissive CORS to allow for testing with server on differnt port
     if (req.header('origin')) {
