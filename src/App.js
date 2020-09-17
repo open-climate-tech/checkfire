@@ -43,11 +43,11 @@ function FirePagesHeader(props) {
   return (<div>
     <div className="w3-bar w3-wide w3-padding w3-card">
       <div className="w3-col s3 w3-button w3-block">
-        <Link to='/'>Potential fires</Link>
+        <Link to='/wildfirecheck'>Potential fires</Link>
       </div>
-      {/* <div className="w3-col s3 w3-button w3-block">
+      <div className="w3-col s3 w3-button w3-block">
         <Link to='/confirmed'>Confirmed fires</Link>
-      </div> */}
+      </div>
       <div className="w3-col s3 w3-button w3-block">
         {props.validCookie ?
           <Link to='/chooseArea'>Choose area</Link>
@@ -117,7 +117,7 @@ class App extends Component {
     const serverUrl = getServerUrl('/api/oauthUrl?path=' + encodeURIComponent(window.location.pathname));
     const oauthUrlResp = await serverGet(serverUrl);
     this.oauthUrl = await oauthUrlResp.text();
-    console.log('got url', this.oauthUrl);
+    // console.log('oauth url', this.oauthUrl);
   }
 
   async signin() {
@@ -146,10 +146,11 @@ class App extends Component {
           <FirePagesHeader validCookie={this.state.validCookie} signin={()=> this.signin()}/>
           <Switch>
             <Route path="/prototypes" exact component={Prototypes} />
-            <Route path="/confirmed" exact component={ConfirmedFires} />
+            <Route path="/confirmed" exact render={props =>
+                    <ConfirmedFires {...props} />} />
             <Route path="/chooseArea" exact render={props =>
                     <ChooseArea {...props} validCookie={this.state.validCookie} />} />
-           <Route path="/" render={props =>
+           <Route path={["/", "/wildfirecheck"]} render={props =>
                     <VoteFires {...props} validCookie={this.state.validCookie}
                       signin={() => this.signin()} invalidateCookie={() => this.invalidateCookie()} />} />
           </Switch>

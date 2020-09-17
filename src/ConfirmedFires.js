@@ -18,22 +18,56 @@
 // Confirmed Fires
 
 import React, { Component } from "react";
+import {Link} from "react-router-dom";
+import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
+
+/**
+ * Show voting stats
+ * @param {*} props
+ */
+export function VoteStats(props) {
+  return (
+    <div>
+      {Math.round(props.potFire.avgVote * 100)} % votes for real fire
+    </div>
+  );
+}
 
 class ConfirmedFires extends Component {
-  // select vt.cameraname, vt.timestamp, alerts.adjscore, alerts.imageid, alerts.croppedid from
-  //       (select distinct cameraname,timestamp from votes where isrealfire=1 order by timestamp desc limit 20) as vt
-  //       inner join alerts
-  //       on vt.cameraname=alerts.cameraname and vt.timestamp=alerts.timestamp
-  //       order by vt.timestamp desc limit 20;
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
+  async componentDidMount() {
+    const serverUrl = getServerUrl('/api/confirmedFires');
+    const resp = await serverGet(serverUrl);
+    const confirmedFires = await resp.json();
+    this.setState({confirmedFires: confirmedFires});
+  }
+
   render() {
     return (
       <div>
-        <h1>
-        Confirmed Fires
+        <h1 className="w3-padding-32 w3-row-padding">
+          Confirmed Fires
         </h1>
         <p>
-          Show potential fires that have been confirmed by some users
+          This page shows recent potential fires that have been confirmed by majority of the voting users.
+          There is an inherent delay in waiting for someone to vote and confirm a fire, so this page will never
+          display events as quickly as the <Link to='/wildfirecheck'>Potential Fires</Link> page.
+          This page also does not check potential fire locations against the your preferred region of interest,
+          but instead shows fires from all cameras.
+          Finally, this page also does does not automatically refresh on new detections.
+          Therefore, it is not suitable for monitoring for earliest notification of potential fires.
+          This page is intended for demonstrating the capability of the system.
         </p>
+        {
+          this.state.confirmedFires && this.state.confirmedFires.map(potFire =>
+            <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+              childComponent={<VoteStats potFire={potFire} />}
+            />)
+        }
       </div>
     );
   }

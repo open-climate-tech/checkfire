@@ -22,7 +22,7 @@ import {Link} from "react-router-dom";
 
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
-import {getServerUrl, serverPost, getUserRegion} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserRegion, FirePreview} from './OctReactUtils';
 
 /**
  * Show voting buttons (yes/no), or already cast vote, or signin button
@@ -62,45 +62,6 @@ function VoteButtons(props) {
     </div>
     );
   }
-}
-
-/**
- * Show preview of the potential fire along with voting buttons
- * @param {*} props
- */
-function FirePreview(props) {
-  return (
-    <div key={props.potFire.annotatedUrl} data-testid="FireListElement">
-      <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
-        <h5>
-          {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
-          {props.potFire.camInfo.cameraName} camera
-          {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
-          &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)}
-          &nbsp;(
-          <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
-          )
-        </h5>
-        <div className="w3-col m8">
-          <video controls autoPlay muted loop width="800" height="600" poster={props.potFire.croppedUrl}>
-            <source src={props.potFire.croppedUrl} type="video/mp4" />
-            Your browser does not support the video tag
-          </video>
-        </div>
-        <div className="w3-col m4">
-          <VoteButtons validCookie={props.validCookie} potFire={props.potFire}
-            onVote={props.onVote}
-            signin={props.signin}
-           />
-          <div className="w3-padding-32">
-            <p>View area</p>
-            <img width="320" height="320" src={props.potFire.mapUrl} alt="Viewshed" />
-          </div>
-        </div>
-      </div>
-      &nbsp;
-    </div>
-  );
 }
 
 class VoteFires extends Component {
@@ -311,7 +272,7 @@ class VoteFires extends Component {
   render() {
     return (
       <div>
-        <h1 className="w3-padding-32 w3-row-padding" id="projects">
+        <h1 className="w3-padding-32 w3-row-padding">
           Potential fires
         </h1>
         <h5>
@@ -368,10 +329,9 @@ class VoteFires extends Component {
               </p>
               {
                 this.state.potentialFires.slice(this.state.numRecentFires).map(potFire =>
-                  <FirePreview key={potFire.annotatedUrl}
-                  potFire={potFire} validCookie={this.props.validCookie}
-                  onVote={(f,v) => this.vote(f,v)}
-                  signin={this.props.signin}
+                  <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+                    childComponent={<VoteButtons validCookie={this.props.validCookie} potFire={potFire}
+                                      onVote={(f,v) => this.vote(f,v)} signin={this.props.signin} />}
                   />)
               }
             </div>)}

@@ -17,6 +17,8 @@
 
 // Utility functions for react code
 
+import React from "react";
+
 /**
  * Return the full URL for UI backend for given route
  * @param {string} path 
@@ -64,4 +66,40 @@ export async function getUserRegion() {
   const serverUrl = getServerUrl('/api/getRegion');
   const resp = await serverGet(serverUrl);
   return await resp.json();
+}
+
+/**
+ * Show preview of the potential fire along with caller specified childComponent
+ * @param {*} props
+ */
+export function FirePreview(props) {
+  return (
+    <div key={props.potFire.annotatedUrl} data-testid="FireListElement">
+      <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+        <h5>
+          {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
+          {props.potFire.camInfo.cameraName} camera
+          {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
+          &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)}
+          &nbsp;(
+          <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
+          )
+        </h5>
+        <div className="w3-col m8">
+          <video controls autoPlay muted loop width="800" height="600" poster={props.potFire.croppedUrl}>
+            <source src={props.potFire.croppedUrl} type="video/mp4" />
+            Your browser does not support the video tag
+          </video>
+        </div>
+        <div className="w3-col m4">
+          {props.childComponent}
+          <div className="w3-padding-32">
+            <p>View area</p>
+            <img width="320" height="320" src={props.potFire.mapUrl} alt="Viewshed" />
+          </div>
+        </div>
+      </div>
+      &nbsp;
+    </div>
+  );
 }
