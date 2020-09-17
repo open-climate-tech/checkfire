@@ -119,7 +119,7 @@ async function getUserVotes(db, cameraID, timestamp, email) {
  * @param {string} userID
  */
 async function getUserRegion(db, userID) {
-  let sqlStr = `select * from user_preferences where userid='${userID}'`;
+  const sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   const region = {};
   if (dbRes[0] && dbRes[0].toplat) {
@@ -131,9 +131,82 @@ async function getUserRegion(db, userID) {
   return region;
 }
 
+/**
+ * Get information about camera (name, direction) from the cameraID
+ * @param {db_mgr} db
+ * @param {string} cameraID
+ */
+async function getCameraInfo(db, cameraID) {
+  const camInfo = {
+    cameraName: cameraID,
+    cameraDir: ''
+  };
+
+  // query DB to get human name
+  const sqlStr = `select name from cameras where cameraids like '%${cameraID}%'`
+  const camNameRes = await db.query(sqlStr);
+  if (camNameRes && (camNameRes.length > 0)) {
+    camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name
+  }
+
+  // use mapping table to get human direction
+  const cardinalHeadings = {
+    'n': [0, 'North'],
+    'e': [90, 'East'],
+    's': [180, 'South'],
+    'w': [270, 'West'],
+    'ne': [45, 'Northeast'],
+    'se': [135, 'Southeast'],
+    'sw': [225, 'Southwest'],
+    'nw': [315, 'Northwest'],
+  }
+  const regexMobo = /-([ns]?[ew]?)-mobo-c/;
+  const parsed = regexMobo.exec(cameraID);
+  if (parsed && Array.isArray(parsed)) {
+    const camDirAbbr = parsed[1];
+    camInfo.cameraDir = cardinalHeadings[camDirAbbr] ? cardinalHeadings[camDirAbbr][1] : camDirAbbr;
+  }
+  // logger.info('Camera namemap (%s -> %s,%s)', cameraID, camInfo.cameraName, camInfo.cameraDir);
+  return camInfo;
+}
+
+async function augmentCameraPolygonVotes(db, potFire, userID) {
+  // add camera metadata
+  const camInfo = await getCameraInfo(db, potFire.cameraID);
+  potFire.camInfo = camInfo;
+
+  // parse polygon
+  if (potFire.polygon && (typeof(potFire.polygon) === 'string')) {
+    potFire.polygon = JSON.parse(potFire.polygon);
+  }
+
+  if (userID) {
+    const existingVotesByUser = await getUserVotes(db, potFire.cameraID, potFire.timestamp, userID);
+    if (existingVotesByUser && (existingVotesByUser.length > 0)) {
+      const isRealFire = existingVotesByUser[0]['IsRealFire'] || existingVotesByUser[0]['isrealfire'];
+      potFire.voted = !!isRealFire;
+    }
+  }
+  return potFire;
+}
+
+function dbAlertToUiObj(dbEvent) {
+  return {
+    "timestamp": dbEvent.Timestamp || dbEvent.timestamp,
+    "cameraID": dbEvent.CameraName || dbEvent.cameraname,
+    "adjScore": dbEvent.AdjScore || dbEvent.adjscore,
+    "annotatedUrl": dbEvent.ImageID || dbEvent.imageid,
+    "croppedUrl": dbEvent.CroppedID || dbEvent.croppedid,
+    "mapUrl": dbEvent.MapID || dbEvent.mapid,
+    "polygon": dbEvent.polygon
+  }
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
 exports.checkAuth = checkAuth;
 exports.getUserVotes = getUserVotes;
 exports.getUserRegion = getUserRegion;
+exports.augmentCameraPolygonVotes = augmentCameraPolygonVotes;
+exports.dbAlertToUiObj = dbAlertToUiObj;

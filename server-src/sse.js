@@ -29,45 +29,6 @@ const SSE_INTERFACE_VERSION = 4;
 var connections = [];
 
 /**
- * Get information about camera (name, direction) from the cameraID
- * @param {db_mgr} db
- * @param {string} cameraID
- */
-async function getCameraInfo(db, cameraID) {
-  const camInfo = {
-    cameraName: cameraID,
-    cameraDir: ''
-  };
-
-  // query DB to get human name
-  const sqlStr = `select name from cameras where cameraids like '%${cameraID}%'`
-  const camNameRes = await db.query(sqlStr);
-  if (camNameRes && (camNameRes.length > 0)) {
-    camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name
-  }
-
-  // use mapping table to get human direction
-  const cardinalHeadings = {
-    'n': [0, 'North'],
-    'e': [90, 'East'],
-    's': [180, 'South'],
-    'w': [270, 'West'],
-    'ne': [45, 'Northeast'],
-    'se': [135, 'Southeast'],
-    'sw': [225, 'Southwest'],
-    'nw': [315, 'Northwest'],
-  }
-  const regexMobo = /-([ns]?[ew]?)-mobo-c/;
-  const parsed = regexMobo.exec(cameraID);
-  if (parsed && Array.isArray(parsed)) {
-    const camDirAbbr = parsed[1];
-    camInfo.cameraDir = cardinalHeadings[camDirAbbr] ? cardinalHeadings[camDirAbbr][1] : camDirAbbr;
-  }
-  // logger.info('Camera namemap (%s -> %s,%s)', cameraID, camInfo.cameraName, camInfo.cameraDir);
-  return camInfo;
-}
-
-/**
  * Send SSE eventsource message using given client response
  * @param {object} messageJson
  * @param {*} connectionInfo
@@ -76,24 +37,8 @@ async function getCameraInfo(db, cameraID) {
 async function sendEvent(messageJson, connectionInfo, db) {
   messageJson.version = SSE_INTERFACE_VERSION;
 
-  // add camera metadata
-  const camInfo = await getCameraInfo(db, messageJson.cameraID);
-  messageJson.camInfo = camInfo;
-
-  // parse polygon
-  if (messageJson.polygon) {
-    messageJson.polygon = JSON.parse(messageJson.polygon);
-  }
-
-  // add user votes (if any)
-  if (connectionInfo.email) {
-    const existingVotesByUser = await oct_utils.getUserVotes(db, messageJson.cameraID, messageJson.timestamp, connectionInfo.email);
-    // console.log('sendEvent existingVotesByUser %s', JSON.stringify(existingVotesByUser));
-    if (existingVotesByUser && (existingVotesByUser.length > 0)) {
-      const isRealFire = existingVotesByUser[0]['IsRealFire'] || existingVotesByUser[0]['isrealfire'];
-      messageJson.voted = !!isRealFire;
-    }
-  }
+  // add detail camera info, parse polygon, and associate user votes to messageJson
+  await oct_utils.augmentCameraPolygonVotes(db, messageJson, connectionInfo.email);
 
   let eventParts = [
     'id: ' + messageJson.timestamp,
@@ -126,15 +71,7 @@ async function checkConnectionToRestore(request, connectionInfo, db) {
   const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 20`;
   const potFireEvents = await db.query(sqlStr);
   potFireEvents.reverse().forEach(potFireEvent => {
-    sendEvent({
-      "timestamp": potFireEvent.Timestamp || potFireEvent.timestamp,
-      "cameraID": potFireEvent.CameraName || potFireEvent.cameraname,
-      "adjScore": potFireEvent.AdjScore || potFireEvent.adjscore,
-      "annotatedUrl": potFireEvent.ImageID || potFireEvent.imageid,
-      "croppedUrl": potFireEvent.CroppedID || potFireEvent.croppedid,
-      "mapUrl": potFireEvent.MapID || potFireEvent.mapid,
-      "polygon": potFireEvent.polygon
-    }, connectionInfo, db);
+    sendEvent(oct_utils.dbAlertToUiObj(potFireEvent), connectionInfo, db);
   });
 }
 

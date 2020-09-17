@@ -255,6 +255,28 @@ function initApis(config, app, db) {
     }
   });
 
+  app.get('/api/confirmedFires', async (req, res) => {
+    logger.info('GET confirmedFires');
+    const nowSeconds = Math.round(new Date().valueOf()/1000);
+    const minTimestamp = nowSeconds - 3600*24*30; // check last 30 days
+    const sqlStr = `select * from
+                      (select * from
+                        (select cameraname,timestamp,avg(isrealfire) as avgrf,count(*) as ct from votes
+                          where timestamp > ${minTimestamp} group by cameraname,timestamp) as q0
+                        where avgrf > 0.49 order by timestamp desc limit 20) as vt
+                      join alerts
+                        on vt.cameraname=alerts.cameraname and vt.timestamp=alerts.timestamp
+                      order by vt.timestamp desc`;
+    const dbRes = await db.query(sqlStr);
+    const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
+      const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
+      fireEvent.avgVote = dbEntry.avgrf;
+      fireEvent.numVotes = dbEntry.ct;
+      return await oct_utils.augmentCameraPolygonVotes(db, fireEvent);
+    }));
+    res.status(200).send(fireEvents).end();
+  });
+
 }
 
 exports.initApis = initApis;
