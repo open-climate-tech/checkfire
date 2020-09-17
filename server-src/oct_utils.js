@@ -143,7 +143,7 @@ async function getCameraInfo(db, cameraID) {
   };
 
   // query DB to get human name
-  const sqlStr = `select name from cameras where cameraids like '%${cameraID}%'`
+  const sqlStr = `select name from cameras where locationID = (select locationID from sources where name='${cameraID}')`;
   const camNameRes = await db.query(sqlStr);
   if (camNameRes && (camNameRes.length > 0)) {
     camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name

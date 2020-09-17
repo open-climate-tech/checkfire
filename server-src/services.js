@@ -44,6 +44,7 @@ async function initServices(app, done) {
 
   // redirects
   app.get('/chooseArea', (req,res) => {res.redirect('/wildfirecheck?redirect=/chooseArea');});
+  app.get('/confirmed', (req,res) => {res.redirect('/wildfirecheck?redirect=/confirmed');});
   done();
 }
 
