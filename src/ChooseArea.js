@@ -21,28 +21,35 @@ import React, { Component } from "react";
 import ResizeObserver from 'react-resize-observer';
 
 import {getServerUrl, serverPost, getUserRegion} from './OctReactUtils';
-import hpwren20 from './hpw-20.jpg';
-const mapTopLat = 34.89;
-const mapLeftLong = -120.53;
-const mapBottomLat = 32.45;
-const mapRightLong = -115.75;
-const mapLongWidth = mapRightLong - mapLeftLong;
-const mapLatHeight = mapTopLat - mapBottomLat;
-const mapPixelWidth = 1762;
-const mapPixelHeight = 1080;
+import hpwren1078 from './hpwren-1078x638.jpg';
+import hpwren1290 from './hpwren-1290x762.jpg';
+import hpwren1492 from './hpwren-1492x870.jpg';
+import hpwren1762 from './hpwren-1762x1080.jpg';
+const maps = [
+  {name: hpwren1762, topLat: 34.89, leftLong: -120.53, bottomLat: 32.45, rightLong: -115.75, pixelWidth: 1762, pixelHeight: 1080},
+  {name: hpwren1492, topLat: 34.79, leftLong: -120.59, bottomLat: 32.42, rightLong: -115.72, pixelWidth: 1492, pixelHeight: 870},
+  {name: hpwren1290, topLat: 34.81, leftLong: -120.58, bottomLat: 32.43, rightLong: -115.72, pixelWidth: 1290, pixelHeight: 762},
+  {name: hpwren1078, topLat: 34.82, leftLong: -120.60, bottomLat: 32.41, rightLong: -115.72, pixelWidth: 1078, pixelHeight: 638},
+];
+maps.forEach(mapInfo => {
+  mapInfo.longWidth = mapInfo.rightLong - mapInfo.leftLong;
+  mapInfo.latHeight = mapInfo.topLat - mapInfo.bottomLat;
+});
 
 class ChooseArea extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      mapIndex: 2,
+    };
   }
 
   async componentDidMount() {
     // Load and display any earlier saved region from backend
-    const existingRegion = await getUserRegion();
-    this.setState({existingRegion: existingRegion});
+    const savedRegion = await getUserRegion();
+    this.setState({savedRegion: savedRegion});
     if (!this.state.startX && !this.state.minX) {
-      this.showRegion(existingRegion);
+      this.showRegion(savedRegion);
     }
   }
 
@@ -51,17 +58,19 @@ class ChooseArea extends Component {
    * @param {*} region
    */
   showRegion(region) {
-    if (region.topLat && this.imgElt && (typeof(this.imgLeft) === 'number')) {
-      const topLat = Math.min(Math.max(region.topLat, mapBottomLat), mapTopLat);
-      const bottomLat = Math.min(Math.max(region.bottomLat, mapBottomLat), mapTopLat);
-      const leftLong = Math.min(Math.max(region.leftLong, mapLeftLong), mapRightLong);
-      const rightLong = Math.min(Math.max(region.rightLong, mapLeftLong), mapRightLong);
+    const mapInfo = maps[this.state.mapIndex];
+    if (region && region.topLat && this.imgElt && (typeof(this.imgLeft) === 'number')) {
+      const topLat = Math.min(Math.max(region.topLat, mapInfo.bottomLat), mapInfo.topLat);
+      const bottomLat = Math.min(Math.max(region.bottomLat, mapInfo.bottomLat), mapInfo.topLat);
+      const leftLong = Math.min(Math.max(region.leftLong, mapInfo.leftLong), mapInfo.rightLong);
+      const rightLong = Math.min(Math.max(region.rightLong, mapInfo.leftLong), mapInfo.rightLong);
       const newState = {
-        minX: (leftLong - mapLeftLong)/mapLongWidth*mapPixelWidth + this.imgLeft,
-        minY: (mapTopLat - topLat)/mapLatHeight*mapPixelHeight + this.imgTop,
-        width: (rightLong - leftLong)/mapLongWidth*mapPixelWidth,
-        height: (topLat - bottomLat)/mapLatHeight*mapPixelHeight,
+        minX: (leftLong - mapInfo.leftLong)/mapInfo.longWidth*mapInfo.pixelWidth + this.imgLeft,
+        minY: (mapInfo.topLat - topLat)/mapInfo.latHeight*mapInfo.pixelHeight + this.imgTop,
+        width: (rightLong - leftLong)/mapInfo.longWidth*mapInfo.pixelWidth,
+        height: (topLat - bottomLat)/mapInfo.latHeight*mapInfo.pixelHeight,
         startX: null,
+        currentRegion: region,
       }
       this.setState(newState);
     }
@@ -96,6 +105,9 @@ class ChooseArea extends Component {
       this.imgRight = right;
       this.imgBottom = bottom;
       // console.log('img l,t,r,b', left, top, right, bottom);
+      if (this.state.currentRegion) {
+        this.showRegion(this.state.currentRegion);
+      }
     }
   }
 
@@ -137,7 +149,18 @@ class ChooseArea extends Component {
    */
   handleMouseUp(e) {
     // console.log('hm up', e.nativeEvent.pageX, e.nativeEvent.pageY);
-    this.setState({startX: null});
+    const mapInfo = maps[this.state.mapIndex];
+    const region = {};
+    region.topLat = mapInfo.topLat - (this.state.minY - this.imgTop)/mapInfo.pixelHeight*mapInfo.latHeight;
+    region.bottomLat = region.topLat - this.state.height/mapInfo.pixelHeight*mapInfo.latHeight;
+    region.leftLong = mapInfo.leftLong + (this.state.minX - this.imgLeft)/mapInfo.pixelWidth*mapInfo.longWidth;
+    region.rightLong = region.leftLong + this.state.width/mapInfo.pixelWidth*mapInfo.longWidth;
+    // TODO: ensure box is at least few miles in each dimension
+    console.log('box', region.topLat, region.leftLong, region.bottomLat, region.rightLong);
+    this.setState({
+      startX: null,
+      currentRegion: region,
+    });
   }
 
   /**
@@ -145,17 +168,12 @@ class ChooseArea extends Component {
    * make a POST call to backend to save the lat/long coordinates
    */
   async saveRegion() {
-    const region = {};
-    region.topLat = mapTopLat - (this.state.minY - this.imgTop)/mapPixelHeight*mapLatHeight;
-    region.bottomLat = region.topLat - this.state.height/mapPixelHeight*mapLatHeight;
-    region.leftLong = mapLeftLong + (this.state.minX - this.imgLeft)/mapPixelWidth*mapLongWidth;
-    region.rightLong = region.leftLong + this.state.width/mapPixelWidth*mapLongWidth;
-    console.log('box', region.topLat, region.leftLong, region.bottomLat, region.rightLong);
-    // TODO: ensure box is at least few miles in each dimension
-    const serverUrl = getServerUrl('/api/setRegion');
-    const serverRes = await serverPost(serverUrl, region);
-    console.log('post res', serverRes);
-    this.setState({existingRegion: region});
+    if (this.state.currentRegion && this.state.currentRegion.topLat) {
+      const serverUrl = getServerUrl('/api/setRegion');
+      const serverRes = await serverPost(serverUrl, this.state.currentRegion);
+      console.log('post res', serverRes);
+      this.setState({savedRegion: this.state.currentRegion});
+    }
   }
 
   /**
@@ -170,10 +188,21 @@ class ChooseArea extends Component {
     this.setState({
       startX: null,
       minX: null,
-      existingRegion: null,
+      currentRegion: null,
+      savedRegion: null,
     });
   }
 
+  zoomIn() {
+    if (this.state.mapIndex > 0) {
+      this.setState({mapIndex: this.state.mapIndex - 1});
+    }
+  }
+  zoomOut() {
+    if (this.state.mapIndex < (maps.length - 1)) {
+      this.setState({mapIndex: this.state.mapIndex + 1});
+    }
+  }
   render() {
     return (
       <div>
@@ -201,7 +230,7 @@ class ChooseArea extends Component {
               <ResizeObserver
                 onReflow={r=>this.checkImgLocation(r)}
               />
-              <img src={hpwren20} alt="Map" draggable={false}
+              <img src={maps[this.state.mapIndex].name} alt="Map" draggable={false}
                 ref={e => this.saveImgRef(e)}
               />
               {this.state.minX && (
@@ -213,32 +242,27 @@ class ChooseArea extends Component {
                 </div>
               )}
             </div>
-            <div className="w3-padding"></div>
-            {
-              (this.state.minX ?
-                <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.saveRegion()}>
-                  Save selected region
-                </button>
-              :
-                <button className="w3-button w3-border w3-round-large w3-black w3-disabled">
-                  Save selected region
-                </button>
-              )
-            }
-            {
-              ((this.state.existingRegion && this.state.existingRegion.topLat) ?
-                <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.showRegion(this.state.existingRegion)}>
-                  Restore saved region
-                </button>
-              :
-                <button className="w3-button w3-border w3-round-large w3-black w3-disabled">
-                  Restore saved region
-                </button>
-              )
-            }
-            <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.removeSelection()}>
-              Remove selection
-            </button>
+            <div className="w3-padding">
+              <button className={"w3-button w3-border w3-round-large w3-black" + ((this.state.mapIndex === 0) ? " w3-disabled" : "")}
+                onClick={()=> this.zoomIn()}>Zoom in</button>
+              <button className={"w3-button w3-border w3-round-large w3-black" + ((this.state.mapIndex === (maps.length - 1)) ? " w3-disabled" : "")}
+                onClick={()=> this.zoomOut()}>Zoom out</button>
+            </div>
+            <div className="w3-padding">
+              <button className={"w3-button w3-border w3-round-large w3-black" + (this.state.minX ? "" : " w3-disabled")}
+                onClick={()=> this.saveRegion()}>
+                Save selected region
+              </button>
+              <button className={"w3-button w3-border w3-round-large w3-black" +
+                                  ((this.state.savedRegion && this.state.savedRegion.topLat) ? "" : " w3-disabled")}
+                onClick={()=> this.showRegion(this.state.savedRegion)}>
+                Restore saved region
+              </button>
+              <button className="w3-button w3-border w3-round-large w3-black"
+                onClick={()=> this.removeSelection()}>
+                Remove selection
+              </button>
+            </div>
             <div className="w3-padding"></div>
           </div>)
           :

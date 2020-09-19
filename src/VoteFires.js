@@ -309,12 +309,11 @@ class VoteFires extends Component {
         {
           (this.state.numRecentFires > 0) ?
             this.state.potentialFires.slice(0, this.state.numRecentFires).map(potFire =>
-              <FirePreview key={potFire.annotatedUrl}
-              potFire={potFire} validCookie={this.props.validCookie}
-              onVote={(f,v) => this.vote(f,v)}
-              signin={this.props.signin}
+              <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+                childComponent={<VoteButtons validCookie={this.props.validCookie} potFire={potFire}
+                                  onVote={(f,v) => this.vote(f,v)} signin={this.props.signin} />}
               />)
-          :
+        :
             <p>No fire starts detected in last {this.state.hoursLimit} hours.</p>
         }
         {(this.state.numOldFires > 0) &&
