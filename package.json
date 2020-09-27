@@ -5,7 +5,7 @@
   "homepage": ".",
   "dependencies": {
     "@google-cloud/compute": "^1.2.0",
-    "@google-cloud/pubsub": "^1.7.0",
+    "@google-cloud/pubsub": "^1.7.3",
     "@google-cloud/storage": "^4.7.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
@@ -15,17 +15,20 @@
     "cookie-parser": "^1.4.5",
     "express": "^4.17.1",
     "googleapis": "^52.1.0",
-    "helmet": "^3.22.0",
+    "helmet": "^3.23.3",
     "js-cookie": "^2.2.1",
     "jsonwebtoken": "^8.5.1",
-    "pg": "^8.0.2",
+    "node-fetch": "^2.6.1",
+    "pg": "^8.3.3",
     "react": "^16.13.1",
+    "react-datetime-picker": "^3.0.4",
     "react-dom": "^16.13.1",
+    "react-dropdown-select": "^4.5.2",
     "react-resize-observer": "^1.1.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.3",
-    "sqlite3": "^4.1.1",
-    "winston": "^3.2.1"
+    "sqlite3": "^4.2.0",
+    "winston": "^3.3.3"
   },
   "scripts": {
     "start": "node server-main.js",
@@ -51,6 +54,6 @@
   },
   "devDependencies": {
     "chai-http": "^4.3.0",
-    "mocha": "^7.1.1"
+    "mocha": "^7.2.0"
   }
 }
