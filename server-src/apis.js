@@ -23,12 +23,14 @@ const logger = oct_utils.getLogger('api');
 const {google} = require('googleapis');
 const jwt = require("jsonwebtoken");
 const { assert } = require('chai');
-const { sql } = require('googleapis/build/src/apis/sql');
+const fetch = require('node-fetch');
 
 const scopes = [
   'email',
   // 'profile'
 ];
+
+const cameraRegex = /^[0-9a-z\-]+\-mobo-c$/;
 
 /**
  * Verify that request has a valid signed JWT cookie
@@ -84,7 +86,6 @@ function initApis(config, app, db) {
 
       // cameraID validation
       assert(typeof(req.body.cameraID) === 'string');
-      const cameraRegex = /^[0-9a-z\-]+\-mobo-c$/;
       assert(cameraRegex.test(req.body.cameraID));
 
       // timestamp validation
@@ -255,6 +256,9 @@ function initApis(config, app, db) {
     }
   });
 
+  /**
+   * Get a list of recently fires with majority positive votes along with voting stats
+   */
   app.get('/api/confirmedFires', async (req, res) => {
     logger.info('GET confirmedFires');
     const nowSeconds = Math.round(new Date().valueOf()/1000);
@@ -277,6 +281,56 @@ function initApis(config, app, db) {
     res.status(200).send(fireEvents).end();
   });
 
+  /**
+   * Get URL for image from given camera at given time.
+   * This code could work directly from the client, except browser CORS restrictions prevent fetching image archives
+   */
+  app.get('/api/fetchImage', async (req, res) => {
+    /***
+     * Parse out timestamps from HTTP directory listing of HPWREN archive "Q" directory
+     */
+    const timeFileRegex = /href="(1\d{9})\.jpg"/g;
+    function parseTimeFiles(text) {
+      const list = [];
+      let entry;
+      while (entry = timeFileRegex.exec(text)) {
+        list.push(parseInt(entry[1]));
+      }
+      return list;
+    }
+
+    logger.info('GET fetchImage');
+    let decoded;
+    try {
+      decoded = await verifyAuth(req, res, config);
+      assert(cameraRegex.test(req.query.cameraID));
+      assert(!isNaN(Date.parse(req.query.dateTime)));
+      const dateTime = new Date(req.query.dateTime);
+      const yearStr = dateTime.getFullYear().toString();
+      const monthStr = (dateTime.getMonth() + 1).toString().padStart(2,'0');
+      const dateStr = dateTime.getDate().toString().padStart(2,'0');
+      const fullDate = yearStr + monthStr + dateStr;
+      const qStr = 'Q' + Math.floor(dateTime.getHours()/3 + 1);
+      const hpwrenUrlDir = `http://c1.hpwren.ucsd.edu/archive/${req.query.cameraID}/large/${dateTime.getFullYear()}/${fullDate}/${qStr}/`;
+      logger.info('fetchImage hpwrenUrlDir %s', hpwrenUrlDir);
+      const resp = await fetch(hpwrenUrlDir);
+      const dirText = await resp.text();
+      const timeFiles = parseTimeFiles(dirText);
+      if (timeFiles.length) {
+        const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000));
+        const imageUrl = hpwrenUrlDir + closest + '.jpg';
+        logger.info('fetchImage imageUrl %s', imageUrl);
+        res.status(200).send(imageUrl).end();
+      } else {
+        res.status(404).send().end();
+      }
+    } catch (err) {
+      logger.error('fetchImage failure', err);
+      if (decoded) {
+        res.status(400).send('Bad Request').end();
+      }
+    }
+  });
 }
 
 exports.initApis = initApis;

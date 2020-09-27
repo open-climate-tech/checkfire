@@ -202,6 +202,18 @@ function dbAlertToUiObj(dbEvent) {
   }
 }
 
+/**
+ * Find the entry in allValues array that has the closest value to given desired value
+ * @param {Array<Number>} allValues
+ * @param {Number} desired
+ */
+function findClosest(allValues, desired) {
+  const closest = allValues.reduce((acc,value) =>
+      (acc.diff <= Math.abs(value - desired)) ? acc : {diff: Math.abs(value - desired), value: value},
+    {diff: Infinity, value: allValues[0]});
+  return closest.value;
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
@@ -210,3 +222,4 @@ exports.getUserVotes = getUserVotes;
 exports.getUserRegion = getUserRegion;
 exports.augmentCameraPolygonVotes = augmentCameraPolygonVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
+exports.findClosest = findClosest;
