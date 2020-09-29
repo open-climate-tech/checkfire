@@ -29,6 +29,7 @@ import './App.css';
 import VoteFires from './VoteFires';
 import ConfirmedFires from './ConfirmedFires';
 import ChooseArea from './ChooseArea';
+import LabelImage from './LabelImage';
 import Prototypes from './Prototypes';
 
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
@@ -150,7 +151,9 @@ class App extends Component {
                     <ConfirmedFires {...props} />} />
             <Route path="/chooseArea" exact render={props =>
                     <ChooseArea {...props} validCookie={this.state.validCookie} />} />
-           <Route path={["/", "/wildfirecheck"]} render={props =>
+            <Route path="/labelImage" exact render={props =>
+                    <LabelImage {...props} validCookie={this.state.validCookie} />} />
+            <Route path={["/", "/wildfirecheck"]} render={props =>
                     <VoteFires {...props} validCookie={this.state.validCookie}
                       signin={() => this.signin()} invalidateCookie={() => this.invalidateCookie()} />} />
           </Switch>
