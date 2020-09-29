@@ -37,10 +37,17 @@ const cameraRegex = /^[0-9a-z\-]+\-mobo-c$/;
  * @param {*} req
  * @param {*} res
  * @param {*} config
+ * @param {*} db
+ * @param {boolen} checkLabeler
  */
-async function verifyAuth(req, res, config) {
+async function verifyAuth(req, res, config, db=null, checkLabeler=false) {
   try {
-    return await oct_utils.checkAuth(req, config);
+    const decoded = await oct_utils.checkAuth(req, config);
+    if (checkLabeler) {
+      const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
+      assert(isLabeler);
+    }
+    return decoded;
   } catch (err) {
     console.log('jwt verify err', err);
     res.status(403).send('Forbidden').end();
@@ -282,15 +289,36 @@ function initApis(config, app, db) {
   });
 
   /**
+   * Return list of available cameras
+   */
+  app.get('/api/listCameras', async (req, res) => {
+    logger.info('GET listCameras');
+    let decoded;
+    try {
+      decoded = await verifyAuth(req, res, config, db, true);
+      const sqlStr = `select name from sources order by name`;
+      const dbRes = await db.query(sqlStr);
+      const cameraIDs = dbRes.map(dbEntry => dbEntry.name);
+      res.status(200).send(cameraIDs).end();
+    } catch (err) {
+      logger.error('listCameras failure', err);
+      if (decoded) {
+        res.status(400).send('Bad Request').end();
+      }
+    }
+  });
+
+  /**
    * Get URL for image from given camera at given time.
    * This code could work directly from the client, except browser CORS restrictions prevent fetching image archives
    */
   app.get('/api/fetchImage', async (req, res) => {
     /***
      * Parse out timestamps from HTTP directory listing of HPWREN archive "Q" directory
+     * @param {string} text
      */
-    const timeFileRegex = /href="(1\d{9})\.jpg"/g;
     function parseTimeFiles(text) {
+      const timeFileRegex = /href="(1\d{9})\.jpg"/g;
       const list = [];
       let entry;
       while (entry = timeFileRegex.exec(text)) {
@@ -299,10 +327,20 @@ function initApis(config, app, db) {
       return list;
     }
 
+    /**
+     * Get the timestamps of files in given URL of HPWREN archive directory
+     * @param {string} hpwrenUrlDir
+     */
+    async function getTimeFiles(hpwrenUrlDir) {
+      const resp = await fetch(hpwrenUrlDir);
+      const dirText = await resp.text();
+      return parseTimeFiles(dirText);
+    }
+
     logger.info('GET fetchImage');
     let decoded;
     try {
-      decoded = await verifyAuth(req, res, config);
+      decoded = await verifyAuth(req, res, config, db, true);
       assert(cameraRegex.test(req.query.cameraID));
       assert(!isNaN(Date.parse(req.query.dateTime)));
       const dateTime = new Date(req.query.dateTime);
@@ -311,21 +349,60 @@ function initApis(config, app, db) {
       const dateStr = dateTime.getDate().toString().padStart(2,'0');
       const fullDate = yearStr + monthStr + dateStr;
       const qStr = 'Q' + Math.floor(dateTime.getHours()/3 + 1);
-      const hpwrenUrlDir = `http://c1.hpwren.ucsd.edu/archive/${req.query.cameraID}/large/${dateTime.getFullYear()}/${fullDate}/${qStr}/`;
+      let hpwrenUrlDir = `http://c1.hpwren.ucsd.edu/archive/${req.query.cameraID}/large/${dateTime.getFullYear()}/${fullDate}/${qStr}/`;
       logger.info('fetchImage hpwrenUrlDir %s', hpwrenUrlDir);
-      const resp = await fetch(hpwrenUrlDir);
-      const dirText = await resp.text();
-      const timeFiles = parseTimeFiles(dirText);
+      let timeFiles = await getTimeFiles(hpwrenUrlDir);
+      if (!timeFiles.length) { // retry without year directory
+        hpwrenUrlDir = `http://c1.hpwren.ucsd.edu/archive/${req.query.cameraID}/large/${fullDate}/${qStr}/`;
+        logger.info('fetchImage retry hpwrenUrlDir %s', hpwrenUrlDir);
+        timeFiles = await getTimeFiles(hpwrenUrlDir);
+      }
+      const result = {};
       if (timeFiles.length) {
         const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000));
+        const closestDate = new Date(closest*1000);
         const imageUrl = hpwrenUrlDir + closest + '.jpg';
         logger.info('fetchImage imageUrl %s', imageUrl);
-        res.status(200).send(imageUrl).end();
-      } else {
-        res.status(404).send().end();
+        result.imageUrl = imageUrl;
+        result.imageTime = closestDate.toISOString();
+        result.imageName = req.query.cameraID + '__' + yearStr + '-' + monthStr + '-' + dateStr + 'T' +
+          closestDate.getHours().toString().padStart(2,'0') + ';' +
+          closestDate.getMinutes().toString().padStart(2,'0') + ';' +
+          closestDate.getSeconds().toString().padStart(2,'0') + '.jpg';
       }
+      res.status(200).send(JSON.stringify(result)).end();
     } catch (err) {
       logger.error('fetchImage failure', err);
+      if (decoded) {
+        res.status(400).send('Bad Request').end();
+      }
+    }
+  });
+
+  /**
+   * Save the given bounding box for the given image
+   */
+  app.post('/api/setBbox', async (req, res) => {
+    logger.info('POST setBbox');
+    let decoded;
+    try {
+      decoded = await verifyAuth(req, res, config, db, true);
+      assert(req.body.fileName && req.body.minX && req.body.minY && req.body.maxX && req.body.maxY);
+      assert(typeof(req.body.fileName) === 'string');
+      assert(typeof(req.body.notes) === 'string');
+      assert(typeof(req.body.minX) === 'number');
+      assert(typeof(req.body.minY) === 'number');
+      assert(typeof(req.body.maxX) === 'number');
+      assert(typeof(req.body.maxY) === 'number');
+
+      const bboxKeys = ['ImageName', 'MinX', 'MinY', 'MaxX', 'MaxY', 'InsertionTime', 'UserID', 'Notes'];
+      const bboxVals = [req.body.fileName, req.body.minX, req.body.minY, req.body.maxX, req.body.maxY,
+                        Math.floor(new Date().valueOf()/1000), decoded.email, req.body.notes];
+      await db.insert('bbox', bboxKeys, bboxVals);
+
+      res.status(200).send('success').end();
+    } catch (err) {
+      logger.error('setRegion failures', err);
       if (decoded) {
         res.status(400).send('Bad Request').end();
       }

@@ -132,6 +132,20 @@ async function getUserRegion(db, userID) {
 }
 
 /**
+ * Return boolean to indicate whether given user has labeler role
+ * @param {db_mgr} db
+ * @param {string} userID
+ */
+async function isUserLabeler(db, userID) {
+  const sqlStr = `select islabeler from user_preferences where userid='${userID}'`;
+  const dbRes = await db.query(sqlStr);
+  if (dbRes[0]) {
+    return Boolean(dbRes[0].islabeler);
+  }
+  return false;
+}
+
+/**
  * Get information about camera (name, direction) from the cameraID
  * @param {db_mgr} db
  * @param {string} cameraID
@@ -220,6 +234,7 @@ exports.getConfig = getConfig;
 exports.checkAuth = checkAuth;
 exports.getUserVotes = getUserVotes;
 exports.getUserRegion = getUserRegion;
+exports.isUserLabeler = isUserLabeler;
 exports.augmentCameraPolygonVotes = augmentCameraPolygonVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
 exports.findClosest = findClosest;
