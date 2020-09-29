@@ -21,6 +21,7 @@
 const oct_utils = require('./oct_utils');
 const logger = oct_utils.getLogger('detect_mgr');
 const Compute = require('@google-cloud/compute');
+const { DateTime } = require('luxon');
 const CHECK_MINUTES = 10; // check every 10 minutes
 
 /**
@@ -28,21 +29,20 @@ const CHECK_MINUTES = 10; // check every 10 minutes
  * @param {object} config
  */
 async function checkInstances(config) {
-  if (!config.detectZone || !config.detectGroup || !config.detectTZOffset ||
-      !config.detectStartHour || !config.detectEndHour || !config.detectNumInstances) {
+  if (!config.detectZone || !config.detectGroup ||
+      !config.detectStartTime || !config.detectEndTime || !config.detectNumInstances) {
     logger.error('Missing detect management settings');
     return;
   }
-  if (config.detectEndHour < config.detectStartHour) {
-    logger.error('End (%d) before Start (%d)', config.detectEndHour, config.detectStartHour);
+  if (config.detectEndTime < config.detectStartTime) {
+    logger.error('End (%s) before Start (%s)', config.detectEndTime, config.detectStartTime);
     return;
   }
   // start/end times in config are based on local timezone, so adjust current time
-  const now = new Date();
-  const nowHoursLocalTZ = (now.getUTCHours() - config.detectTZOffset + 24) % 24;
-  logger.info('Now (%d), Start (%d), End (%d)', nowHoursLocalTZ, config.detectStartHour, config.detectEndHour);
-  const expected = (nowHoursLocalTZ < config.detectStartHour) ? 0 : 
-                   (nowHoursLocalTZ >= config.detectEndHour) ? 0 :
+  const now = DateTime.utc().setZone(config.timeZome).toLocaleString(DateTime.TIME_24_SIMPLE);
+  logger.info('Now (%s), Start (%s), End (%s)', now, config.detectStartTime, config.detectEndTime);
+  const expected = (now < config.detectStartTime) ? 0 :
+                   (now >= config.detectEndTime) ? 0 :
                    config.detectNumInstances;
 
   const options = {};

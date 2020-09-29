@@ -333,7 +333,10 @@ class LabelImage extends Component {
                   Mark (click and drag) a rectangle on top of the image below to select the
                   bounding box around the visible smoke in the image.
                   You can restart anytime by marking a new rectangle.
-                  When satisfied, click the Save button below the image.
+                  When satisfied, click the Save button below the image (or press 's' key).
+                  The arrow keys are keyboard shortcuts for moving image forward and backward in time.
+                  Left/Right arrow keys move time by 1 minute.
+                  Up/Down arrow keys move time by 10 minutes.
                 </p>
                 <div
                   onMouseDown={e => this.handleMouseDown(e)}
