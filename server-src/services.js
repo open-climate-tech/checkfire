@@ -44,7 +44,7 @@ async function initServices(app, done) {
 
   const redirects = ['/chooseArea', '/confirmed', '/labelImage'];
   redirects.forEach(redirectUrl => {
-    app.get(redirectUrl, (req,res) => {res.redirect('/wildfirecheck?redirect=' + redirectUrl);});
+    app.get(redirectUrl, (req,res) => {res.redirect('/wildfirecheck/?redirect=' + redirectUrl);});
   });
   done();
 }

@@ -44,10 +44,18 @@ class LabelImage extends Component {
 
     const serverUrl = getServerUrl('/api/listCameras');
     const serverRes = await serverGet(serverUrl);
-    const serverResJson = await serverRes.json();
-    console.log('List cameras', serverRes.status, serverResJson);
-    if ((serverRes.status === 200) && serverResJson) {
-      this.setState({cameraOptions: serverResJson.map(cameraID => ({value: cameraID, label: cameraID}))});
+    if (serverRes.status === 200) {
+      const serverResJson = await serverRes.json();
+      console.log('List cameras', serverRes.status, serverResJson);
+      if (serverResJson) {
+        this.setState({cameraOptions: serverResJson.map(cameraID => ({value: cameraID, label: cameraID}))});
+      } else {
+        this.setState({imageMsg: 'Failed to get cameras.  Try reloading.'});
+      }
+    } else {
+      const serverResText = await serverRes.text();
+      console.log('ListCameras response', serverRes.status, serverResText);
+      this.setState({imageMsg: 'Error: ' + serverRes.status + ': ' + serverResText});
     }
   }
 
@@ -203,7 +211,7 @@ class LabelImage extends Component {
       'cameraID=' + encodeURIComponent(cameraID),
       'dateTime=' + encodeURIComponent(dateISO),
     ];
-    const relativeUrl = '/api/fetchImage' + '?' + urlComponents.join('&');
+    const relativeUrl = '/api/fetchImage?' + urlComponents.join('&');
     const serverUrl = getServerUrl(relativeUrl);
     const serverRes = await serverGet(serverUrl);
     if (serverRes.status === 200) {
@@ -240,9 +248,15 @@ class LabelImage extends Component {
    * @param {*} e
    */
   keyDown = e => {
+    if (!this.eltRefs.cameraPicker || !this.eltRefs.dateTimePicker || !this.eltRefs.notes) {
+      return;
+    }
     const cpDom = ReactDOM.findDOMNode(this.eltRefs.cameraPicker);
     const dtpDom = ReactDOM.findDOMNode(this.eltRefs.dateTimePicker);
     const notesDom = ReactDOM.findDOMNode(this.eltRefs.notes);
+    if (!cpDom || !dtpDom || !notesDom) {
+      return;
+    }
     const inputsInFocus = cpDom.contains(document.activeElement) || dtpDom.contains(document.activeElement) || notesDom.contains(document.activeElement);
     // console.log('inputsInFocus', inputsInFocus);
     if (inputsInFocus) { // avoid interference with inputs and keyboard shortcuts

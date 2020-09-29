@@ -104,6 +104,7 @@ class App extends Component {
 
   componentDidMount() {
     this.checkCookie();
+    this.getOauthUrl();
     const queryParams = qs.parse(window.location.search, {ignoreQueryPrefix: true});
     // console.log('qp', queryParams);
     if (queryParams.redirect && (queryParams.redirect[0] === '/')) {
@@ -111,7 +112,6 @@ class App extends Component {
       this.setState({redirect: queryParams.redirect});
       return;
     }
-    this.getOauthUrl();
   }
 
   async getOauthUrl () {
