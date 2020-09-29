@@ -24,6 +24,7 @@ const {google} = require('googleapis');
 const jwt = require("jsonwebtoken");
 const { assert } = require('chai');
 const fetch = require('node-fetch');
+const { DateTime } = require('luxon');
 
 const scopes = [
   'email',
@@ -213,7 +214,10 @@ function initApis(config, app, db) {
     try {
       decoded = await verifyAuth(req, res, config);
 
-      const userRegion = await oct_utils.getUserRegion(db, decoded.email);
+      let userRegion = await oct_utils.getUserRegion(db, decoded.email);
+      if (!userRegion.topLat) {
+        userRegion = {};
+      }
       console.log('getRegion existing %s', JSON.stringify(userRegion));
       res.status(200).send(userRegion).end();
     } catch (err) {
@@ -233,7 +237,6 @@ function initApis(config, app, db) {
     let decoded;
     try {
       decoded = await verifyAuth(req, res, config);
-      assert(req.body.topLat && req.body.leftLong && req.body.bottomLat && req.body.rightLong);
       assert(typeof(req.body.topLat) === 'number');
       assert(typeof(req.body.leftLong) === 'number');
       assert(typeof(req.body.bottomLat) === 'number');
@@ -242,18 +245,16 @@ function initApis(config, app, db) {
       const userRegion = await oct_utils.getUserRegion(db, decoded.email);
       console.log('setRegion existing %s', JSON.stringify(userRegion));
 
-      let sqlStr;
-      if ((req.body.topLat === 1) && (req.body.leftLong === 1) && (req.body.bottomLat === 1) && (req.body.rightLong === 1)) {
-        sqlStr = `delete from user_preferences where userid='${decoded.email}'`;
-      } else if (userRegion && userRegion.topLat) {
-        sqlStr = `update user_preferences set toplat=${req.body.topLat}, leftlong=${req.body.leftLong},
+      if (userRegion && (typeof(userRegion.topLat) === 'number')) {
+        const sqlStr = `update user_preferences set toplat=${req.body.topLat}, leftlong=${req.body.leftLong},
           bottomlat=${req.body.bottomLat}, rightlong=${req.body.rightLong}
           where userid='${decoded.email}'`;
+        await db.query(sqlStr);
       } else {
-        sqlStr = `insert into user_preferences (userid, toplat, leftlong, bottomlat, rightlong) values
-          ('${decoded.email}',${req.body.topLat}, ${req.body.leftLong}, ${req.body.bottomLat}, ${req.body.rightLong})`;
+        const regionKeys = ['userid', 'toplat', 'leftlong', 'bottomlat', 'rightlong'];
+        const regionVals = [decoded.email, req.body.topLat, req.body.leftLong, req.body.bottomLat, req.body.rightLong];
+        await db.insert('user_preferences', regionKeys, regionVals);
       }
-      await db.query(sqlStr);
       res.status(200).send('success').end();
     } catch (err) {
       logger.error('setRegion failures', err);
@@ -342,14 +343,15 @@ function initApis(config, app, db) {
     try {
       decoded = await verifyAuth(req, res, config, db, true);
       assert(cameraRegex.test(req.query.cameraID));
-      assert(!isNaN(Date.parse(req.query.dateTime)));
-      const dateTime = new Date(req.query.dateTime);
-      const yearStr = dateTime.getFullYear().toString();
-      const monthStr = (dateTime.getMonth() + 1).toString().padStart(2,'0');
-      const dateStr = dateTime.getDate().toString().padStart(2,'0');
+      const timeZomeName = 'America/Los_Angeles'
+      const dateTime = DateTime.fromISO(req.query.dateTime).setZone(timeZomeName);
+      assert(dateTime.isValid);
+      const yearStr = dateTime.year.toString();
+      const monthStr = dateTime.month.toString().padStart(2,'0');
+      const dateStr = dateTime.day.toString().padStart(2,'0');
       const fullDate = yearStr + monthStr + dateStr;
-      const qStr = 'Q' + Math.floor(dateTime.getHours()/3 + 1);
-      let hpwrenUrlDir = `http://c1.hpwren.ucsd.edu/archive/${req.query.cameraID}/large/${dateTime.getFullYear()}/${fullDate}/${qStr}/`;
+      const qStr = 'Q' + Math.floor(dateTime.hour/3 + 1);
+      let hpwrenUrlDir = `http://c1.hpwren.ucsd.edu/archive/${req.query.cameraID}/large/${yearStr}/${fullDate}/${qStr}/`;
       logger.info('fetchImage hpwrenUrlDir %s', hpwrenUrlDir);
       let timeFiles = await getTimeFiles(hpwrenUrlDir);
       if (!timeFiles.length) { // retry without year directory
@@ -360,15 +362,15 @@ function initApis(config, app, db) {
       const result = {};
       if (timeFiles.length) {
         const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000));
-        const closestDate = new Date(closest*1000);
+        const closestDate = DateTime.fromSeconds(closest).setZone(timeZomeName);
         const imageUrl = hpwrenUrlDir + closest + '.jpg';
         logger.info('fetchImage imageUrl %s', imageUrl);
         result.imageUrl = imageUrl;
-        result.imageTime = closestDate.toISOString();
+        result.imageTime = closestDate.toUTC().toISO();
         result.imageName = req.query.cameraID + '__' + yearStr + '-' + monthStr + '-' + dateStr + 'T' +
-          closestDate.getHours().toString().padStart(2,'0') + ';' +
-          closestDate.getMinutes().toString().padStart(2,'0') + ';' +
-          closestDate.getSeconds().toString().padStart(2,'0') + '.jpg';
+          closestDate.hour.toString().padStart(2,'0') + ';' +
+          closestDate.minute.toString().padStart(2,'0') + ';' +
+          closestDate.second.toString().padStart(2,'0') + '.jpg';
       }
       res.status(200).send(JSON.stringify(result)).end();
     } catch (err) {

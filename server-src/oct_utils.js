@@ -122,11 +122,11 @@ async function getUserRegion(db, userID) {
   const sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   const region = {};
-  if (dbRes[0] && dbRes[0].toplat) {
-    region.topLat = dbRes[0].toplat;
-    region.leftLong = dbRes[0].leftlong;
-    region.bottomLat = dbRes[0].bottomlat;
-    region.rightLong = dbRes[0].rightlong;
+  if (dbRes[0]) {
+    region.topLat = dbRes[0].toplat || 0;
+    region.leftLong = dbRes[0].leftlong || 0;
+    region.bottomLat = dbRes[0].bottomlat || 0;
+    region.rightLong = dbRes[0].rightlong || 0;
   }
   return region;
 }

@@ -182,7 +182,7 @@ class ChooseArea extends Component {
   async removeSelection() {
     const serverUrl = getServerUrl('/api/setRegion');
     const serverRes = await serverPost(serverUrl, {
-      topLat: 1, leftLong: 1, bottomLat: 1, rightLong: 1
+      topLat: 0, leftLong: 0, bottomLat: 0, rightLong: 0
     });
     console.log('post res', serverRes);
     this.setState({
