@@ -76,21 +76,36 @@
             <h2>Wildfire Detection and Checking</h2>
             <p>
                 Wildfires are getting more destructive over time due to many factors including climate change.
-                Wildfires also release significant amount of carbon back into the atmosphere,
-                thus speeding up climate change even further.
-                The goal of this project is to automatically detect wildfires in their initial phase, so the authorities
-                responsible for wildfires can take appropriate action while the fire is still small and easy to manage.
-                Folks from multiple organizations have contributed to this project during its lifetime -
-                listing some of them here in alphabetical order:
-                <a href="https://aiformankind.org/">AI for Mankind</a>,
-                <a href="https://ffla-sandiego.org/">FFLA San Diego</a>,
-                <a href="https://hpwren.ucsd.edu/">HPWREN</a>, and
-                <a href="https://www.lbl.gov/">Lawrence Berkeley National Lab</a>.
+                Besides the devastating impact on lives and property, wildfires also release significant amount
+                of carbon back into the atmosphere, thus speeding up climate change even further.
+                Depending on the location situation, sometimes it is better in the long-term to let fires burn,
+                while at other times it's better to extinguish the fires as soon as possible.
+                This project does not have any opinion on determining the optimal action for each fire.
+                The goal of this project is to automatically detect wildfires in their initial phase,
+                so the authorities responsible for wildfires can take appropriate action while the fire is
+                still small and easy to manage.
             </p>
             <p>
                 This project uses machine learning to identify potential smoke from wildfires using real-time images
                 from images installed on vantage points, such as mountain tops. The information about the potential
                 wildfires are then sent to website for people to check and confirm whether they are real fires.
+                This system has successfully detected some fires before authorities were aware of them,
+                but the system also generates some false notificatons.  Therefore, it is useful to
+                have people review the notificatons.  This system monitors more than a hundred cameras
+                continuously, and usually generates less than 50 notifications a day.
+                Doing the same task without such a system would require a large group of people to continuously
+                stare at real-time images coming from a hundred cameras and maintain high vigilence throughout.
+                That is the main impediment why these cameras are currently not used for detection, but only
+                for verifying reports and for monitoring known fires.
+            </p>
+            <p>
+                Folks from multiple organizations have contributed to this project during its lifetime -
+                listing some of them here in alphabetical order:
+                <a href="https://ffla-sandiego.org/">FFLA San Diego</a>,
+                <a href="https://hpwren.ucsd.edu/">HPWREN</a>, and
+                <a href="https://www.lbl.gov/">Lawrence Berkeley National Lab</a>.
+            </p>
+            <p>
             </p>
             <p>
                 <h3 class="w3-padding-16">Wildfire Detection</h3>
@@ -119,22 +134,31 @@
                     </div>
                 </div>
 
-                A detailed description of system and how it performed during a pilot period in Oct 2019 are published in
-                the
+                When one of the squares scores high, the detection system applies a few other checks to
+                discard cases that are unlikely to be smoke from real fires.
+                A detailed description of an earlier version of the system and how it performed during a pilot period
+                in Oct 2019 are published in this
                 <a href="https://doi.org/10.3390/rs12010166">paper</a>
                 published in peer reviewed Remote Sensing journal.
 
                 Also, the <a href="https://github.com/open-climate-tech/firecam">source code</a>
-                for detection is available is available on Github.
+                for the detection system is available on Github.
             </p>
             <p>
                 <h3 class="w3-padding-16">Wildfire Checking</h3>
-                The detection results are displayed
-                <a href="/wildfirecheck/">here</a>.
-                This live updating site subscribes to the detections published by the detection service.
+                The real-time potential fire notifications from the detection service are displayed on
+                <a href="/wildfirecheck/">this live updating site</a>.
 
                 In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
                 dispatch center to take appropriate action.  Please note that this site does not alert the authorities directly.
+            </p>
+            <p>
+                The site also allows users to vote on each notificaton to indicate whether it was a real fire or not.
+                The events where the majority of the users confirm a real fire are displayed on a separate
+                <a href="/confirmed/">Confirmed Fires</a> tab.
+                The votes are also helpful for improving the system by retraining the machine learning system with new images.
+                Users can also specify a desired geographical region to limit the notifications to those that may
+                overlap the specified region.
 
                 The <a href="https://github.com/open-climate-tech/checkfire">source code</a> for the wildfire checking
                 website is available is available on Github.

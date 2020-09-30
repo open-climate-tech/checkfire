@@ -277,7 +277,7 @@ class VoteFires extends Component {
         </h1>
         <h5>
           There's no need to refresh this page to see new fires because it automatically updates to display new detections.
-          The real-time detection is only active between 8AM and 8PM California time.
+          Note that the real-time detection is only active during daylight hours in California.
         </h5>
         <p>
           This page shows recent potential fires as detected by the automated system.

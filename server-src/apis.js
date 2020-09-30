@@ -343,7 +343,7 @@ function initApis(config, app, db) {
     try {
       decoded = await verifyAuth(req, res, config, db, true);
       assert(cameraRegex.test(req.query.cameraID));
-      const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZome);
+      const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZone);
       assert(dateTime.isValid);
       const yearStr = dateTime.year.toString();
       const monthStr = dateTime.month.toString().padStart(2,'0');
@@ -361,7 +361,7 @@ function initApis(config, app, db) {
       const result = {};
       if (timeFiles.length) {
         const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000));
-        const closestDate = DateTime.fromSeconds(closest).setZone(config.timeZome);
+        const closestDate = DateTime.fromSeconds(closest).setZone(config.timeZone);
         const imageUrl = hpwrenUrlDir + closest + '.jpg';
         logger.info('fetchImage imageUrl %s', imageUrl);
         result.imageUrl = imageUrl;

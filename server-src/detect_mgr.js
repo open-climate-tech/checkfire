@@ -39,7 +39,7 @@ async function checkInstances(config) {
     return;
   }
   // start/end times in config are based on local timezone, so adjust current time
-  const now = DateTime.utc().setZone(config.timeZome).toLocaleString(DateTime.TIME_24_SIMPLE);
+  const now = DateTime.utc().setZone(config.timeZone).toLocaleString(DateTime.TIME_24_SIMPLE);
   logger.info('Now (%s), Start (%s), End (%s)', now, config.detectStartTime, config.detectEndTime);
   const expected = (now < config.detectStartTime) ? 0 :
                    (now >= config.detectEndTime) ? 0 :
