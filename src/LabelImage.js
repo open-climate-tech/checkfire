@@ -207,9 +207,12 @@ class LabelImage extends Component {
       imageMsg: 'Fetching image.  Should appear soon if found',
     });
     console.log('Fetch', cameraID, dateISO);
+    const direction = (timeOffsetSec > 0) ? 'positive' :
+                        ((timeOffsetSec < 0) ? 'negative' : '');
     const urlComponents = [
       'cameraID=' + encodeURIComponent(cameraID),
       'dateTime=' + encodeURIComponent(dateISO),
+      'direction=' + encodeURIComponent(direction),
     ];
     const relativeUrl = '/api/fetchImage?' + urlComponents.join('&');
     const serverUrl = getServerUrl(relativeUrl);

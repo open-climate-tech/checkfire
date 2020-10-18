@@ -345,6 +345,7 @@ function initApis(config, app, db) {
       assert(cameraRegex.test(req.query.cameraID));
       const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZone);
       assert(dateTime.isValid);
+      assert((req.query.direction === 'positive') || (req.query.direction === 'negative') || (req.query.direction === ''));
       const yearStr = dateTime.year.toString();
       const monthStr = dateTime.month.toString().padStart(2,'0');
       const dateStr = dateTime.day.toString().padStart(2,'0');
@@ -360,7 +361,7 @@ function initApis(config, app, db) {
       }
       const result = {};
       if (timeFiles.length) {
-        const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000));
+        const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000), req.query.direction);
         const closestDate = DateTime.fromSeconds(closest).setZone(config.timeZone);
         const imageUrl = hpwrenUrlDir + closest + '.jpg';
         logger.info('fetchImage imageUrl %s', imageUrl);

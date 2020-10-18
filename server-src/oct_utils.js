@@ -221,10 +221,16 @@ function dbAlertToUiObj(dbEvent) {
  * @param {Array<Number>} allValues
  * @param {Number} desired
  */
-function findClosest(allValues, desired) {
-  const closest = allValues.reduce((acc,value) =>
-      (acc.diff <= Math.abs(value - desired)) ? acc : {diff: Math.abs(value - desired), value: value},
-    {diff: Infinity, value: allValues[0]});
+function findClosest(allValues, desired, direction) {
+  const closest = allValues.reduce((acc,value) => {
+    let diff = Math.abs(value - desired);
+    if (direction === 'positive' && (value < desired)) {
+      return acc;
+    } else if (direction === 'negative' && (value > desired)) {
+      return acc;
+    }
+    return (acc.diff <= diff) ? acc : {diff: diff, value: value};
+  }, {diff: Infinity, value: allValues[0]});
   return closest.value;
 }
 
