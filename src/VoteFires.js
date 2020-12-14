@@ -101,7 +101,7 @@ class VoteFires extends Component {
       if (userRegion.topLat && this.state.potentialFires && this.state.potentialFires.length) {
         const selectedFires = this.state.potentialFires.filter(potFire => this.isFireInRegion(potFire, userRegion));
         if (selectedFires.length !== this.state.potentialFires.length) {
-          this.setState({potentialFires: selectedFires});
+          this.updateFiresAndCounts(selectedFires);
         }
       }
     });
@@ -226,19 +226,27 @@ class VoteFires extends Component {
       .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
 
-    this.setState({
-      potentialFires: updatedFires,
-    });
-    this.updateRecentCounts(updatedFires);
+    this.updateFiresAndCounts(updatedFires);
   }
 
-  updateRecentCounts(potentialFires) {
+  calculateRecentCounts(potentialFires) {
     const nowSeconds = Math.round(new Date().valueOf()/1000);
     const earliestTimestamp = nowSeconds - 3600*this.state.hoursLimit;
-    const newState = {
+    const counts = {
       numRecentFires: potentialFires.filter(f => f.timestamp >= earliestTimestamp).length,
       numOldFires: potentialFires.filter(f => f.timestamp < earliestTimestamp).length
     };
+    return counts;
+  }
+
+  updateRecentCounts(potentialFires) {
+    const newState = this.calculateRecentCounts(potentialFires);
+    this.setState(newState);
+  }
+
+  updateFiresAndCounts(potentialFires) {
+    const newState = this.calculateRecentCounts(potentialFires);
+    newState.potentialFires = potentialFires;
     this.setState(newState);
   }
 
