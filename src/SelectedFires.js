@@ -1,5 +1,5 @@
 /*
-# Copyright 2020 Open Climate Tech Contributors
+# Copyright 2021 Open Climate Tech Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
 # ==============================================================================
 */
 
-// Confirmed Fires
+// Selected Fires
 
 import React, { Component } from "react";
-import {Link} from "react-router-dom";
 import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
 
 /**
@@ -33,37 +32,32 @@ function VoteStats(props) {
   );
 }
 
-class ConfirmedFires extends Component {
+class SelectedFires extends Component {
   constructor(props) {
     super(props);
     this.state = {};
   }
 
   async componentDidMount() {
-    const serverUrl = getServerUrl('/api/confirmedFires');
+    const serverUrl = getServerUrl('/api/selectedFires');
     const resp = await serverGet(serverUrl);
-    const confirmedFires = await resp.json();
-    this.setState({confirmedFires: confirmedFires});
+    const selectedFires = await resp.json();
+    this.setState({selectedFires: selectedFires});
   }
 
   render() {
     return (
       <div>
         <h1 className="w3-padding-32 w3-row-padding">
-          Confirmed Fires
+          Selected Fires
         </h1>
         <p>
-          This page shows recent potential fires that have been confirmed by majority of the voting users.
-          There is an inherent delay in waiting for someone to vote and confirm a fire, so this page will never
-          display events as quickly as the <Link to='/wildfirecheck'>Potential Fires</Link> page.
-          This page also does not check potential fire locations against the your preferred region of interest,
-          but instead shows fires from all cameras.
-          Finally, this page also does does not automatically refresh on new detections.
+          This page shows selected fires.
           Therefore, it is not suitable for monitoring for earliest notification of potential fires.
           This page is intended for demonstrating the capability of the system.
         </p>
         {
-          this.state.confirmedFires && this.state.confirmedFires.map(potFire =>
+          this.state.selectedFires && this.state.selectedFires.map(potFire =>
             <FirePreview key={potFire.annotatedUrl} potFire={potFire}
               childComponent={<VoteStats potFire={potFire} />}
             />)
@@ -73,4 +67,4 @@ class ConfirmedFires extends Component {
   }
 }
 
-export default ConfirmedFires;
+export default SelectedFires;

@@ -28,6 +28,7 @@ import {
 import './App.css';
 import VoteFires from './VoteFires';
 import ConfirmedFires from './ConfirmedFires';
+import SelectedFires from './SelectedFires';
 import ChooseArea from './ChooseArea';
 import LabelImage from './LabelImage';
 import Prototypes from './Prototypes';
@@ -149,6 +150,8 @@ class App extends Component {
             <Route path="/prototypes" exact component={Prototypes} />
             <Route path="/confirmed" exact render={props =>
                     <ConfirmedFires {...props} />} />
+            <Route path="/selected" exact render={props =>
+                    <SelectedFires {...props} />} />
             <Route path="/chooseArea" exact render={props =>
                     <ChooseArea {...props} validCookie={this.state.validCookie} />} />
             <Route path="/labelImage" exact render={props =>

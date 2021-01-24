@@ -290,6 +290,30 @@ function initApis(config, app, db) {
   });
 
   /**
+   * Get a list of selected fires
+   */
+  app.get('/api/selectedFires', async (req, res) => {
+    logger.info('GET selectedFires');
+    const fireName = 'comet';
+    const sqlStr = `select * from
+                      (select nf.cameraname as cameraname, nf.timestamp as timestamp, avg(isrealfire) as avgrf, count(*) as ct from
+                        (select * from named_fires where firename='${fireName}' order by timestamp desc limit 20) as nf
+                        join votes
+                          on nf.cameraname=votes.cameraname and nf.timestamp=votes.timestamp group by nf.cameraname,nf.timestamp) as nfv
+                      join alerts
+                        on nfv.cameraname=alerts.cameraname and nfv.timestamp=alerts.timestamp
+                      order by nfv.timestamp desc`;
+    const dbRes = await db.query(sqlStr);
+    const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
+      const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
+      fireEvent.avgVote = dbEntry.avgrf;
+      fireEvent.numVotes = dbEntry.ct;
+      return await oct_utils.augmentCameraPolygonVotes(db, fireEvent);
+    }));
+    res.status(200).send(fireEvents).end();
+  });
+
+  /**
    * Return list of available cameras
    */
   app.get('/api/listCameras', async (req, res) => {
