@@ -38,20 +38,29 @@ const cameraRegex = /^[0-9a-z\-]+\-mobo-c$/;
  * @param {*} req
  * @param {*} res
  * @param {*} config
- * @param {*} db
- * @param {boolen} checkLabeler
  */
-async function verifyAuth(req, res, config, db=null, checkLabeler=false) {
+async function verifyAuth(req, res, config) {
   try {
     const decoded = await oct_utils.checkAuth(req, config);
-    if (checkLabeler) {
-      const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
-      assert(isLabeler);
-    }
     return decoded;
   } catch (err) {
     console.log('jwt verify err', err);
     res.status(403).send('Forbidden').end();
+  }
+}
+
+
+async function apiWrapper(req, res, config, apiDesc, cb) {
+  logger.info(apiDesc);
+  let decoded;
+  try {
+    decoded = await verifyAuth(req, res, config);
+    cb(decoded);
+  } catch (err) {
+    logger.error('%s failure: %s', apiDesc, err);
+    if (decoded) { // non-decoded cases get errored out in verifyAuth
+      res.status(400).send('Bad Request').end();
+    }
   }
 }
 
@@ -82,42 +91,6 @@ function initApis(config, app, db) {
       console.log('body', req.body);
       res.status(200).send('success').end();
     } catch (err) {
-    }
-  });
-
-  app.post('/api/voteFire', async (req, res) => {
-    logger.info('POST voteFire');
-    let decoded;
-    try {
-      decoded = await verifyAuth(req, res, config);
-      assert(req.body.cameraID && req.body.timestamp && (req.body.isRealFire !== undefined));
-
-      // cameraID validation
-      assert(typeof(req.body.cameraID) === 'string');
-      assert(cameraRegex.test(req.body.cameraID));
-
-      // timestamp validation
-      assert(typeof(req.body.timestamp) === 'number');
-      assert(req.body.timestamp > 1510001000); // Nov 2017
-      assert(req.body.timestamp < new Date().valueOf()/1000);
-
-      assert(typeof(req.body.isRealFire) === 'boolean');
-      const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
-      // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
-      if (existingVotesByUser && (existingVotesByUser.length > 0)) {
-        logger.warn('Multiple votes not supported %s', existingVotesByUser);
-        res.status(400).send('Bad Request').end();
-        return;
-      }
-      const sqlStr = `insert into votes (cameraname,timestamp,isrealfire,userid) values
-                      ('${req.body.cameraID}',${req.body.timestamp},${req.body.isRealFire ? 1 : 0},'${decoded.email}')`;
-      await db.query(sqlStr);
-      res.status(200).send('success').end();
-    } catch (err) {
-      logger.error('voteFire failures', err);
-      if (decoded) {
-        res.status(400).send('Bad Request').end();
-      }
     }
   });
 
@@ -205,63 +178,89 @@ function initApis(config, app, db) {
     });
   }
 
+  app.post('/api/voteFire', async (req, res) => {
+    apiWrapper(req, res, config, 'POST voteFire', async decoded => {
+      assert(req.body.cameraID && req.body.timestamp && (req.body.isRealFire !== undefined));
+
+      // cameraID validation
+      assert(typeof(req.body.cameraID) === 'string');
+      assert(cameraRegex.test(req.body.cameraID));
+
+      // timestamp validation
+      assert(typeof(req.body.timestamp) === 'number');
+      assert(req.body.timestamp > 1510001000); // Nov 2017
+      assert(req.body.timestamp < new Date().valueOf()/1000);
+
+      assert(typeof(req.body.isRealFire) === 'boolean');
+      const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
+      // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
+      if (existingVotesByUser && (existingVotesByUser.length > 0)) {
+        logger.warn('Multiple votes not supported %s', existingVotesByUser);
+        res.status(400).send('Bad Request').end();
+        return;
+      }
+      const sqlStr = `insert into votes (cameraname,timestamp,isrealfire,userid) values
+                      ('${req.body.cameraID}',${req.body.timestamp},${req.body.isRealFire ? 1 : 0},'${decoded.email}')`;
+      await db.query(sqlStr);
+      res.status(200).send('success').end();
+    });
+  });
+
   /**
+   * Still here to support older web clients
+   * TODO: delete
    * Return the geographical region on interest (if any) saved by the user
    */
   app.get('/api/getRegion', async (req, res) => {
-    logger.info('GET getRegion');
-    let decoded;
-    try {
-      decoded = await verifyAuth(req, res, config);
-
-      let userRegion = await oct_utils.getUserRegion(db, decoded.email);
-      if (!userRegion.topLat) {
-        userRegion = {};
-      }
+    apiWrapper(req, res, config, 'GET getRegion', async decoded => {
+      const preferences = await oct_utils.getUserPreferences(db, decoded.email);
+      const userRegion = preferences.topLat ? preferences : {};
       console.log('getRegion existing %s', JSON.stringify(userRegion));
       res.status(200).send(userRegion).end();
-    } catch (err) {
-      logger.error('getRegion failures', err);
-      if (decoded) {
-        res.status(400).send('Bad Request').end();
-      }
-    }
+    });
+  });
+
+  /**
+   * Return user preferences saved by the user
+   * 1. the geographical region on interest (if any)
+   * 2. webNotify
+   */
+  app.get('/api/getPreferences', async (req, res) => {
+    apiWrapper(req, res, config, 'GET getPreferences', async decoded => {
+      const preferences = await oct_utils.getUserPreferences(db, decoded.email);
+      console.log('getPreferences existing %s', JSON.stringify(preferences));
+      res.status(200).send(preferences).end();
+    });
   });
 
   /**
    * Save the given geographical region for future reference for current user.
-   * If top/left/bottom/right are all 1, that indicates special value to delete the region.
    */
   app.post('/api/setRegion', async (req, res) => {
-    logger.info('POST setRegion');
-    let decoded;
-    try {
-      decoded = await verifyAuth(req, res, config);
+    apiWrapper(req, res, config, 'POST setRegion', async decoded => {
       assert(typeof(req.body.topLat) === 'number');
       assert(typeof(req.body.leftLong) === 'number');
       assert(typeof(req.body.bottomLat) === 'number');
       assert(typeof(req.body.rightLong) === 'number');
 
-      const userRegion = await oct_utils.getUserRegion(db, decoded.email);
-      console.log('setRegion existing %s', JSON.stringify(userRegion));
-
-      if (userRegion && (typeof(userRegion.topLat) === 'number')) {
-        const sqlStr = `update user_preferences set toplat=${req.body.topLat}, leftlong=${req.body.leftLong},
-          bottomlat=${req.body.bottomLat}, rightlong=${req.body.rightLong}
-          where userid='${decoded.email}'`;
-        await db.query(sqlStr);
-      } else {
-        const regionKeys = ['userid', 'toplat', 'leftlong', 'bottomlat', 'rightlong'];
-        const regionVals = [decoded.email, req.body.topLat, req.body.leftLong, req.body.bottomLat, req.body.rightLong];
-        await db.insert('user_preferences', regionKeys, regionVals);
-      }
+      const regionKeys = ['toplat', 'leftlong', 'bottomlat', 'rightlong'];
+      const regionVals = [req.body.topLat, req.body.leftLong, req.body.bottomLat, req.body.rightLong];
+      await db.insertOrUpdate('user_preferences', regionKeys, regionVals, 'userid', decoded.email);
       res.status(200).send('success').end();
-    } catch (err) {
-      logger.error('setRegion failures', err);
-      if (decoded) {
-        res.status(400).send('Bad Request').end();
-      }
-    }
+    });
+  });
+
+  /**
+   * Save user preference on whether they want to HTML5 notifications
+   */
+  app.post('/api/setWebNotify', async (req, res) => {
+    apiWrapper(req, res, config, 'POST setWebNotify', async decoded => {
+      assert(typeof(req.body.webNotify) === 'boolean');
+      assert((req.body.webNotify === true) || (req.body.webNotify === false));
+
+      await db.insertOrUpdate('user_preferences', ['webnotify'], [req.body.webNotify ? 1 : 0], 'userid', decoded.email);
+      res.status(200).send('success').end();
+    });
   });
 
   /**
@@ -317,20 +316,14 @@ function initApis(config, app, db) {
    * Return list of available cameras
    */
   app.get('/api/listCameras', async (req, res) => {
-    logger.info('GET listCameras');
-    let decoded;
-    try {
-      decoded = await verifyAuth(req, res, config, db, true);
+    apiWrapper(req, res, config, 'GET listCameras', async decoded => {
+      const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
+      assert(isLabeler);
       const sqlStr = `select name from sources order by name`;
       const dbRes = await db.query(sqlStr);
       const cameraIDs = dbRes.map(dbEntry => dbEntry.name);
       res.status(200).send(cameraIDs).end();
-    } catch (err) {
-      logger.error('listCameras failure', err);
-      if (decoded) {
-        res.status(400).send('Bad Request').end();
-      }
-    }
+    });
   });
 
   /**
@@ -362,10 +355,9 @@ function initApis(config, app, db) {
       return parseTimeFiles(dirText);
     }
 
-    logger.info('GET fetchImage');
-    let decoded;
-    try {
-      decoded = await verifyAuth(req, res, config, db, true);
+    apiWrapper(req, res, config, 'GET fetchImage', async decoded => {
+      const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
+      assert(isLabeler);
       assert(cameraRegex.test(req.query.cameraID));
       const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZone);
       assert(dateTime.isValid);
@@ -397,22 +389,16 @@ function initApis(config, app, db) {
           closestDate.second.toString().padStart(2,'0') + '.jpg';
       }
       res.status(200).send(JSON.stringify(result)).end();
-    } catch (err) {
-      logger.error('fetchImage failure', err);
-      if (decoded) {
-        res.status(400).send('Bad Request').end();
-      }
-    }
+    });
   });
 
   /**
    * Save the given bounding box for the given image
    */
   app.post('/api/setBbox', async (req, res) => {
-    logger.info('POST setBbox');
-    let decoded;
-    try {
-      decoded = await verifyAuth(req, res, config, db, true);
+    apiWrapper(req, res, config, 'POST setBbox', async decoded => {
+      const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
+      assert(isLabeler);
       assert(req.body.fileName && req.body.minX && req.body.minY && req.body.maxX && req.body.maxY);
       assert(typeof(req.body.fileName) === 'string');
       assert(typeof(req.body.notes) === 'string');
@@ -427,12 +413,7 @@ function initApis(config, app, db) {
       await db.insert('bbox', bboxKeys, bboxVals);
 
       res.status(200).send('success').end();
-    } catch (err) {
-      logger.error('setRegion failures', err);
-      if (decoded) {
-        res.status(400).send('Bad Request').end();
-      }
-    }
+    });
   });
 }
 

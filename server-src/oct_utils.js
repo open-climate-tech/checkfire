@@ -114,21 +114,24 @@ async function getUserVotes(db, cameraID, timestamp, email) {
 }
 
 /**
- * Return the geographical region on interest (if any) saved by the given user
+ * Return the user preferences of the given user
  * @param {db_mgr} db
  * @param {string} userID
  */
-async function getUserRegion(db, userID) {
+async function getUserPreferences(db, userID) {
   const sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
-  const region = {};
-  if (dbRes[0]) {
-    region.topLat = dbRes[0].toplat || 0;
-    region.leftLong = dbRes[0].leftlong || 0;
-    region.bottomLat = dbRes[0].bottomlat || 0;
-    region.rightLong = dbRes[0].rightlong || 0;
+  const rawPrefs = dbRes && dbRes[0];
+  if (rawPrefs) {
+    return {
+      topLat: rawPrefs.toplat || 0,
+      leftLong: rawPrefs.leftlong || 0,
+      bottomLat: rawPrefs.bottomlat || 0,
+      rightLong: rawPrefs.rightlong || 0,
+      webNotify: rawPrefs.webNotify ? true : false,
+    }
   }
-  return region;
+  return {};
 }
 
 /**
@@ -239,7 +242,7 @@ exports.getLogger = getLogger;
 exports.getConfig = getConfig;
 exports.checkAuth = checkAuth;
 exports.getUserVotes = getUserVotes;
-exports.getUserRegion = getUserRegion;
+exports.getUserPreferences = getUserPreferences;
 exports.isUserLabeler = isUserLabeler;
 exports.augmentCameraPolygonVotes = augmentCameraPolygonVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
