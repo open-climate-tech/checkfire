@@ -28,6 +28,7 @@
     "react-resize-observer": "^1.1.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.1",
+    "react-web-notification": "^0.8.0",
     "sqlite3": "^4.2.0",
     "winston": "^3.3.3"
   },
