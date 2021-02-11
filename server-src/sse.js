@@ -23,7 +23,7 @@ const oct_utils = require('./oct_utils');
 const logger = oct_utils.getLogger('sse');
 
 // Interface versioning to ensure browser and nodejs are synced up
-const SSE_INTERFACE_VERSION = 4;
+const SSE_INTERFACE_VERSION = 5;
 
 // Array of all the connections to the frontend
 var connections = [];
@@ -82,7 +82,16 @@ async function checkConnectionToRestore(request, connectionInfo, db) {
  * @param {string} messageData - JSON stringified
  */
 function updateFromDetect(db, messageData) {
-  let messageJson = JSON.parse(messageData);
+  let messageJson;
+  try {
+    messageJson = JSON.parse(messageData);
+    console.log('msg', messageJson);
+  } catch (e) {
+    logger.error('unxpected data %s', messageData, e);
+    return;
+  }
+  // add isRealTime flag to real-time detections coming from detection service
+  messageJson.isRealTime = true;
   connections.forEach(connectionInfo => {
     sendEvent(messageJson, connectionInfo, db);
   });

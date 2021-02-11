@@ -122,16 +122,19 @@ async function getUserPreferences(db, userID) {
   const sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   const rawPrefs = dbRes && dbRes[0];
+  let region = {};
   if (rawPrefs) {
-    return {
+    region = {
       topLat: rawPrefs.toplat || 0,
       leftLong: rawPrefs.leftlong || 0,
       bottomLat: rawPrefs.bottomlat || 0,
       rightLong: rawPrefs.rightlong || 0,
-      webNotify: rawPrefs.webNotify ? true : false,
     }
   }
-  return {};
+  return {
+    region: region,
+    webNotify: (rawPrefs && rawPrefs.webNotify) ? true : false,
+  };
 }
 
 /**

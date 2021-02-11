@@ -214,9 +214,8 @@ function initApis(config, app, db) {
   app.get('/api/getRegion', async (req, res) => {
     apiWrapper(req, res, config, 'GET getRegion', async decoded => {
       const preferences = await oct_utils.getUserPreferences(db, decoded.email);
-      const userRegion = preferences.topLat ? preferences : {};
-      console.log('getRegion existing %s', JSON.stringify(userRegion));
-      res.status(200).send(userRegion).end();
+      console.log('getRegion existing %s', JSON.stringify(preferences.region));
+      res.status(200).send(preferences.region).end();
     });
   });
 
