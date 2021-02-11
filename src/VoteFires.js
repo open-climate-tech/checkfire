@@ -356,12 +356,12 @@ class VoteFires extends Component {
           (this.state.userRegion && this.state.userRegion.topLat) ?
             <h5>
               Only potential fires in selected region are being shown.  To see potential fires across all
-              cameras, remove the selection in the <Link to='/chooseArea'>Choose area</Link> page.
+              cameras, remove the selection in the <Link to='/preferences'>Preferences</Link> page.
             </h5>
           :
             <p>
               Signed-in users can specify their region of interest on the&nbsp;
-              {this.props.validCookie? <Link to='/chooseArea'>Choose area</Link>: 'Choose area'}
+              {this.props.validCookie? <Link to='/preferences'>Preferences</Link>: 'Choose area'}
               &nbsp;page.
               Such users will only see potential fire events that may overlap their chosen area of interest.
             </p>

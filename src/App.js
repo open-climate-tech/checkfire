@@ -52,7 +52,7 @@ function FirePagesHeader(props) {
       </div>
       <div className="w3-col s3 w3-button w3-block">
         {props.validCookie ?
-          <Link to='/chooseArea'>Choose area</Link>
+          <Link to='/preferences'>Preferences</Link>
         :
           <span className="w3-disabled">
             Choose area (sign-in required)
@@ -152,7 +152,7 @@ class App extends Component {
                     <ConfirmedFires {...props} />} />
             <Route path="/selected" exact render={props =>
                     <SelectedFires {...props} />} />
-            <Route path="/chooseArea" exact render={props =>
+            <Route path="/preferences" exact render={props =>
                     <ChooseArea {...props} validCookie={this.state.validCookie} />} />
             <Route path="/labelImage" exact render={props =>
                     <LabelImage {...props} validCookie={this.state.validCookie} />} />
