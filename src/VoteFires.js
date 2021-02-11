@@ -19,10 +19,11 @@
 
 import React, { Component } from "react";
 import {Link} from "react-router-dom";
+import Notification  from "react-web-notification";
 
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
-import {getServerUrl, serverPost, getUserRegion, FirePreview} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserPreferences, FirePreview} from './OctReactUtils';
 
 /**
  * Show voting buttons (yes/no), or already cast vote, or signin button
@@ -73,6 +74,9 @@ class VoteFires extends Component {
       numRecentFires: 0,
       numOldFires: 0,
       showOldFires: false,
+      webNotify: false,
+      notifyTitle: '',
+      notifyOptions: '',
     };
     this.sseVersion = null;
   }
@@ -94,9 +98,13 @@ class VoteFires extends Component {
     );
 
     // filter potential fires with user specified region of interest
-    getUserRegion().then(userRegion => {
-      // console.log('userRegion', userRegion);
-      this.setState({userRegion: userRegion});
+    getUserPreferences().then(preferences => {
+      // console.log('preferences', preferences);
+      const userRegion = preferences.region;
+      this.setState({
+        userRegion: userRegion,
+        webNotify: preferences.webNotify,
+      });
       // check existing potentialFires to see if they are within limits
       if (userRegion.topLat && this.state.potentialFires && this.state.potentialFires.length) {
         const selectedFires = this.state.potentialFires.filter(potFire => this.isFireInRegion(potFire, userRegion));
@@ -197,6 +205,7 @@ class VoteFires extends Component {
   }
 
   newPotentialFire(e) {
+    this.clearNotification();
     // console.log('newPotentialFire', e);
     const parsed = JSON.parse(e.data);
     // first check version number
@@ -226,6 +235,11 @@ class VoteFires extends Component {
       .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
 
+    // if this is a new real-time fire, and notifications are enabled, trigger notification
+    const newTop = updatedFires.length ? updatedFires[0] : {};
+    if (newTop && newTop.isRealTime && this.state.webNotify) {
+      this.notify(updatedFires);
+    }
     this.updateFiresAndCounts(updatedFires);
   }
 
@@ -252,6 +266,44 @@ class VoteFires extends Component {
 
   toggleOldFires() {
     this.setState({showOldFires: !this.state.showOldFires});
+  }
+
+  clearNotification() {
+    this.setState({notifyTitle: ''});
+  }
+
+  notify(updatedFires) {
+    const newFire = updatedFires[0]
+    if (newFire.notified || !newFire.isRealTime) {
+      console.log('Assumption violation: first fire should be realtime and not notified');
+      return;
+    }
+    const NOTIFY_GAP_MIN_SECONDS = 30;
+    const NOTIFY_MAX_RECENT_NOTIFICAIONS = 2;
+    const NOTIFY_MAX_RECENT_MINUTES = 5;
+    const notifiedFires = updatedFires.filter(x => x.isRealTime && x.notified);
+    const mostRecentNotification = notifiedFires[0] ? notifiedFires[0].timestamp : 0;
+    // prevent spam with frequency thresholds
+    // at leaset NOTIFY_GAP_MIN_SECONDS seconds between notifications
+    if ((newFire.timestamp - mostRecentNotification) < NOTIFY_GAP_MIN_SECONDS) {
+      return;
+    }
+    // at most NOTIFY_MAX_FIRES every NOTIFY_MAX_MINUTES minutes
+    const timeThreshold = newFire.timestamp - NOTIFY_MAX_RECENT_MINUTES*60;
+    const recentNotifiedFires = notifiedFires.filter(x => x.timestamp > timeThreshold)
+    if (recentNotifiedFires.length > NOTIFY_MAX_RECENT_NOTIFICAIONS) {
+      return;
+    }
+    newFire.notified = true;
+    this.setState({
+      notifyTitle: 'Potential fire',
+      notifyOptions: {
+        tag: newFire.timestamp.toString(),
+        body: `Camera ${newFire.camInfo.cameraName} facing ${newFire.camInfo.cameraDir}`,
+        icon: '/checkfire192.png',
+        lang: 'en',
+      }
+    });
   }
 
   async vote(potFire, isRealFire) {
@@ -314,6 +366,14 @@ class VoteFires extends Component {
               Such users will only see potential fire events that may overlap their chosen area of interest.
             </p>
         }
+        {this.state.webNotify && (
+          <Notification
+          ignore={this.state.notifyTitle === ''}
+          disableActiveWindow={true}
+          title={this.state.notifyTitle}
+          options={this.state.notifyOptions}
+          />
+        )}
         {
           (this.state.numRecentFires > 0) ?
             this.state.potentialFires.slice(0, this.state.numRecentFires).map(potFire =>

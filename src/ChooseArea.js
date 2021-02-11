@@ -19,8 +19,9 @@
 
 import React, { Component } from "react";
 import ResizeObserver from 'react-resize-observer';
+import Notification  from "react-web-notification";
 
-import {getServerUrl, serverPost, getUserRegion} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserPreferences} from './OctReactUtils';
 import hpwren1078 from './hpwren-1078x638.jpg';
 import hpwren1290 from './hpwren-1290x762.jpg';
 import hpwren1492 from './hpwren-1492x870.jpg';
@@ -41,15 +42,20 @@ class ChooseArea extends Component {
     super(props);
     this.state = {
       mapIndex: 2,
+      webNotify: false,
+      notifBlocked: false,
     };
   }
 
   async componentDidMount() {
     // Load and display any earlier saved region from backend
-    const savedRegion = await getUserRegion();
-    this.setState({savedRegion: savedRegion});
+    const preferences = await getUserPreferences()
+    this.setState({
+      savedRegion: preferences.region,
+      webNotify: preferences.webNotify,
+    });
     if (!this.state.startX && !this.state.minX) {
-      this.showRegion(savedRegion);
+      this.showRegion(preferences.region);
     }
   }
 
@@ -203,65 +209,119 @@ class ChooseArea extends Component {
       this.setState({mapIndex: this.state.mapIndex + 1});
     }
   }
+
+  // change handler for notifications checkbox
+  async handleNotifyChange(event) {
+    const target = event.target;
+    this.setState({
+      webNotify: target.checked
+    });
+    const serverUrl = getServerUrl('/api/setWebNotify');
+    const serverRes = await serverPost(serverUrl, {webNotify: target.checked});
+    console.log('post res', serverRes);
+  }
+
+  // notifications permission granted by user
+  notifGranted() {
+    this.setState({notifBlocked: false});
+  }
+  // notifications permission denied by user
+  notifDenied() {
+    this.setState({notifBlocked: true});
+  }
+
   render() {
     return (
       <div>
         <h1>
-          Choose region of interest
+          Preferences
         </h1>
         {
           this.props.validCookie ?
           (<div>
-            <p>
-              Mark (click and drag) a rectangle on top of the map below to select the geographical region
-              where you are interested in monitoring potential fires.  You can restart anytime by marking
-              a new rectangle.  When satisfied, click the Save button below the map.
-            </p>
-            <p>
-              The red dots show the location of the cameras, and partially shaded red circles around each
-              dot represent a 20 mile radius circlular region that should be visible from each camera location.
-              Actual visible area depends on terrain occlusions and atmospheric visibility conditions.
-            </p>
-            <div
-              onMouseDown={e => this.handleMouseDown(e)}
-              onMouseUp={e => this.handleMouseUp(e)}
-              onMouseMove={e => this.handleMouseMove(e)}
-            >
-              <ResizeObserver
-                onReflow={r=>this.checkImgLocation(r)}
-              />
-              <img src={maps[this.state.mapIndex].name} alt="Map" draggable={false}
-                ref={e => this.saveImgRef(e)}
-              />
-              {this.state.minX && (
-                <div style={{zIndex: 10, position: 'absolute',
-                  left: this.state.minX + 'px', top: this.state.minY + 'px',
-                  width: this.state.width + 'px', height: this.state.height + 'px',
-                  backgroundColor: 'transparent', border: '1px solid blue'}}
-                >
-                </div>
-              )}
+            <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+              <h3>
+                Notifications
+              </h3>
+              <div>
+                <p>
+                  Check the below if you want to see notifications on your device whenever
+                  new potential fire events are discovered.  Note the browser may ask you to
+                  allow showing notifications.
+                </p>
+                Notifications <input type="checkbox" id="webNotify" name="webNotify"
+                  checked={this.state.webNotify} onChange={e => this.handleNotifyChange(e)}>
+                </input>
+                {this.state.webNotify && (
+                  <Notification
+                    onPermissionGranted={() => this.notifGranted()}
+                    onPermissionDenied={() => this.notifDenied()}
+                    title=''
+                  />
+                )}
+                {this.state.webNotify && this.state.notifBlocked && (
+                  <p>
+                    Notifications are blocked by your browser.  Please change settings if you want notifications.
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="w3-padding">
-              <button className={"w3-button w3-border w3-round-large w3-black" + ((this.state.mapIndex === 0) ? " w3-disabled" : "")}
-                onClick={()=> this.zoomIn()}>Zoom in</button>
-              <button className={"w3-button w3-border w3-round-large w3-black" + ((this.state.mapIndex === (maps.length - 1)) ? " w3-disabled" : "")}
-                onClick={()=> this.zoomOut()}>Zoom out</button>
-            </div>
-            <div className="w3-padding">
-              <button className={"w3-button w3-border w3-round-large w3-black" + (this.state.minX ? "" : " w3-disabled")}
-                onClick={()=> this.saveRegion()}>
-                Save selected region
-              </button>
-              <button className={"w3-button w3-border w3-round-large w3-black" +
-                                  ((this.state.savedRegion && this.state.savedRegion.topLat) ? "" : " w3-disabled")}
-                onClick={()=> this.showRegion(this.state.savedRegion)}>
-                Restore saved region
-              </button>
-              <button className="w3-button w3-border w3-round-large w3-black"
-                onClick={()=> this.removeSelection()}>
-                Remove selection
-              </button>
+            <div className="w3-padding"></div>
+            <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+              <h3>
+                Choose region of interest
+              </h3>
+              <p>
+                Mark (click and drag) a rectangle on top of the map below to select the geographical region
+                where you are interested in monitoring potential fires.  You can restart anytime by marking
+                a new rectangle.  When satisfied, click the Save button below the map.
+              </p>
+              <p>
+                The red dots show the location of the cameras, and partially shaded red circles around each
+                dot represent a 20 mile radius circlular region that should be visible from each camera location.
+                Actual visible area depends on terrain occlusions and atmospheric visibility conditions.
+              </p>
+              <div
+                onMouseDown={e => this.handleMouseDown(e)}
+                onMouseUp={e => this.handleMouseUp(e)}
+                onMouseMove={e => this.handleMouseMove(e)}
+              >
+                <ResizeObserver
+                  onReflow={r=>this.checkImgLocation(r)}
+                />
+                <img src={maps[this.state.mapIndex].name} alt="Map" draggable={false}
+                  ref={e => this.saveImgRef(e)}
+                />
+                {this.state.minX && (
+                  <div style={{zIndex: 10, position: 'absolute',
+                    left: this.state.minX + 'px', top: this.state.minY + 'px',
+                    width: this.state.width + 'px', height: this.state.height + 'px',
+                    backgroundColor: 'transparent', border: '1px solid blue'}}
+                  >
+                  </div>
+                )}
+              </div>
+              <div className="w3-padding">
+                <button className={"w3-button w3-border w3-round-large w3-black" + ((this.state.mapIndex === 0) ? " w3-disabled" : "")}
+                  onClick={()=> this.zoomIn()}>Zoom in</button>
+                <button className={"w3-button w3-border w3-round-large w3-black" + ((this.state.mapIndex === (maps.length - 1)) ? " w3-disabled" : "")}
+                  onClick={()=> this.zoomOut()}>Zoom out</button>
+              </div>
+              <div className="w3-padding">
+                <button className={"w3-button w3-border w3-round-large w3-black" + (this.state.minX ? "" : " w3-disabled")}
+                  onClick={()=> this.saveRegion()}>
+                  Save selected region
+                </button>
+                <button className={"w3-button w3-border w3-round-large w3-black" +
+                                    ((this.state.savedRegion && this.state.savedRegion.topLat) ? "" : " w3-disabled")}
+                  onClick={()=> this.showRegion(this.state.savedRegion)}>
+                  Restore saved region
+                </button>
+                <button className="w3-button w3-border w3-round-large w3-black"
+                  onClick={()=> this.removeSelection()}>
+                  Remove selection
+                </button>
+              </div>
             </div>
             <div className="w3-padding"></div>
           </div>)

@@ -62,8 +62,8 @@ export async function serverPost(serverUrl, body) {
   return await resp.text();
 }
 
-export async function getUserRegion() {
-  const serverUrl = getServerUrl('/api/getRegion');
+export async function getUserPreferences() {
+  const serverUrl = getServerUrl('/api/getPreferences');
   const resp = await serverGet(serverUrl);
   return await resp.json();
 }
