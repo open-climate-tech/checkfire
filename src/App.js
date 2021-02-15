@@ -29,7 +29,7 @@ import './App.css';
 import VoteFires from './VoteFires';
 import ConfirmedFires from './ConfirmedFires';
 import SelectedFires from './SelectedFires';
-import ChooseArea from './ChooseArea';
+import Preferences from './Preferences';
 import LabelImage from './LabelImage';
 import Prototypes from './Prototypes';
 
@@ -55,7 +55,7 @@ function FirePagesHeader(props) {
           <Link to='/preferences'>Preferences</Link>
         :
           <span className="w3-disabled">
-            Choose area (sign-in required)
+            Preferences (sign-in required)
           </span>
         }
       </div>
@@ -153,7 +153,7 @@ class App extends Component {
             <Route path="/selected" exact render={props =>
                     <SelectedFires {...props} />} />
             <Route path="/preferences" exact render={props =>
-                    <ChooseArea {...props} validCookie={this.state.validCookie} />} />
+                    <Preferences {...props} validCookie={this.state.validCookie} />} />
             <Route path="/labelImage" exact render={props =>
                     <LabelImage {...props} validCookie={this.state.validCookie} />} />
             <Route path={["/", "/wildfirecheck"]} render={props =>

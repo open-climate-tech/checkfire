@@ -125,15 +125,15 @@ async function getUserPreferences(db, userID) {
   let region = {};
   if (rawPrefs) {
     region = {
-      topLat: rawPrefs.toplat || 0,
-      leftLong: rawPrefs.leftlong || 0,
-      bottomLat: rawPrefs.bottomlat || 0,
-      rightLong: rawPrefs.rightlong || 0,
+      topLat: rawPrefs.topLat || rawPrefs.toplat || 0,
+      leftLong: rawPrefs.leftLong || rawPrefs.leftlong || 0,
+      bottomLat: rawPrefs.bottomLat || rawPrefs.bottomlat || 0,
+      rightLong: rawPrefs.rightLong || rawPrefs.rightlong || 0,
     }
   }
   return {
     region: region,
-    webNotify: (rawPrefs && rawPrefs.webNotify) ? true : false,
+    webNotify: (rawPrefs && (rawPrefs.webNotify || rawPrefs.webnotify)) ? true : false,
   };
 }
 

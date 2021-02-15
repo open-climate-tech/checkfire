@@ -15,7 +15,7 @@
 # ==============================================================================
 */
 
-// Choose area of interest by dragging a rectangle over map
+// User preferences (Notifications and Choose area of interest by dragging a rectangle over map)
 
 import React, { Component } from "react";
 import ResizeObserver from 'react-resize-observer';
@@ -37,7 +37,7 @@ maps.forEach(mapInfo => {
   mapInfo.latHeight = mapInfo.topLat - mapInfo.bottomLat;
 });
 
-class ChooseArea extends Component {
+class Preferences extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -247,7 +247,8 @@ class ChooseArea extends Component {
                 <p>
                   Check the below if you want to see notifications on your device whenever
                   new potential fire events are discovered.  Note the browser may ask you to
-                  allow showing notifications.
+                  allow showing notifications.  Also note that the notifications are only shown
+                  when this site is not running in the foreground.
                 </p>
                 Notifications <input type="checkbox" id="webNotify" name="webNotify"
                   checked={this.state.webNotify} onChange={e => this.handleNotifyChange(e)}>
@@ -335,4 +336,4 @@ class ChooseArea extends Component {
   }
 }
 
-export default ChooseArea;
+export default Preferences;
