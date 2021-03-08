@@ -228,7 +228,11 @@ function initApis(config, app, db) {
     apiWrapper(req, res, config, 'GET getPreferences', async decoded => {
       const preferences = await oct_utils.getUserPreferences(db, decoded.email);
       console.log('getPreferences existing %s', JSON.stringify(preferences));
-      res.status(200).send(preferences).end();
+      const result = {
+        region: preferences.region,
+        webNotify: preferences.webNotify,
+      }
+      res.status(200).send(result).end();
     });
   });
 

@@ -23,7 +23,7 @@ const oct_utils = require('./oct_utils');
 const logger = oct_utils.getLogger('sse');
 
 // Interface versioning to ensure browser and nodejs are synced up
-const SSE_INTERFACE_VERSION = 5;
+const SSE_INTERFACE_VERSION = 6;
 
 // Array of all the connections to the frontend
 var connections = [];
@@ -36,6 +36,17 @@ var connections = [];
  */
 async function sendEvent(messageJson, connectionInfo, db) {
   messageJson.version = SSE_INTERFACE_VERSION;
+
+  // only show proto events to users with showProto prefs
+  if (messageJson.isProto) {
+    if (!connectionInfo.email) {
+      return;
+    }
+    const prefs = await oct_utils.getUserPreferences(db, connectionInfo.email);
+    if (!prefs.showProto) {
+      return;
+    }
+  }
 
   // add detail camera info, parse polygon, and associate user votes to messageJson
   await oct_utils.augmentCameraPolygonVotes(db, messageJson, connectionInfo.email);

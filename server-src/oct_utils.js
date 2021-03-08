@@ -134,6 +134,7 @@ async function getUserPreferences(db, userID) {
   return {
     region: region,
     webNotify: (rawPrefs && (rawPrefs.webNotify || rawPrefs.webnotify)) ? true : false,
+    showProto: (rawPrefs && (rawPrefs.showProto || rawPrefs.showproto)) ? true : false,
   };
 }
 
@@ -218,7 +219,8 @@ function dbAlertToUiObj(dbEvent) {
     "annotatedUrl": dbEvent.ImageID || dbEvent.imageid,
     "croppedUrl": dbEvent.CroppedID || dbEvent.croppedid,
     "mapUrl": dbEvent.MapID || dbEvent.mapid,
-    "polygon": dbEvent.polygon
+    "polygon": dbEvent.polygon,
+    "isProto": dbEvent.IsProto || dbEvent.isproto,
   }
 }
 
