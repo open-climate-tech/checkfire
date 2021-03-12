@@ -31,7 +31,7 @@ const scopes = [
   // 'profile'
 ];
 
-const cameraRegex = /^[0-9a-z\-]+\-mobo-c$/;
+const cameraHpwrenRegex = /^[0-9a-z\-]+\-mobo-c$/;
 
 /**
  * Verify that request has a valid signed JWT cookie
@@ -184,7 +184,6 @@ function initApis(config, app, db) {
 
       // cameraID validation
       assert(typeof(req.body.cameraID) === 'string');
-      assert(cameraRegex.test(req.body.cameraID));
 
       // timestamp validation
       assert(typeof(req.body.timestamp) === 'number');
@@ -192,6 +191,12 @@ function initApis(config, app, db) {
       assert(req.body.timestamp < new Date().valueOf()/1000);
 
       assert(typeof(req.body.isRealFire) === 'boolean');
+
+      // validate given info matches an alert
+      const alertsQuery = `select * from alerts where timestamp=${req.body.timestamp} and cameraname='${req.body.cameraID}'`;
+      const matchingAlerts = await db.query(alertsQuery);
+      assert(matchingAlerts.length === 1);
+
       const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
       // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
       if (existingVotesByUser && (existingVotesByUser.length > 0)) {
@@ -361,7 +366,7 @@ function initApis(config, app, db) {
     apiWrapper(req, res, config, 'GET fetchImage', async decoded => {
       const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
       assert(isLabeler);
-      assert(cameraRegex.test(req.query.cameraID));
+      assert(cameraHpwrenRegex.test(req.query.cameraID));
       const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZone);
       assert(dateTime.isValid);
       assert((req.query.direction === 'positive') || (req.query.direction === 'negative') || (req.query.direction === ''));
