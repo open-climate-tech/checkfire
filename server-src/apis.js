@@ -276,16 +276,30 @@ function initApis(config, app, db) {
    */
   app.get('/api/confirmedFires', async (req, res) => {
     logger.info('GET confirmedFires');
+    let decoded;
+    try {
+      decoded = await oct_utils.checkAuth(req, config);
+    } catch (err) {
+      // ignore
+    }
+    let showProto = false;
+    if (decoded && decoded.email) {
+      const prefs = await oct_utils.getUserPreferences(db, decoded.email);
+      showProto = prefs.showProto;
+    }
     const nowSeconds = Math.round(new Date().valueOf()/1000);
     const minTimestamp = nowSeconds - 3600*24*30; // check last 30 days
-    const sqlStr = `select * from
+    let sqlStr = `select * from
                       (select * from
                         (select cameraname,timestamp,avg(isrealfire) as avgrf,count(*) as ct from votes
                           where timestamp > ${minTimestamp} group by cameraname,timestamp) as q0
-                        where avgrf > 0.49 order by timestamp desc limit 20) as vt
+                        where avgrf > 0.49 order by timestamp desc limit 40) as vt
                       join alerts
-                        on vt.cameraname=alerts.cameraname and vt.timestamp=alerts.timestamp
-                      order by vt.timestamp desc`;
+                        on vt.cameraname=alerts.cameraname and vt.timestamp=alerts.timestamp`;
+    if (!showProto) {
+      sqlStr += ' where alerts.isproto != 1 ';
+    }
+    sqlStr += ' order by vt.timestamp desc limit 20';
     const dbRes = await db.query(sqlStr);
     const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
