@@ -78,9 +78,13 @@ export function FirePreview(props) {
       <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
         <h5>
           {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
-          {props.potFire.camInfo.cameraName} camera
+          {props.potFire.camInfo.cityName}
+          &nbsp;(
+            <a href={props.potFire.camInfo.networkUrl} target="_blank" rel="noopener noreferrer">{props.potFire.camInfo.network}</a>
+            &nbsp;{props.potFire.camInfo.cameraName}
+          )
           {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
-          &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)}
+          {/* &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)} */}
           &nbsp;(
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
           )

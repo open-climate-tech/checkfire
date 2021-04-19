@@ -155,19 +155,23 @@ async function isUserLabeler(db, userID) {
 /**
  * Get information about camera (name, direction) from the cameraID
  * @param {db_mgr} db
+ * @param {object} config
  * @param {string} cameraID
  */
-async function getCameraInfo(db, cameraID) {
+async function getCameraInfo(db, config, cameraID) {
   const camInfo = {
     cameraName: cameraID,
     cameraDir: ''
   };
 
   // query DB to get human name
-  const sqlStr = `select name from cameras where locationID = (select locationID from sources where name='${cameraID}')`;
+  const sqlStr = `select name, network, cityname from cameras where locationID = (select locationID from sources where name='${cameraID}')`;
   const camNameRes = await db.query(sqlStr);
   if (camNameRes && (camNameRes.length > 0)) {
-    camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name
+    camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name;
+    camInfo.network = camNameRes[0].Network || camNameRes[0].network;
+    camInfo.networkUrl = config.networkUrls && config.networkUrls[camInfo.network];
+    camInfo.cityName = camNameRes[0].CityName || camNameRes[0].cityname;
   }
 
   // use mapping table to get human direction
@@ -191,9 +195,9 @@ async function getCameraInfo(db, cameraID) {
   return camInfo;
 }
 
-async function augmentCameraPolygonVotes(db, potFire, userID) {
+async function augmentCameraPolygonVotes(db, config, potFire, userID) {
   // add camera metadata
-  const camInfo = await getCameraInfo(db, potFire.cameraID);
+  const camInfo = await getCameraInfo(db, config, potFire.cameraID);
   potFire.camInfo = camInfo;
 
   // parse polygon

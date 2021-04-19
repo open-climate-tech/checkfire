@@ -33,8 +33,9 @@ var connections = [];
  * @param {object} messageJson
  * @param {*} connectionInfo
  * @param {db_mgr} db
+ * @param {object} config
  */
-async function sendEvent(messageJson, connectionInfo, db) {
+async function sendEvent(messageJson, connectionInfo, db, config) {
   messageJson.version = SSE_INTERFACE_VERSION;
 
   // only show proto events to users with showProto prefs
@@ -49,7 +50,7 @@ async function sendEvent(messageJson, connectionInfo, db) {
   }
 
   // add detail camera info, parse polygon, and associate user votes to messageJson
-  await oct_utils.augmentCameraPolygonVotes(db, messageJson, connectionInfo.email);
+  await oct_utils.augmentCameraPolygonVotes(db, config, messageJson, connectionInfo.email);
 
   let eventParts = [
     'id: ' + messageJson.timestamp,
@@ -69,8 +70,9 @@ async function sendEvent(messageJson, connectionInfo, db) {
  * @param {HTTP Request} request
  * @param {*} connectionInfo
  * @param {db_mgr} db
+ * @param {object} config
  */
-async function checkConnectionToRestore(request, connectionInfo, db) {
+async function checkConnectionToRestore(request, connectionInfo, db, config) {
   let prevTimestamp = 0;
   if (request.headers["last-event-id"]) {
     const eventId = parseInt(request.headers["last-event-id"]);
@@ -82,7 +84,7 @@ async function checkConnectionToRestore(request, connectionInfo, db) {
   const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 20`;
   const potFireEvents = await db.query(sqlStr);
   potFireEvents.reverse().forEach(potFireEvent => {
-    sendEvent(oct_utils.dbAlertToUiObj(potFireEvent), connectionInfo, db);
+    sendEvent(oct_utils.dbAlertToUiObj(potFireEvent), connectionInfo, db, config);
   });
 }
 
@@ -90,9 +92,10 @@ async function checkConnectionToRestore(request, connectionInfo, db) {
  * Callback function used for when new messages about potential fires are received
  * from the ML based detection service.  Forward the data to all connected clients
  * @param {db_mgr} db
+ * @param {object} config
  * @param {string} messageData - JSON stringified
  */
-function updateFromDetect(db, messageData) {
+function updateFromDetect(db, config, messageData) {
   let messageJson;
   try {
     messageJson = JSON.parse(messageData);
@@ -104,7 +107,7 @@ function updateFromDetect(db, messageData) {
   // add isRealTime flag to real-time detections coming from detection service
   messageJson.isRealTime = true;
   connections.forEach(connectionInfo => {
-    sendEvent(messageJson, connectionInfo, db);
+    sendEvent(messageJson, connectionInfo, db, config);
   });
 }
 
@@ -143,11 +146,11 @@ function updateFromDetect(db, messageData) {
     } catch (_) {}
     logger.info('SSE add %s.  Total %d', !!connectionInfo.email, connections.length);
     connections.push(connectionInfo);
-    checkConnectionToRestore(request, connectionInfo, db);
+    checkConnectionToRestore(request, connectionInfo, db, config);
 
     // fakeEvents(response);
   });
-  return messageData => updateFromDetect(db, messageData);
+  return messageData => updateFromDetect(db, config, messageData);
 }
 
 /**
