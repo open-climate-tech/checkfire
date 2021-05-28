@@ -81,13 +81,15 @@ export function FirePreview(props) {
           {props.potFire.camInfo.cityName}
           &nbsp;(
             <a href={props.potFire.camInfo.networkUrl} target="_blank" rel="noopener noreferrer">{props.potFire.camInfo.network}</a>
-            &nbsp;{props.potFire.camInfo.cameraName}
+            &nbsp;
+            <a href={props.potFire.camInfo.camerakUrl} target="_blank" rel="noopener noreferrer">
+              {props.potFire.camInfo.cameraName}
+              {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
+            </a>
           )
-          {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
           {/* &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)} */}
-          &nbsp;(
-          <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">full image</a>
-          )
+          :&nbsp;
+          <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">Full image</a>
         </h5>
         <div className="w3-col m8">
           <video controls autoPlay muted loop width="800" height="600" poster={props.potFire.croppedUrl}>

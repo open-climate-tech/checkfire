@@ -171,6 +171,12 @@ async function getCameraInfo(db, config, cameraID) {
     camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name;
     camInfo.network = camNameRes[0].Network || camNameRes[0].network;
     camInfo.networkUrl = config.networkUrls && config.networkUrls[camInfo.network];
+    const cameraUrls = config.cameraUrls && config.cameraUrls[camInfo.network];
+    if (cameraUrls && cameraUrls.length === 2) {
+      camInfo.camerakUrl = cameraUrls[0] + cameraID + cameraUrls[1];
+    } else {
+      camInfo.camerakUrl = '';
+    }
     camInfo.cityName = camNameRes[0].CityName || camNameRes[0].cityname;
   }
 
