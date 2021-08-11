@@ -74,14 +74,24 @@ class VoteFires extends Component {
       numRecentFires: 0,
       numOldFires: 0,
       showOldFires: false,
+      showDetails: false,
       webNotify: false,
       notifyTitle: '',
       notifyOptions: '',
+      locationID: null,
     };
     this.sseVersion = null;
   }
 
   componentDidMount() {
+    const queryParams = new URLSearchParams(window.location.search)
+    const locationID = queryParams.get('locID');
+    // locationID queryParam automatically enables notifications
+    this.setState({
+      locationID: locationID,
+      webNotify: this.state.webNotify || Boolean(locationID)
+    });
+
     // setup SSE connection with backend to get updates on new detections
     const sseConfig = {};
     if (process.env.NODE_ENV === 'development') {
@@ -103,7 +113,7 @@ class VoteFires extends Component {
       const userRegion = preferences.region;
       this.setState({
         userRegion: userRegion,
-        webNotify: preferences.webNotify,
+        webNotify: preferences.webNotify || locationID,
       });
       // check existing potentialFires to see if they are within limits
       if (userRegion.topLat && this.state.potentialFires && this.state.potentialFires.length) {
@@ -160,6 +170,10 @@ class VoteFires extends Component {
   }
 
   isFireInRegion(potFire, userRegion) {
+    if (this.state.locationID && !potFire.cameraID.startsWith(this.state.locationID + '-')) {
+      return false;
+    }
+
     if (!userRegion || !userRegion.topLat || !potFire.polygon) {
       return true; // pass if coordinates are not available
     }
@@ -268,6 +282,10 @@ class VoteFires extends Component {
     this.setState({showOldFires: !this.state.showOldFires});
   }
 
+  toggleDetails() {
+    this.setState({showDetails: !this.state.showDetails});
+  }
+
   clearNotification() {
     this.setState({notifyTitle: ''});
   }
@@ -332,39 +350,52 @@ class VoteFires extends Component {
   render() {
     return (
       <div>
-        <h1 className="w3-padding-32 w3-row-padding">
-          Potential fires
-        </h1>
-        <h5>
-          There's no need to refresh this page to see new fires because it automatically updates to display new detections.
-          Note that the real-time detection is only active during daylight hours in California.
-        </h5>
-        <p>
-          This page shows recent potential fires as detected by the automated system.
-          Each potential fire event displays a five minute time-lapse video of portion of the camera image
-          where the potential fire was detected.  The last frame of the video highlights the detection
-          area in a red rectangle to help people quickly determine if there is a real fire.
-          Users intersted in seeting a broader view can see the full camera image by click on the
-          "full image" link above each video.
-          Each potential fire event display also includes a map with a red shaded triangular region
-          highlighting the potential fire region from the video (the map view is an approximation that
-          may not reflect the real view from the image).
-          The system does generate false notifications, and signed-in users can vote whether system was
-          correct or not.  These votes help improve the system over time, so please consider voting.
-        </p>
-        {
-          (this.state.userRegion && this.state.userRegion.topLat) ?
-            <h5>
-              Only potential fires in selected region are being shown.  To see potential fires across all
-              cameras, remove the selection in the <Link to='/preferences'>Preferences</Link> page.
-            </h5>
-          :
+        <span>
+          <h1>
+            Potential fires
+          </h1>
+          <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.toggleDetails()}>
+            {this.state.showDetails ? 'Hide description' : 'Show description'}
+          </button>
+        </span>
+        {this.state.showDetails &&
+          <div>
             <p>
-              Signed-in users can specify their region of interest on the&nbsp;
-              {this.props.validCookie? <Link to='/preferences'>Preferences</Link>: 'Preferences'}
-              &nbsp;page.
-              Such users will only see potential fire events that may overlap their chosen area of interest.
+              There's no need to refresh this page to see new fires because it automatically updates to display
+              new detections. Note that the real-time detection is only active during daylight hours in California.
             </p>
+            <p>
+              This page shows recent potential fires as detected by the automated system.
+              Each potential fire event displays a five minute time-lapse video of portion of the camera image
+              where the potential fire was detected.  The last frame of the video highlights the detection
+              area in a red rectangle to help people quickly determine if there is a real fire.
+              Users intersted in seeting a broader view can see the full camera image by click on the
+              "full image" link above each video.
+              Each potential fire event display also includes a map with a red shaded triangular region
+              highlighting the potential fire region from the video (the map view is an approximation that
+              may not reflect the real view from the image).
+              The system does generate false notifications, and signed-in users can vote whether system was
+              correct or not.  These votes help improve the system over time, so please consider voting.
+            </p>
+          </div>
+        }
+        {
+          this.state.locationID ?
+            <h5>
+              Only potential fires from camera location <strong>{this.state.locationID}</strong> are being shown.
+            </h5>
+          : ((this.state.userRegion && this.state.userRegion.topLat) ?
+              <h5>
+                Only potential fires in selected region are being shown.  To see potential fires across all
+                cameras, remove the selection in the <Link to='/preferences'>Preferences</Link> page.
+              </h5>
+            :
+              <p>
+                Signed-in users can restrict potential fires to their specified region of interest on the&nbsp;
+                {this.props.validCookie? <Link to='/preferences'>Preferences</Link>: 'Preferences'}
+                &nbsp;page.
+              </p>
+            )
         }
         {(!this.state.webNotify) && (
           <p>
