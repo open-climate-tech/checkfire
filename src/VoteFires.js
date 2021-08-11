@@ -114,6 +114,7 @@ class VoteFires extends Component {
       this.setState({
         userRegion: userRegion,
         webNotify: preferences.webNotify || locationID,
+        showProto: preferences.showProto,
       });
       // check existing potentialFires to see if they are within limits
       if (userRegion.topLat && this.state.potentialFires && this.state.potentialFires.length) {
@@ -416,7 +417,7 @@ class VoteFires extends Component {
         {
           (this.state.numRecentFires > 0) ?
             this.state.potentialFires.slice(0, this.state.numRecentFires).map(potFire =>
-              <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+              <FirePreview key={potFire.annotatedUrl} potFire={potFire} showProto={this.state.showProto}
                 childComponent={<VoteButtons validCookie={this.props.validCookie} potFire={potFire}
                                   onVote={(f,v) => this.vote(f,v)} signin={this.props.signin} />}
               />)
@@ -435,7 +436,7 @@ class VoteFires extends Component {
               </p>
               {
                 this.state.potentialFires.slice(this.state.numRecentFires).map(potFire =>
-                  <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+                  <FirePreview key={potFire.annotatedUrl} potFire={potFire} showProto={this.state.showProto}
                     childComponent={<VoteButtons validCookie={this.props.validCookie} potFire={potFire}
                                       onVote={(f,v) => this.vote(f,v)} signin={this.props.signin} />}
                   />)

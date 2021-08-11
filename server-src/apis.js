@@ -236,6 +236,7 @@ function initApis(config, app, db) {
       const result = {
         region: preferences.region,
         webNotify: preferences.webNotify,
+        showProto: preferences.showProto,
       }
       res.status(200).send(result).end();
     });

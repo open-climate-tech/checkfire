@@ -90,6 +90,11 @@ export function FirePreview(props) {
           {/* &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)} */}
           :&nbsp;
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">Full image</a>
+          {props.showProto && props.potFire.weatherScore &&
+            <div>
+              Wscore: {props.potFire.weatherScore}
+            </div>
+          }
         </h5>
         <div className="w3-col m8">
           <video controls autoPlay muted loop width="800" height="600" poster={props.potFire.croppedUrl}>

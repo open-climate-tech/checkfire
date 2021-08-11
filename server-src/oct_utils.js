@@ -226,6 +226,7 @@ function dbAlertToUiObj(dbEvent) {
     "timestamp": dbEvent.Timestamp || dbEvent.timestamp,
     "cameraID": dbEvent.CameraName || dbEvent.cameraname,
     "adjScore": dbEvent.AdjScore || dbEvent.adjscore,
+    "weatherScore": dbEvent.WeatherScore || dbEvent.weatherscore,
     "annotatedUrl": dbEvent.ImageID || dbEvent.imageid,
     "croppedUrl": dbEvent.CroppedID || dbEvent.croppedid,
     "mapUrl": dbEvent.MapID || dbEvent.mapid,
