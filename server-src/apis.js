@@ -352,7 +352,7 @@ function initApis(config, app, db) {
         const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
         fireEvent.avgVote = dbEntry.avgrf;
         fireEvent.numVotes = dbEntry.ct;
-        return await oct_utils.augmentCameraPolygonVotes(db, config, fireEvent);
+        return await oct_utils.augmentCameraPolygonVotes(db, config, fireEvent, decoded.email);
       }));
       res.status(200).send(fireEvents).end();
     });
