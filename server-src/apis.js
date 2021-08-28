@@ -192,10 +192,10 @@ function initApis(config, app, db) {
 
       assert(typeof(req.body.isRealFire) === 'boolean');
 
-      // validate given info matches an alert
-      const alertsQuery = `select * from alerts where timestamp=${req.body.timestamp} and cameraname='${req.body.cameraID}'`;
-      const matchingAlerts = await db.query(alertsQuery);
-      assert(matchingAlerts.length === 1);
+      // validate given info matches an detection
+      const detectionsQuery = `select * from detections where timestamp=${req.body.timestamp} and cameraname='${req.body.cameraID}'`;
+      const matchingDetections = await db.query(detectionsQuery);
+      assert(matchingDetections.length === 1);
 
       const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
       // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
@@ -333,6 +333,29 @@ function initApis(config, app, db) {
       return await oct_utils.augmentCameraPolygonVotes(db, config, fireEvent);
     }));
     res.status(200).send(fireEvents).end();
+  });
+
+  /**
+   * Get a list of detected fires
+   */
+   app.get('/api/detectedFires', async (req, res) => {
+    apiWrapper(req, res, config, 'GET detectedFires', async decoded => {
+      const preferences = await oct_utils.getUserPreferences(db, decoded.email);
+      assert(preferences.showProto);
+
+      const sqlStr = `select detections.*
+                        from detections left join alerts on detections.timestamp=alerts.timestamp and detections.cameraname=alerts.cameraname
+                        where alerts.timestamp is null
+                        order by detections.timestamp desc limit 20;`;
+      const dbRes = await db.query(sqlStr);
+      const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
+        const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
+        fireEvent.avgVote = dbEntry.avgrf;
+        fireEvent.numVotes = dbEntry.ct;
+        return await oct_utils.augmentCameraPolygonVotes(db, config, fireEvent);
+      }));
+      res.status(200).send(fireEvents).end();
+    });
   });
 
   /**

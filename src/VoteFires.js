@@ -21,49 +21,7 @@ import React, { Component } from "react";
 import {Link} from "react-router-dom";
 import Notification  from "react-web-notification";
 
-import googleSigninImg from './btn_google_signin_dark_normal_web.png';
-import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
-import {getServerUrl, serverPost, getUserPreferences, FirePreview} from './OctReactUtils';
-
-/**
- * Show voting buttons (yes/no), or already cast vote, or signin button
- * @param {*} props
- */
-function VoteButtons(props) {
-  if (!props.validCookie) {
-    return (
-    <div>
-      <p>Is this a fire?</p>
-      <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> props.signin()}>
-      <img src={googleSigninImg} alt="Sign in with Google"
-         onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
-         onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
-      </button>
-      <p>to vote</p>
-    </div>
-    );
-  } else if (props.potFire.voted !== undefined) {
-    if (props.potFire.voted) {
-      return <p>Thanks for confirming this is a real fire</p>;
-    } else {
-      return <p>Thanks for confirming this is not a fire</p>;
-    }
-  } else {
-    return (
-    <div>
-      <p>Is this a fire?</p>
-      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
-        <i className="fa fa-fire" style={{color: "red"}} />
-        &nbsp;Real fire
-      </button>
-      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
-        <i className="fa fa-close" />
-        &nbsp;Not a fire
-      </button>
-    </div>
-    );
-  }
-}
+import {getServerUrl, serverPost, getUserPreferences, FirePreview, VoteButtons} from './OctReactUtils';
 
 class VoteFires extends Component {
   constructor(props) {
