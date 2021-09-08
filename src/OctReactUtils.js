@@ -93,7 +93,7 @@ export function FirePreview(props) {
           :&nbsp;
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">Full image</a>
           {props.showProto && props.potFire.weatherScore &&
-            <div>
+            <div className={(props.potFire.weatherScore > 0.25) && "w3-pale-red"}>
               Wscore: {props.potFire.weatherScore}
             </div>
           }

@@ -294,11 +294,11 @@ function initApis(config, app, db) {
                       (select * from
                         (select cameraname,timestamp,avg(isrealfire) as avgrf,count(*) as ct from votes
                           where timestamp > ${minTimestamp} group by cameraname,timestamp) as q0
-                        where avgrf > 0.49 order by timestamp desc limit 40) as vt
-                      join alerts
-                        on vt.cameraname=alerts.cameraname and vt.timestamp=alerts.timestamp`;
+                        where avgrf > 0.49 order by timestamp desc limit 100) as vt
+                      join detections
+                        on vt.cameraname=detections.cameraname and vt.timestamp=detections.timestamp`;
     if (!showProto) {
-      sqlStr += ' where alerts.isproto != 1 ';
+      sqlStr += ' where detections.isproto != 1 ';
     }
     sqlStr += ' order by vt.timestamp desc limit 20';
     const dbRes = await db.query(sqlStr);
