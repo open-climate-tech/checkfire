@@ -25,17 +25,14 @@ const { DateTime } = require('luxon');
 const CHECK_MINUTES = 10; // check every 10 minutes
 
 /**
- * Check number of detection instances are valid for currnet time
+ * Check number of detection instances are valid for currnet time in given group
  * @param {object} config
+ * @param {string} groupName
+ * @param {number} numInstances
  */
-async function checkInstances(config) {
-  if (!config.detectZone || !config.detectGroup ||
-      !config.detectStartTime || !config.detectEndTime || !config.detectNumInstances) {
-    logger.error('Missing detect management settings');
-    return;
-  }
-  if (config.detectEndTime < config.detectStartTime) {
-    logger.error('End (%s) before Start (%s)', config.detectEndTime, config.detectStartTime);
+ async function checkGroup(config, groupName, numInstances) {
+  if (!groupName || !Number.isInteger(numInstances)) {
+    logger.error('Invalid detect group name (%s) or num (%d)', groupName, numInstances);
     return;
   }
   // start/end times in config are based on local timezone, so adjust current time
@@ -43,7 +40,7 @@ async function checkInstances(config) {
   logger.info('Now (%s), Start (%s), End (%s)', now, config.detectStartTime, config.detectEndTime);
   const expected = (now < config.detectStartTime) ? 0 :
                    (now >= config.detectEndTime) ? 0 :
-                   config.detectNumInstances;
+                   numInstances;
 
   const options = {};
   if (config.gcpServiceKey) {
@@ -53,17 +50,37 @@ async function checkInstances(config) {
   const compute = new Compute(options);
   const zone = compute.zone(config.detectZone);
   const instanceGroupMgrs = await zone.getInstanceGroupManagers();
-  const instanceGroupMgr = instanceGroupMgrs[0].find(i => i.name === config.detectGroup);
+  const instanceGroupMgr = instanceGroupMgrs[0].find(i => i.name === groupName);
   const instanceVMs = await instanceGroupMgr.getManagedInstances();
   const found = instanceVMs[0].length;
-  logger.info('Num instances expected (%d), found (%d)', expected, found);
+  logger.info('Group: %s: Num instances expected (%d), found (%d)', groupName, expected, found);
 
   if (found != expected) {
     await instanceGroupMgr.resize(expected);
-    logger.info('resized to %d', expected);
+    logger.info('Group: %s: resized to %d', groupName, expected);
     // deletion is a more drastic way that is not currently necessary,
     // but leaving commented out code here in case something changes
     // await instanceGroupMgr.deleteInstances(instanceVMs[0].slice(0, found - expected));
+  }
+}
+
+/**
+ * Check number of detection instances are valid for currnet time
+ * @param {object} config
+ */
+async function checkInstances(config) {
+  if (!config.detectZone || !config.detectGroups ||
+      !config.detectStartTime || !config.detectEndTime) {
+    logger.error('Missing detect management settings');
+    return;
+  }
+  if (config.detectEndTime < config.detectStartTime) {
+    logger.error('End (%s) before Start (%s)', config.detectEndTime, config.detectStartTime);
+    return;
+  }
+
+  for (let groupInfo of config.detectGroups) {
+    await checkGroup(config, groupInfo[0], groupInfo[1]);
   }
 }
 
