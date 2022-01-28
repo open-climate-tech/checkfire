@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    .oct-head-margin{margin-top:40px;}
+</style>
+
+<head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-163857708-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-163857708-1', { 'page_path': window.location.pathname + window.location.search });
+    </script>
+
+    <title>Open Climate Tech</title>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="w3-top">
+        <div class="w3-bar w3-white w3-wide w3-padding w3-card">
+            <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-hover-white w3-large w3-light-grey"
+                href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+            <div class="w3-col s3">
+                <a href="/#" class="w3-button w3-block">Home</a>
+            </div>
+            <div class="w3-col s3 w3-hide-small">
+                <a href="/#projects" class="w3-button w3-block">Projects</a>
+            </div>
+            <div class="w3-col s3 w3-hide-small">
+                <a href="/#about" class="w3-button w3-block">About</a>
+            </div>
+            <div class="w3-col s3 w3-hide-small">
+                <a href="/#contact" class="w3-button w3-block">Contact</a>
+            </div>
+        </div>
+
+        <!-- Navbar on small screens -->
+        <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium w3-large">
+            <a href="/#projects" class="w3-bar-item w3-button w3-padding-large">Projects</a>
+            <a href="/#about" class="w3-bar-item w3-button w3-padding-large">About</a>
+            <a href="/#contact" class="w3-bar-item w3-button w3-padding-large">Contact</a>
+        </div>
+    </div>
+    <div class="w3-row-padding w3-padding-64 w3-container w3-light-grey ">
+        <div class="w3-content">
+            <h1>Privacy Policy</h1>
+            <p>
+                This privacy policy ("policy") will help you understand how Open Climate Tech ("us", "we", "our") uses and
+                protects the data you provide to us when you visit and use our website ("website", "service").
+                
+                We reserve the right to change this policy at any given time, of which you will be promptly
+                updated. If you want to make sure that you are up to date with the latest changes, we advise
+                you to frequently visit this page.
+            </p>
+            <h2>What User Data We Collect and Why</h2>
+            <p>
+                When you visit the website, we log which pages are visited in order to improve the website and resolve any issues.
+                These logs are deleted after one month.
+            </p>
+            <p>
+                We use Google Analytics to find user growth patterns and to determine how to scale
+                our services to meet our user needs.
+            </p>
+            <p>
+                When authenticated users save preferences, we store those preferences in order to
+                customize ther users' experience of our website to their desire.
+                When authenticated users vote on the site, the votes are stored in our database along 
+                with their user identifier to analyze voting data to improve accuracy, and to stop potential abuse.
+            </p>
+            <h2>Safeguarding and Securing the Data</h2>
+            <p>
+                We are committed to securing your data and keeping it confidential. We have done all in its
+                power to prevent data theft, unauthorized access, and disclosure by implementing the latest
+                technologies and software, which help us safeguard all the information we collect online.
+            </p>
+            <p>
+                We will not lease, sell or distribute your personal information to any third parties.
+                We might do so if the law forces us.
+            </p>
+            <h2>Our Cookie Policy</h2>
+            <p>
+                We use cookies to identify authenticated users in order to honor their prefernces and to
+                associate votes with their user identifier.
+                Google Analytics may also store cookies.
+                If you want to disable cookies, you can do it by accessing the settings of your internet browser.
+            </p>
+            <h2>Links to Other Websites</h2>
+            <p>
+                Our website contains links that lead to other websites. If you click on these links we are not
+                held responsible for your data and privacy protection. Visiting those websites is not governed by
+                this privacy policy agreement. Make sure to read the privacy policy documentation of the
+                website you go to from our website.
+            </p>
+            <h2>Contact</h2>
+            <p>
+                If you have any questions about this Privacy Policy, please contact us at:
+            </p>
+            <p>&#105;&#110;f&#111;&#64;&#111;&#112;enc&#108;&#105;&#109;a&#116;e&#116;&#101;c&#104;.&#111;&#114;g</p>
+        </div>
+    </div>
+    <script>
+        // Used to toggle the menu on small screens when clicking on the menu button
+        function myFunction() {
+        var x = document.getElementById("navDemo");
+        if (x.className.indexOf("w3-show") == -1) {
+            x.className += " w3-show";
+        } else {
+            x.className = x.className.replace(" w3-show", "");
+        }
+        }
+    </script>
+</body>
+</html>
