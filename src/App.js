@@ -78,7 +78,7 @@ function FirePagesHeader(props) {
         If you discover a real fire that recently ignited,
         consider informing the fire department to take appropriate action.
       </p>
-      <a href="/disclaimer.html">Disclaimer</a>
+      <a href="/terms.html">Terms and Conditions</a>
     </header>
   </div>);
 }
