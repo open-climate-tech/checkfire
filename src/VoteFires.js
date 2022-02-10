@@ -37,6 +37,7 @@ class VoteFires extends Component {
       notifyTitle: '',
       notifyOptions: '',
       locationID: null,
+      latLongStr: null,
     };
     this.sseVersion = null;
   }
@@ -44,10 +45,33 @@ class VoteFires extends Component {
   componentDidMount() {
     const queryParams = new URLSearchParams(window.location.search)
     const locationID = queryParams.get('locID');
-    // locationID queryParam automatically enables notifications
+    let latLongStr = queryParams.get('latLong');
+    const regexLatLong = /^([0-9]{1,2}),([0-9]{1,2}),(-[0-9]{1,3}),(-[0-9]{1,3})$/; // lat/long for northern and western hemispheres
+    const latLongParsed = regexLatLong.exec(latLongStr);
+    let userRegion = null;
+    if (latLongParsed) {
+      userRegion = {
+        bottomLat: parseInt(latLongParsed[1]),
+        topLat: parseInt(latLongParsed[2]),
+        leftLong: parseInt(latLongParsed[3]),
+        rightLong: parseInt(latLongParsed[4]),
+      }
+      // basic lat/long verification for northern and western hemispheres
+      if (userRegion.topLat > 90 || userRegion.bottomLat > 90 || userRegion.topLat <= userRegion.bottomLat ||
+        userRegion.leftLong < -180 || userRegion.rightLong < -180 || userRegion.leftLong >= userRegion.rightLong) {
+          userRegion = null;
+          latLongStr = null;
+        }
+    } else {
+      latLongStr = null;
+    }
+
+    // locationID and latLong queryParams automatically enable notifications
     this.setState({
       locationID: locationID,
-      webNotify: this.state.webNotify || Boolean(locationID)
+      latLongStr: latLongStr,
+      userRegion: userRegion,
+      webNotify: this.state.webNotify || Boolean(locationID) || Boolean(latLongStr)
     });
 
     // setup SSE connection with backend to get updates on new detections
@@ -68,10 +92,12 @@ class VoteFires extends Component {
     // filter potential fires with user specified region of interest
     getUserPreferences().then(preferences => {
       // console.log('preferences', preferences);
-      const userRegion = preferences.region;
+      if (!userRegion || !latLongStr) {
+        userRegion = preferences.region;
+      }
       this.setState({
         userRegion: userRegion,
-        webNotify: preferences.webNotify || locationID,
+        webNotify: preferences.webNotify || Boolean(locationID) || Boolean(latLongStr),
         showProto: preferences.showProto,
       });
       // check existing potentialFires to see if they are within limits
@@ -136,10 +162,11 @@ class VoteFires extends Component {
     if (!userRegion || !userRegion.topLat || !potFire.polygon) {
       return true; // pass if coordinates are not available
     }
-    let minLat = 100;
+    // min/max lat/long for northern and western hemispheres
+    let minLat = 90;
     let maxLat = 0;
-    let minLong = 200;
-    let maxLong = -200;
+    let minLong = 0;
+    let maxLong = -180;
     let vertexInRegion = false;
     potFire.polygon.forEach(vertex => {
       minLat = Math.min(minLat, vertex[0]);
