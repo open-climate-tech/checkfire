@@ -37,7 +37,7 @@ import Prototypes from './Prototypes';
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
 import Cookies from 'js-cookie';
-import jwt from 'jsonwebtoken';
+import jwt_decode from 'jwt-decode'
 import {getServerUrl, serverGet} from './OctReactUtils';
 
 const qs = require('qs');
@@ -98,7 +98,7 @@ class App extends Component {
   checkCookie() {
     const cf_token = Cookies.get('cf_token');
     if (cf_token) {
-      const decoded = jwt.decode(cf_token);
+      const decoded = jwt_decode(cf_token);
       const now = new Date().valueOf()/1000;
       console.log('now', now, decoded.exp, now < decoded.exp);
       const newState = {
