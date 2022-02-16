@@ -106,7 +106,7 @@ export function FirePreview(props) {
         </div>
         <div className="w3-col m4">
           {props.childComponent}
-          <div className="w3-padding-32">
+          <div className="w3-padding-8">
             <p>View area</p>
             <img width="320" height="320" src={props.potFire.mapUrl} alt="Viewshed" />
           </div>
@@ -125,13 +125,12 @@ export function VoteButtons(props) {
   if (!props.validCookie) {
     return (
     <div>
-      <p>Is this a fire?</p>
+      <p>Sign in to vote if this is a fire</p>
       <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> props.signin()}>
       <img src={googleSigninImg} alt="Sign in with Google"
          onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
          onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
       </button>
-      <p>to vote</p>
     </div>
     );
   } else if (props.potFire.voted !== undefined) {
