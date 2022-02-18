@@ -237,7 +237,7 @@ class VoteFires extends Component {
 
     // if this is a new real-time fire, and notifications are enabled, trigger notification
     const newTop = updatedFires.length ? updatedFires[0] : {};
-    if (newTop && newTop.isRealTime && this.state.webNotify) {
+    if (newTop && newTop.isRealTime && this.state.webNotify && (newTop.timestamp === parsed.timestamp) && (newTop.cameraID === parsed.cameraID)) {
       this.notify(updatedFires);
     }
     this.updateFiresAndCounts(updatedFires);
