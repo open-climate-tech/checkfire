@@ -304,7 +304,7 @@ class VoteFires extends Component {
       notifyOptions: {
         tag: newFire.timestamp.toString(),
         body: `Camera ${newFire.camInfo.cameraName} facing ${newFire.camInfo.cameraDir}`,
-        icon: '/checkfire192.png',
+        icon: '/wildfirecheck/checkfire192.png',
         lang: 'en',
       }
     });
