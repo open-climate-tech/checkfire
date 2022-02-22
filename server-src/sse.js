@@ -120,6 +120,7 @@ function updateFromDetect(db, config, messageData) {
  */
  function initSSE(config, app, db) {
   app.get('/fireEvents', async (request, response) => {
+    request.setTimeout(50 * 60 * 1000); // extend default timeout of 2 minutes to 50 mins (1 hour is max)
     request.on("close", () => {
       if (!response.finished) {
         response.end();
