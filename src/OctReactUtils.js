@@ -99,16 +99,16 @@ export function FirePreview(props) {
           }
         </h5>
         <div className="w3-col m8">
-          <video controls autoPlay muted loop width="700" height="500" poster={props.potFire.croppedUrl}>
+          <video controls autoPlay muted loop width="640" height="460" poster={props.potFire.croppedUrl}>
             <source src={props.potFire.croppedUrl} type="video/mp4" />
             Your browser does not support the video tag
           </video>
         </div>
         <div className="w3-col m4">
           {props.childComponent}
-          <div className="w3-padding-8">
+          <div>
             <p>View area</p>
-            <img width="320" height="320" src={props.potFire.mapUrl} alt="Viewshed" />
+            <img width="280" height="280" src={props.potFire.mapUrl} alt="Viewshed" />
           </div>
         </div>
       </div>
