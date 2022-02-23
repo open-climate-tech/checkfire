@@ -99,7 +99,7 @@ export function FirePreview(props) {
           }
         </h5>
         <div className="w3-col m8">
-          <video controls autoPlay muted loop width="640" height="460" poster={props.potFire.croppedUrl}>
+          <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.potFire.croppedUrl}>
             <source src={props.potFire.croppedUrl} type="video/mp4" />
             Your browser does not support the video tag
           </video>
