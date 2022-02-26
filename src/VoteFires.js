@@ -46,19 +46,23 @@ class VoteFires extends Component {
     const queryParams = new URLSearchParams(window.location.search)
     const locationID = queryParams.get('locID');
     let latLongStr = queryParams.get('latLong');
-    const regexLatLong = /^([0-9]{1,2}),([0-9]{1,2}),(-[0-9]{1,3}),(-[0-9]{1,3})$/; // lat/long for northern and western hemispheres
+     // lat/long for northern (> 10 latitude) and western (<-100) longitude
+    const twoPointOne = '([0-9]{2}(?:\.[0-9])?)'
+    const negThreePointOne = '(-[0-9]{3}(?:\.[0-9])?)'
+    const regexLatLong = RegExp('^' + twoPointOne + ',' + twoPointOne + ',' + negThreePointOne + ',' + negThreePointOne + '$')
     const latLongParsed = regexLatLong.exec(latLongStr);
     let userRegion = null;
     if (latLongParsed) {
       userRegion = {
-        bottomLat: parseInt(latLongParsed[1]),
-        topLat: parseInt(latLongParsed[2]),
-        leftLong: parseInt(latLongParsed[3]),
-        rightLong: parseInt(latLongParsed[4]),
+        bottomLat: parseFloat(latLongParsed[1]),
+        topLat: parseFloat(latLongParsed[2]),
+        leftLong: parseFloat(latLongParsed[3]),
+        rightLong: parseFloat(latLongParsed[4]),
       }
       // basic lat/long verification for northern and western hemispheres
-      if (userRegion.topLat > 90 || userRegion.bottomLat > 90 || userRegion.topLat <= userRegion.bottomLat ||
-        userRegion.leftLong < -180 || userRegion.rightLong < -180 || userRegion.leftLong >= userRegion.rightLong) {
+      // also verify degree difference of at least 0.3
+      if (userRegion.topLat > 90 || userRegion.bottomLat > 90 || userRegion.topLat < (userRegion.bottomLat + 0.3) ||
+        userRegion.leftLong < -180 || userRegion.rightLong < -180 || userRegion.rightLong < (userRegion.leftLong + 0.3)) {
           userRegion = null;
           latLongStr = null;
         }
