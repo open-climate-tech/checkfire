@@ -119,6 +119,27 @@ async function initDB(config, useSocket=false) {
   }
 
   /**
+   * Insert if there's no existing row in table with given primary key/value (queryKey/queryValue)
+   * @param {string} tableName
+   * @param {Array<string>} dataKeys
+   * @param {Array<>} dataValues
+   * @param {string} queryKey
+   * @param {*} queryValue
+   */
+   db.insertIfNew = async function insertIfNew(tableName, dataKeys, dataValues, queryKey, queryValue) {
+    // TODO: wrap this in a tx
+    const sqlQuery = `select * from ${tableName} where ${queryKey} = '${queryValue}'`;
+    const queryRes = await db.query(sqlQuery);
+    if (queryRes && queryRes[0]) {
+      // noop
+      return Promise.resolve();
+    } else {
+      // insert
+      return db.insert(tableName, dataKeys.concat(queryKey), dataValues.concat(queryValue));
+    }
+  }
+
+  /**
    * Close the DB connection
    */
   db.close = function dbClose() {
