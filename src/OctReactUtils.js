@@ -71,6 +71,34 @@ export async function getUserPreferences() {
 }
 
 /**
+ * Show a list of maps with different zoom levels
+ * @param {*} props
+ */
+export function ZoomableMaps(props) {
+  const mapsList = props.mapUrls.split(',');
+  const initialIndex = (mapsList.length > 1) ? (mapsList.length - 2) : 0;
+  const [index, setIndex] = React.useState(initialIndex);
+  return (
+    <div>
+      <p>View area</p>
+      <div class="w3-display-container">
+        <div class="w3-display-topmiddle" style={{width: "280px"}}>
+          {(mapsList.length > 1) &&
+            <div class="w3-display-topleft">
+              <button className={"w3-button w3-border w3-round-large w3-black w3-padding-small" + ((index === mapsList.length - 1) ? " w3-disabled" : "")}
+                onClick={() => setIndex(index < mapsList.length - 1 ? index + 1 : index)}>+</button>
+              <button className={"w3-button w3-border w3-round-large w3-black w3-padding-small" + ((index === 0) ? " w3-disabled" : "")}
+                onClick={() => setIndex(index > 0 ? index - 1 : index)}>-</button>
+            </div>
+          }
+          <img width="280" height="280" src={mapsList[index]} alt="Viewshed" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Show preview of the potential fire along with caller specified childComponent
  * @param {*} props
  */
@@ -106,10 +134,7 @@ export function FirePreview(props) {
         </div>
         <div className="w3-col m4">
           {props.childComponent}
-          <div>
-            <p>View area</p>
-            <img width="280" height="280" src={props.potFire.mapUrl} alt="Viewshed" />
-          </div>
+          <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
         </div>
       </div>
       &nbsp;
