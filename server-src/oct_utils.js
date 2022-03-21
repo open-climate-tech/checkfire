@@ -165,12 +165,14 @@ async function getCameraInfo(db, config, cameraID) {
   };
 
   // query DB to get human name
-  const sqlStr = `select name, network, cityname from cameras where locationID = (select locationID from sources where name='${cameraID}')`;
+  const sqlStr = `select name, network, cityname, latitude, longitude from cameras where locationID = (select locationID from sources where name='${cameraID}')`;
   const camNameRes = await db.query(sqlStr);
   if (camNameRes && (camNameRes.length > 0)) {
     camInfo.cameraName = camNameRes[0].Name || camNameRes[0].name;
     camInfo.network = camNameRes[0].Network || camNameRes[0].network;
     camInfo.networkUrl = config.networkUrls && config.networkUrls[camInfo.network];
+    camInfo.latitude = camNameRes[0].Latitude || camNameRes[0].latitude;
+    camInfo.longitude = camNameRes[0].Longitude || camNameRes[0].longitude;
     const cameraUrls = config.cameraUrls && config.cameraUrls[camInfo.network];
     if (cameraUrls && cameraUrls.length === 2) {
       camInfo.camerakUrl = cameraUrls[0] + cameraID + cameraUrls[1];
@@ -179,26 +181,43 @@ async function getCameraInfo(db, config, cameraID) {
     }
     camInfo.cityName = camNameRes[0].CityName || camNameRes[0].cityname;
   }
-
-  // use mapping table to get human direction
-  const cardinalHeadings = {
-    'n': [0, 'North'],
-    'e': [90, 'East'],
-    's': [180, 'South'],
-    'w': [270, 'West'],
-    'ne': [45, 'Northeast'],
-    'se': [135, 'Southeast'],
-    'sw': [225, 'Southwest'],
-    'nw': [315, 'Northwest'],
-  }
-  const regexMobo = /-([ns]?[ew]?)-mobo-c/;
-  const parsed = regexMobo.exec(cameraID);
-  if (parsed && Array.isArray(parsed)) {
-    const camDirAbbr = parsed[1];
-    camInfo.cameraDir = cardinalHeadings[camDirAbbr] ? cardinalHeadings[camDirAbbr][1] : camDirAbbr;
-  }
-  // logger.info('Camera namemap (%s -> %s,%s)', cameraID, camInfo.cameraName, camInfo.cameraDir);
   return camInfo;
+}
+
+function getFireCardinalHeading(firePolygon, camLatitude, camLongitude) {
+  // first get lat/long for firePolygon
+  let polygon;
+  if ((firePolygon[0][0] === firePolygon[firePolygon.length-1][0]) && (firePolygon[0][1] === firePolygon[firePolygon.length-1][1])) {
+    polygon = firePolygon.slice(0, firePolygon.length - 1);
+  } else {
+    polygon = firePolygon.slice();
+  }
+  const polySum = polygon.reduce((sum,point) => [sum[0] + point[0], sum[1] + point[1]], [0,0]);
+  const fireCenter = [polySum[0]/polygon.length, polySum[1]/polygon.length];
+
+  // diff the lat/long with camera and use atan2 to get numerical heading
+  const latDiff = fireCenter[0] - camLatitude;
+  const longDiff = fireCenter[1] - camLongitude;
+  const angleEast = Math.round(Math.atan2(latDiff, longDiff) * 180/Math.PI);
+  let heading = 90 - angleEast;
+  if (heading < 0) {
+    heading += 360;
+  }
+
+  // convert numerical heading to cardinal name
+  const cardinalHeadings = {
+    0: 'North',
+    45: 'Northeast',
+    90: 'East',
+    135: 'Southeast',
+    180: 'South',
+    225: 'Southwest',
+    270: 'West',
+    315: 'Northwest',
+  };
+  const degreesPerHeading = 360/Object.keys(cardinalHeadings).length;
+  const roundedHeading = (Math.round(heading/degreesPerHeading) * degreesPerHeading) % 360;
+  return cardinalHeadings[roundedHeading];
 }
 
 async function augmentCameraPolygonVotes(db, config, potFire, userID) {
@@ -209,6 +228,7 @@ async function augmentCameraPolygonVotes(db, config, potFire, userID) {
   // parse polygon
   if (potFire.polygon && (typeof(potFire.polygon) === 'string')) {
     potFire.polygon = JSON.parse(potFire.polygon);
+    potFire.camInfo.cameraDir = getFireCardinalHeading(potFire.polygon, camInfo.latitude, camInfo.longitude);
   }
 
   if (userID) {
