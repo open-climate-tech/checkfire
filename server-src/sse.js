@@ -30,16 +30,16 @@ var connections = [];
 
 /**
  * Send SSE eventsource message using given client response
- * @param {object} messageJson
+ * @param {object} potFire
  * @param {*} connectionInfo
  * @param {db_mgr} db
  * @param {object} config
  */
-async function sendEvent(messageJson, connectionInfo, db, config) {
-  messageJson.version = SSE_INTERFACE_VERSION;
+async function sendEvent(potFire, connectionInfo, db, config) {
+  potFire.version = SSE_INTERFACE_VERSION;
 
   // only show proto events to users with showProto prefs
-  if (messageJson.isProto) {
+  if (potFire.isProto) {
     if (!connectionInfo.email) {
       return;
     }
@@ -49,13 +49,13 @@ async function sendEvent(messageJson, connectionInfo, db, config) {
     }
   }
 
-  // add detail camera info, parse polygon, and associate user votes to messageJson
-  await oct_utils.augmentCameraPolygonVotes(db, config, messageJson, connectionInfo.email);
+  // add detail camera info, parse polygon, and associate user votes to potFire
+  await oct_utils.augmentVotes(db, potFire, connectionInfo.email);
 
   let eventParts = [
-    'id: ' + messageJson.timestamp,
+    'id: ' + potFire.timestamp,
     'event: newPotentialFire',
-    'data: ' + JSON.stringify(messageJson),
+    'data: ' + JSON.stringify(potFire),
     '', ''  // two extra empty strings to generate \n\n at the end
   ];
   let eventString = eventParts.join('\n');
@@ -83,8 +83,19 @@ async function checkConnectionToRestore(request, connectionInfo, db, config) {
   }
   const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by timestamp desc limit 100`;
   const potFireEvents = await db.query(sqlStr);
-  potFireEvents.reverse().forEach(potFireEvent => {
-    sendEvent(oct_utils.dbAlertToUiObj(potFireEvent), connectionInfo, db, config);
+  potFireEvents.reverse().forEach(async potFireEvent => {
+    const potFire = oct_utils.dbAlertToUiObj(potFireEvent);
+    await oct_utils.augmentCameraInfo(db, config, potFire);
+    sendEvent(potFire, connectionInfo, db, config);
+  });
+}
+
+async function updateFromDetectAsync(db, config, potFire) {
+  await oct_utils.augmentCameraInfo(db, config, potFire);
+  connections.forEach(connectionInfo => {
+    // clone potFire so any changes made by sendEvent for one connection doesn't affect other connections
+    const copyPotFire = Object.assign({}, potFire);
+    sendEvent(copyPotFire, connectionInfo, db, config);
   });
 }
 
@@ -106,9 +117,7 @@ function updateFromDetect(db, config, messageData) {
   }
   // add isRealTime flag to real-time detections coming from detection service
   messageJson.isRealTime = true;
-  connections.forEach(connectionInfo => {
-    sendEvent(messageJson, connectionInfo, db, config);
-  });
+  updateFromDetectAsync(db, config, messageJson);
 }
 
 /**

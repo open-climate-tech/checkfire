@@ -220,17 +220,20 @@ function getFireCardinalHeading(firePolygon, camLatitude, camLongitude) {
   return cardinalHeadings[roundedHeading];
 }
 
-async function augmentCameraPolygonVotes(db, config, potFire, userID) {
+async function augmentCameraInfo(db, config, potFire) {
   // add camera metadata
   const camInfo = await getCameraInfo(db, config, potFire.cameraID);
   potFire.camInfo = camInfo;
 
-  // parse polygon
+  // parse polygon and calculate direction
   if (potFire.polygon && (typeof(potFire.polygon) === 'string')) {
     potFire.polygon = JSON.parse(potFire.polygon);
     potFire.camInfo.cameraDir = getFireCardinalHeading(potFire.polygon, camInfo.latitude, camInfo.longitude);
   }
+  return potFire;
+}
 
+async function augmentVotes(db, potFire, userID) {
   if (userID) {
     const existingVotesByUser = await getUserVotes(db, potFire.cameraID, potFire.timestamp, userID);
     if (existingVotesByUser && (existingVotesByUser.length > 0)) {
@@ -280,6 +283,7 @@ exports.checkAuth = checkAuth;
 exports.getUserVotes = getUserVotes;
 exports.getUserPreferences = getUserPreferences;
 exports.isUserLabeler = isUserLabeler;
-exports.augmentCameraPolygonVotes = augmentCameraPolygonVotes;
+exports.augmentCameraInfo = augmentCameraInfo;
+exports.augmentVotes = augmentVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
 exports.findClosest = findClosest;
