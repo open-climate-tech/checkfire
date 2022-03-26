@@ -25,9 +25,7 @@ import {getServerUrl, serverPost, getUserPreferences} from './OctReactUtils';
 import hpwren1078 from './hpwren-1078x638.jpg';
 import hpwren1290 from './hpwren-1290x762.jpg';
 import hpwren1492 from './hpwren-1492x870.jpg';
-import hpwren1762 from './hpwren-1762x1080.jpg';
 const maps = [
-  {name: hpwren1762, topLat: 34.89, leftLong: -120.53, bottomLat: 32.45, rightLong: -115.75, pixelWidth: 1762, pixelHeight: 1080},
   {name: hpwren1492, topLat: 34.79, leftLong: -120.59, bottomLat: 32.42, rightLong: -115.72, pixelWidth: 1492, pixelHeight: 870},
   {name: hpwren1290, topLat: 34.81, leftLong: -120.58, bottomLat: 32.43, rightLong: -115.72, pixelWidth: 1290, pixelHeight: 762},
   {name: hpwren1078, topLat: 34.82, leftLong: -120.60, bottomLat: 32.41, rightLong: -115.72, pixelWidth: 1078, pixelHeight: 638},
@@ -41,7 +39,7 @@ class Preferences extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      mapIndex: 2,
+      mapIndex: 1,
       webNotify: false,
       notifBlocked: false,
     };
