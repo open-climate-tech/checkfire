@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import {Link} from "react-router-dom";
 import Notification  from "react-web-notification";
 
-import {getServerUrl, serverPost, getUserPreferences, FirePreview, VoteButtons} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserPreferences, FirePreview, VoteButtons, Legalese} from './OctReactUtils';
 
 class VoteFires extends Component {
   constructor(props) {
@@ -342,8 +342,14 @@ class VoteFires extends Component {
       <div>
         <span>
           <h1>
-            Potential fires
+            WildfireCheck: Potential fires
           </h1>
+          <Legalese/>
+          <p>
+            Please note that this site does not alert the fire authorities directly.
+            If you discover a real fire that recently ignited,
+            consider informing the fire department to take appropriate action.
+          </p>
           <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.toggleDetails()}>
             {this.state.showDetails ? 'Hide description' : 'Show description'}
           </button>

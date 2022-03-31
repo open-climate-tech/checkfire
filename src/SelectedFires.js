@@ -18,7 +18,7 @@
 // Selected Fires
 
 import React, { Component } from "react";
-import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
+import {getServerUrl, serverGet, FirePreview, Legalese} from './OctReactUtils';
 
 /**
  * Show voting stats
@@ -51,6 +51,7 @@ class SelectedFires extends Component {
         <h1 className="w3-padding-32 w3-row-padding">
           Selected Fires
         </h1>
+        <Legalese/>
         <p>
           This page shows selected fires.
           Therefore, it is not suitable for monitoring for earliest notification of potential fires.

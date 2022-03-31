@@ -70,6 +70,18 @@ export async function getUserPreferences() {
   return await resp.json();
 }
 
+export function Legalese(props) {
+  return (
+    <div className="Disclaimer">
+      <p>
+        <a href="/terms.html">Terms and Conditions</a>
+        &nbsp;|&nbsp;
+        <a href="/privacy.html">Privacy Policy</a>
+      </p>
+    </div>
+  )
+}
+
 /**
  * Show a list of maps with different zoom levels
  * @param {*} props

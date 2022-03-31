@@ -144,7 +144,7 @@ function initApis(config, app, db) {
       logger.info('email: %s', tokId.email);
 
       // now generate signed JWT to send as cookie to client
-      const expiration = '7d';
+      const expiration = '30d'; // 1 month
       const signed = jwt.sign({email: tokId.email}, config.cookieJwtSecret, { expiresIn: expiration });
       const cookieOptions = {
         // httpOnly: true, // cannot use this because client JS checks this to see user is authenticated already

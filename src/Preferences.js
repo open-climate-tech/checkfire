@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import ResizeObserver from 'react-resize-observer';
 import Notification  from "react-web-notification";
 
-import {getServerUrl, serverPost, getUserPreferences} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserPreferences, Legalese} from './OctReactUtils';
 import hpwren1078 from './hpwren-1078x638.jpg';
 import hpwren1290 from './hpwren-1290x762.jpg';
 import hpwren1492 from './hpwren-1492x870.jpg';
@@ -234,6 +234,7 @@ class Preferences extends Component {
         <h1>
           Preferences
         </h1>
+        <Legalese/>
         {
           this.props.validCookie ?
           (<div>

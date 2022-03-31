@@ -23,7 +23,7 @@ import DateTimePicker from 'react-datetime-picker';
 import Select from 'react-dropdown-select';
 import ReactDOM from 'react-dom';
 
-import {getServerUrl, serverGet, serverPost} from './OctReactUtils';
+import {getServerUrl, serverGet, serverPost, Legalese} from './OctReactUtils';
 
 class LabelImage extends Component {
   constructor(props) {
@@ -312,6 +312,7 @@ class LabelImage extends Component {
         <h1>
           Label images
         </h1>
+        <Legalese/>
         {
           this.props.validCookie ?
           (<div>

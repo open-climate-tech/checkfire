@@ -19,7 +19,7 @@
 
 import React, { Component } from "react";
 import {Link} from "react-router-dom";
-import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
+import {getServerUrl, serverGet, FirePreview, Legalese} from './OctReactUtils';
 
 /**
  * Show voting stats
@@ -52,6 +52,7 @@ class ConfirmedFires extends Component {
         <h1 className="w3-padding-32 w3-row-padding">
           Confirmed Fires
         </h1>
+        <Legalese/>
         <p>
           This page shows recent potential fires that have been confirmed by majority of the voting users.
           There is an inherent delay in waiting for someone to vote and confirm a fire, so this page will never

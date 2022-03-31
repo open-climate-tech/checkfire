@@ -38,7 +38,7 @@ import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
 import Cookies from 'js-cookie';
 import jwt_decode from 'jwt-decode'
-import {getServerUrl, serverGet} from './OctReactUtils';
+import {getServerUrl, Legalese, serverGet} from './OctReactUtils';
 
 const qs = require('qs');
 
@@ -72,18 +72,6 @@ function FirePagesHeader(props) {
         }
       </div>
     </div>
-    <header className="Disclaimer">
-      <p>
-        Please note that this site does not alert the fire authorities directly.
-        If you discover a real fire that recently ignited,
-        consider informing the fire department to take appropriate action.
-      </p>
-      <p>
-        <a href="/terms.html">Terms and Conditions</a>
-        &nbsp;|&nbsp;
-        <a href="/privacy.html">Privacy Policy</a>
-      </p>
-    </header>
   </div>);
 }
 
@@ -168,6 +156,7 @@ class App extends Component {
                       signin={() => this.signin()} invalidateCookie={() => this.invalidateCookie()} />} />
           </Switch>
         </Router>
+        <Legalese/>
       </div>
     );  
   }
