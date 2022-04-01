@@ -52,13 +52,7 @@ function FirePagesHeader(props) {
         <Link to='/confirmed'>Confirmed fires</Link>
       </div>
       <div className="w3-col s3 w3-button w3-block">
-        {props.validCookie ?
-          <Link to='/preferences'>Preferences</Link>
-        :
-          <span className="w3-disabled">
-            Preferences (sign-in required)
-          </span>
-        }
+        <Link to='/preferences'>Preferences</Link>
       </div>
       <div className="w3-col s3 w3-block">
         {props.validCookie ?

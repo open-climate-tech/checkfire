@@ -391,18 +391,15 @@ class VoteFires extends Component {
               </h5>
             :
               <p>
-                Signed-in users can restrict potential fires to their specified region of interest on the&nbsp;
-                {this.props.validCookie? <Link to='/preferences'>Preferences</Link>: 'Preferences'}
-                &nbsp;page.
+                Potential fires across all areas are being shown. Users can restrict potential fires to their
+                specified region of interest on the <Link to='/preferences'>Preferences</Link> page
               </p>
             )
         }
         {(!this.state.webNotify) && (
           <p>
-            Signed-in users can choose to get notifications in real-time as new potential fire events
-            are detected by selecting the option in the&nbsp;
-            {this.props.validCookie? <Link to='/preferences'>Preferences</Link>: 'Preferences'}
-            &nbsp;page.
+            Users can choose to get notifications in real-time as new potential fire events are detected by
+            selecting the option in the <Link to='/preferences'>Preferences</Link> page.
           </p>
         )}
         {this.state.webNotify && (
