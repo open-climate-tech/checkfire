@@ -37,7 +37,6 @@ class VoteFires extends Component {
       notifyTitle: '',
       notifyOptions: '',
       locationID: null,
-      latLongStr: null,
     };
     this.sseVersion = null;
   }
@@ -45,10 +44,11 @@ class VoteFires extends Component {
   componentDidMount() {
     const queryParams = new URLSearchParams(window.location.search)
     const locationID = queryParams.get('locID');
-    let latLongStr = queryParams.get('latLong');
+    const latLongStr = queryParams.get('latLong');
+    const notifyStr = queryParams.get('notify');
      // lat/long for northern (> 10 latitude) and western (<-100) longitude
-    const twoPointOne = '([0-9]{2}(?:\.[0-9])?)'
-    const negThreePointOne = '(-[0-9]{3}(?:\.[0-9])?)'
+    const twoPointOne = '([0-9]{2}(?:\.[0-9])?)';
+    const negThreePointOne = '(-[0-9]{3}(?:\.[0-9])?)';
     const regexLatLong = RegExp('^' + twoPointOne + ',' + twoPointOne + ',' + negThreePointOne + ',' + negThreePointOne + '$')
     const latLongParsed = regexLatLong.exec(latLongStr);
     let userRegion = null;
@@ -64,18 +64,16 @@ class VoteFires extends Component {
       if (userRegion.topLat > 90 || userRegion.bottomLat > 90 || userRegion.topLat < (userRegion.bottomLat + 0.3) ||
         userRegion.leftLong < -180 || userRegion.rightLong < -180 || userRegion.rightLong < (userRegion.leftLong + 0.3)) {
           userRegion = null;
-          latLongStr = null;
         }
-    } else {
-      latLongStr = null;
     }
-
-    // locationID and latLong queryParams automatically enable notifications
+    let webNotifyQP = false;
+    if (notifyStr && (notifyStr === 'true' || notifyStr === 'false')) {
+      webNotifyQP = notifyStr === 'true'
+    }
     this.setState({
       locationID: locationID,
-      latLongStr: latLongStr,
       userRegion: userRegion,
-      webNotify: this.state.webNotify || Boolean(locationID) || Boolean(latLongStr)
+      webNotify: webNotifyQP || Boolean(locationID), // locationID queryParams automatically enable notifications
     });
 
     // setup SSE connection with backend to get updates on new detections
@@ -101,7 +99,7 @@ class VoteFires extends Component {
       }
       this.setState({
         userRegion: userRegion,
-        webNotify: preferences.webNotify || Boolean(locationID) || Boolean(latLongStr),
+        webNotify: notifyStr ? webNotifyQP : (preferences.webNotify || Boolean(locationID)),
         showProto: preferences.showProto,
       });
       // check existing potentialFires to see if they are within limits

@@ -93,10 +93,10 @@ export function ZoomableMaps(props) {
   return (
     <div>
       <p>View area</p>
-      <div class="w3-display-container">
-        <div class="w3-display-topmiddle" style={{width: "280px"}}>
+      <div className="w3-display-container">
+        <div className="w3-display-topmiddle" style={{width: "280px"}}>
           {(mapsList.length > 1) &&
-            <div class="w3-display-topleft">
+            <div className="w3-display-topleft">
               <button className={"w3-button w3-border w3-round-large w3-black w3-padding-small" + ((index === mapsList.length - 1) ? " w3-disabled" : "")}
                 onClick={() => setIndex(index < mapsList.length - 1 ? index + 1 : index)}>+</button>
               <button className={"w3-button w3-border w3-round-large w3-black w3-padding-small" + ((index === 0) ? " w3-disabled" : "")}
@@ -133,7 +133,7 @@ export function FirePreview(props) {
           :&nbsp;
           <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">Full image</a>
           {props.showProto && props.potFire.weatherScore &&
-            <div className={(props.potFire.weatherScore > 0.3) && "w3-pale-red"}>
+            <div className={(props.potFire.weatherScore > 0.3) ? "w3-pale-red" : ""}>
               Wscore: {props.potFire.weatherScore}
             </div>
           }

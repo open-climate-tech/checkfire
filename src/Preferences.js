@@ -47,7 +47,7 @@ class Preferences extends Component {
 
   async componentDidMount() {
     // Load and display any earlier saved region from backend
-    const preferences = await getUserPreferences()
+    const preferences = await getUserPreferences();
     this.setState({
       savedRegion: preferences.region,
       webNotify: preferences.webNotify,
@@ -178,6 +178,21 @@ class Preferences extends Component {
       console.log('post res', serverRes);
       this.setState({savedRegion: this.state.currentRegion});
     }
+  }
+
+  generateUrl() {
+    let latLongStr = '';
+    if (this.state.currentRegion && this.state.currentRegion.topLat) {
+      const region = this.state.currentRegion;
+        const latLongArr = [region.bottomLat.toFixed(1), region.topLat.toFixed(1), region.leftLong.toFixed(1), region.rightLong.toFixed(1)];
+        latLongStr = 'latLong=' + latLongArr.join(',');
+    }
+    const notifyStr = 'notify=' + this.state.webNotify.toString();
+    const paramStr = [latLongStr, notifyStr].join('&');
+    const pathStr = '/wildfirecheck/?' + paramStr;
+    const url = window.location.origin + pathStr;
+    console.log('copying url %s', url);
+    navigator.clipboard.writeText(url);
   }
 
   /**
@@ -312,6 +327,10 @@ class Preferences extends Component {
                   onClick={()=> this.saveRegion()}>
                   Save selected region
                 </button>
+                {/* <button className={"w3-button w3-border w3-round-large w3-black" + (this.state.minX ? "" : " w3-disabled")}
+                  onClick={()=> this.generateUrl()}>
+                  Copy URL
+                </button> */}
                 <button className={"w3-button w3-border w3-round-large w3-black" +
                                     ((this.state.savedRegion && this.state.savedRegion.topLat) ? "" : " w3-disabled")}
                   onClick={()=> this.showRegion(this.state.savedRegion)}>
