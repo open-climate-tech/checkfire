@@ -20,6 +20,7 @@
 import React from "react";
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
+import { useMediaQuery } from 'react-responsive'
 
 /**
  * Return the full URL for UI backend for given route
@@ -93,7 +94,7 @@ export function ZoomableMaps(props) {
   return (
     <div>
       <p>View area</p>
-      <div className="w3-display-container">
+      <div className="w3-display-container" style={{height: "280px"}}>
         <div className="w3-display-topmiddle" style={{width: "280px"}}>
           {(mapsList.length > 1) &&
             <div className="w3-display-topleft">
@@ -115,6 +116,8 @@ export function ZoomableMaps(props) {
  * @param {*} props
  */
 export function FirePreview(props) {
+  // wide enough to show video and map side by side
+  const sideBySide = useMediaQuery({ query: '(min-width: 1000px)' });
   return (
     <div key={props.potFire.annotatedUrl} data-testid="FireListElement">
       <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
@@ -138,16 +141,26 @@ export function FirePreview(props) {
             </div>
           }
         </h5>
-        <div className="w3-col m8">
+        {sideBySide ? (<div>
+          <div className="w3-col m8">
+            <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.potFire.croppedUrl}>
+              <source src={props.potFire.croppedUrl} type="video/mp4" />
+              Your browser does not support the video tag
+            </video>
+          </div>
+          <div className="w3-col m4">
+            {props.childComponent}
+            <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
+          </div>
+        </div>)
+        : (<div>
           <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.potFire.croppedUrl}>
             <source src={props.potFire.croppedUrl} type="video/mp4" />
             Your browser does not support the video tag
           </video>
-        </div>
-        <div className="w3-col m4">
           {props.childComponent}
           <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
-        </div>
+        </div>)}
       </div>
       &nbsp;
     </div>
