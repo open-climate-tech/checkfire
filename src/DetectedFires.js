@@ -23,13 +23,21 @@ import {getServerUrl, serverGet, serverPost, FirePreview, VoteButtons, Legalese}
 class DetectedFires extends Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      detectedFires: [],
+    };
   }
 
   async componentDidMount() {
+    const queryParams = new URLSearchParams(window.location.search)
+    const weatherFilterStr = queryParams.get('weatherFilter');
+    const weatherFilter = weatherFilterStr && (weatherFilterStr === 'true');
     const serverUrl = getServerUrl('/api/detectedFires');
     const resp = await serverGet(serverUrl);
-    const detectedFires = await resp.json();
+    let detectedFires = await resp.json();
+    if (weatherFilter) {
+      detectedFires = detectedFires.filter(potFire => potFire.weatherScore > 0.3);
+    }
     this.setState({detectedFires: detectedFires});
   }
 
