@@ -93,7 +93,14 @@ export function ZoomableMaps(props) {
   const [index, setIndex] = React.useState(initialIndex);
   return (
     <div>
-      <p>View area</p>
+      <div className="w3-tooltip">
+        <p className="tooltip-text" style={{width: '280px', left: '25%'}}>
+          The map shows the view area visible from the time-lapse video highlighted by a red triangle.
+          When multiple cameras detect the same event, the intersection of all the triangles is highlighted in purple.
+          The map also depicts any known prescribed burns using an icon with flames and a red cross.
+        </p>
+        <p>View area</p>
+      </div>
       <div className="w3-display-container" style={{height: "280px"}}>
         <div className="w3-display-topmiddle" style={{width: "280px"}}>
           {(mapsList.length > 1) &&
@@ -107,6 +114,23 @@ export function ZoomableMaps(props) {
           <img width="280" height="280" src={mapsList[index]} alt="Viewshed" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function TimeLapseVideo(props) {
+  return (
+    <div className="w3-tooltip">
+      <p className="tooltip-text" style={{width: '640px'}}>
+        Time-lapse video of few minutes prior to the automatically detected potential wildfire.
+        The video shows a portion of the images near the suspected location of fire smoke (highlighted by a rectangle).
+        The rectangle is colored yellow on images prior to the detection and colored red on the image with the detection.
+        To see a broader view for more context, click on the "full image" link above the video.
+      </p>
+      <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.videoUrl}>
+        <source src={props.videoUrl} type="video/mp4" />
+        Your browser does not support the video tag
+      </video>
     </div>
   );
 }
@@ -143,10 +167,7 @@ export function FirePreview(props) {
         </h5>
         {sideBySide ? (<div>
           <div className="w3-col m8">
-            <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.potFire.croppedUrl}>
-              <source src={props.potFire.croppedUrl} type="video/mp4" />
-              Your browser does not support the video tag
-            </video>
+            <TimeLapseVideo videoUrl={props.potFire.croppedUrl}/>
           </div>
           <div className="w3-col m4">
             {props.childComponent}
@@ -154,12 +175,9 @@ export function FirePreview(props) {
           </div>
         </div>)
         : (<div>
-          <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.potFire.croppedUrl}>
-            <source src={props.potFire.croppedUrl} type="video/mp4" />
-            Your browser does not support the video tag
-          </video>
-          {props.childComponent}
-          <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
+            <TimeLapseVideo videoUrl={props.potFire.croppedUrl}/>
+            {props.childComponent}
+            <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
         </div>)}
       </div>
       &nbsp;
@@ -194,7 +212,7 @@ export function VoteButtons(props) {
     <div>
       <p>Is this a fire?</p>
       <div className="w3-tooltip w3-col m6 w3-right-align">
-        <p className="tooltip-text">
+        <p className="tooltip-text" style={{width: '120px'}}>
           Wildfires and prescribed burns
         </p>
         <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
@@ -203,7 +221,7 @@ export function VoteButtons(props) {
         </button>
       </div>
       <div className="w3-tooltip w3-col m6 w3-left-align">
-        <p className="tooltip-text">
+        <p className="tooltip-text" style={{width: '120px'}}>
           Fog, clouds, chimney smoke, dust, and glare
         </p>
         <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
