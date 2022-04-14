@@ -1,3 +1,30 @@
 .App {
   text-align: center;
 }
+.w3-tooltip .tooltip-text {
+  visibility: hidden;
+  display:none;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  top: 100%;
+}
+.w3-tooltip:hover .tooltip-text {
+  display:inline-block;
+  visibility: visible;
+}
+.w3-tooltip .tooltip-text::after {
+  content: " ";
+  position: absolute;
+  bottom: 100%;  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent black transparent;
+}

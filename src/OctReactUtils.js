@@ -193,14 +193,24 @@ export function VoteButtons(props) {
     return (
     <div>
       <p>Is this a fire?</p>
-      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
-        <i className="fa fa-fire" style={{color: "red"}} />
-        &nbsp;Real fire
-      </button>
-      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
-        <i className="fa fa-close" />
-        &nbsp;Not a fire
-      </button>
+      <div className="w3-tooltip w3-col m6 w3-right-align">
+        <p className="tooltip-text">
+          Wildfires and prescribed burns
+        </p>
+        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
+          <i className="fa fa-fire" style={{color: "red"}} />
+          &nbsp;Real fire
+        </button>
+      </div>
+      <div className="w3-tooltip w3-col m6 w3-left-align">
+        <p className="tooltip-text">
+          Fog, clouds, chimney smoke, dust, and glare
+        </p>
+        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
+          <i className="fa fa-close" />
+          &nbsp;Not a fire
+        </button>
+      </div>
     </div>
     );
   }
