@@ -360,18 +360,16 @@ class VoteFires extends Component {
             </p>
             <p>
               This page shows recent potential fires as detected by the automated system.
-              Each potential fire event displays a five minute time-lapse video of a portion of the camera image
-              where the potential fire was detected.  The last frame of the video highlights the detection
-              area in a red rectangle to help people quickly determine if there is a real fire.
-              Users intersted in seeting a broader view can see the full camera image by click on the
-              "full image" link above each video.
+              Each event displays a time-lapse video starting few minutes prior to the detection.
+              The video shows a portion of the images near the suspected location of fire smoke (highlighted by a rectangle).
+              The rectangle is colored yellow on images prior to the detection and colored red on the image with the detection.
+              To see a broader view for more context, click on the "Full image" link above the video.
             </p>
             <p>
-              Each potential fire event display also includes a map with a red shaded triangular region
-              highlighting the potential fire region from the video.  When multiple cameras detect smoke
-              in the same region around the same time, the intersection of all triangular regions are
-              highlighted in purple.  The map also depicts any known prescribed burns in the area using
-              an icon with flames and a red cross.
+              Each potential fire event display also includes a map showing the view area visible from the time-lapse video
+              highlighted by a red triangle.
+              When multiple cameras detect the same event, the intersection of all the triangles is highlighted in purple.
+              The map also depicts any known prescribed burns using an icon with flames and a red cross.
             </p>
             <p>
               The system does generate false notifications, and signed-in users can vote whether system was
