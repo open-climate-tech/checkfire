@@ -234,7 +234,7 @@ class VoteFires extends Component {
 
     // now insert new fires at right timeslot and remove old fires
     const updatedFires = [parsed].concat(this.state.potentialFires)
-      .sort((a,b) => (b.timestamp - a.timestamp)) // sort by timestamp descending
+      .sort((a,b) => ((a.sortId && b.sortId) ? b.sortId - a.sortId : b.timestamp - a.timestamp)) // sort by timestamp descending
       .slice(0, 20);  // limit to most recent 20
 
     // if this is a new real-time fire, and notifications are enabled, trigger notification

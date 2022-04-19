@@ -255,6 +255,7 @@ function dbAlertToUiObj(dbEvent) {
     "mapUrl": dbEvent.MapID || dbEvent.mapid,
     "polygon": dbEvent.polygon,
     "isProto": dbEvent.IsProto || dbEvent.isproto,
+    "sortId": dbEvent.SortId || dbEvent.sortid,
   }
 }
 

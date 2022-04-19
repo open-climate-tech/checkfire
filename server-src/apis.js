@@ -300,7 +300,7 @@ function initApis(config, app, db) {
     if (!showProto) {
       sqlStr += ' where detections.isproto != 1 ';
     }
-    sqlStr += ' order by vt.timestamp desc limit 20';
+    sqlStr += ' order by detections.sortId desc, vt.timestamp desc limit 20';
     const dbRes = await db.query(sqlStr);
     const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
@@ -324,7 +324,7 @@ function initApis(config, app, db) {
                           on nf.cameraname=votes.cameraname and nf.timestamp=votes.timestamp group by nf.cameraname,nf.timestamp) as nfv
                       join alerts
                         on nfv.cameraname=alerts.cameraname and nfv.timestamp=alerts.timestamp
-                      order by nfv.timestamp desc`;
+                      order by alerts.sortId desc, nfv.timestamp desc`;
     const dbRes = await db.query(sqlStr);
     const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
@@ -346,7 +346,7 @@ function initApis(config, app, db) {
       const sqlStr = `select detections.*
                         from detections left join alerts on detections.timestamp=alerts.timestamp and detections.cameraname=alerts.cameraname
                         where alerts.timestamp is null
-                        order by detections.timestamp desc limit 20;`;
+                        order by detections.sortId desc, detections.timestamp desc limit 20;`;
       const dbRes = await db.query(sqlStr);
       const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
         const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
