@@ -71,32 +71,32 @@
 
     <h1 class="w3-padding-32 w3-row-padding" id="projects">Projects</h1>
     <!-- First Grid -->
-    <div class="w3-row-padding w3-padding-64 w3-container w3-light-grey ">
+    <div class="w3-row-padding w3-padding-64 w3-container w3-light-grey">
         <div class="w3-content">
             <h2>Wildfire Detection and Checking</h2>
             <p>
                 Wildfires are getting more destructive over time due to many factors including climate change.
                 Besides the devastating impact on lives and property, wildfires also release significant amount
                 of carbon back into the atmosphere, thus speeding up climate change even further.
-                Depending on the location situation, sometimes it is better in the long-term to let fires burn,
-                while at other times it's better to extinguish the fires as soon as possible.
-                This project does not have any opinion on determining the optimal action for each fire.
                 The goal of this project is to automatically detect wildfires in their initial phase,
                 so the authorities responsible for wildfires can take appropriate action while the fire is
                 still small and easy to manage.
+                This project does not have any opinion on determining the optimal action for each fire.
             </p>
             <p>
-                This project uses machine learning to identify potential smoke from wildfires using real-time images
-                from images installed on vantage points, such as mountain tops. The information about the potential
-                wildfires are then sent to website for people to check and confirm whether they are real fires.
+                This project uses machine learning based tools to identify potential smoke from wildfires using
+                real-time images from cameras installed at vantage points, such as mountain tops and cell towers.
+                The information about the automatically detected potential wildfires is displayed on the website
+                in real-time for people to check and confirm whether they are real fires.
+                For real fires, people may wish to inform local fire department.
                 This system has successfully detected some fires before authorities were aware of them,
                 but the system also generates some false notificatons.  Therefore, it is useful to
                 have people review the notificatons.  This system monitors more than a hundred cameras
-                continuously, and usually generates less than 50 notifications a day.
-                Doing the same task without such a system would require a large group of people to continuously
-                stare at real-time images coming from a hundred cameras and maintain high vigilence throughout.
+                continuously, and usually generates less than 10 notifications a day.
+                Doing the same task without such a system would require a large number of people continuously
+                staring at real-time images coming from the same cameras and maintain high vigilence throughout.
                 That is the main impediment why these cameras are currently not used for detection, but only
-                for verifying reports and for monitoring known fires.
+                for verifying reported fires and for monitoring known fires.
             </p>
             <p>
                 Folks from multiple organizations have contributed to this project during its lifetime -
@@ -105,18 +105,28 @@
                 <a href="https://hpwren.ucsd.edu/">HPWREN</a>, and
                 <a href="https://www.lbl.gov/">Lawrence Berkeley National Lab</a>.
             </p>
+            <h3 class="w3-padding-16">Wildfire Detection</h3>
             <p>
-                This <a href="http://hpwren.ucsd.edu/news/20210430/">article</a> describes some lessons
-                learned while operating the system.
+                The detection technique used by this project relies on three machine learning based filters and multiple
+                traditional non-machine-learning based algorithms.  The three machine learning filters check for whether
+                an image contains something that looks like smoke, moves like smoke, and whether the current weather
+                conditions are likely to support wildifires.  Each of these three are briefly described below.
+                Real-time images are collected from <a href="https://hpwren.ucsd.edu/">HPWREN</a> cameras and checked
+                by the filters.  Images that fail any particular filter are discarded immediately, while images that
+                are deemed by the filter to be likely fire are then checked by the next filter.  Only images deemed
+                to likely contain fire by all the filters are declared as a potential wildfire by the system.
+            </p>
+            <h5 class="w3-padding-16">Looks like smoke</h5>
+            <p>
+                We trained a machine learning model for image object recognitionon (Inception V3) to detect if the image
+                contains something that looks like smoke.  Training requires many thousands of unique images containing
+                real smoke as well as roughly equal number of unique images that do not contain smoke.  The non-smoke
+                images are carefully selected to contain things that visually appear similar to smoke so the machine-learing
+                model learns to differentiate between them.  We acquired images of smoke from early phases of historical
+                wildfires from these same cameras and cropped them around the fire.
             </p>
             <p>
-            </p>
-            <p>
-                <h3 class="w3-padding-16">Wildfire Detection</h3>
-                The detection technique used by this project relies on machine learning based system.
-                We trained a machine learning model for image object recognitionon (Inception V3) on cropped images of
-                smoke from early phases of historical fires. Real-time images are collected from
-                <a href="https://hpwren.ucsd.edu/">HPWREN cameras</a>, divided into slightly overlapping squares of
+                For detection, images are divided into slightly overlapping squares of
                 299x299 pixels, and the machine learning system computes a value (between 0.0 and 1.0) for each square.
                 High values are more likely to be real wildfires. The system is not perfect and regularly generates
                 false positives, which are mostly triggered by fog or clouds. We are continuously working on improving
@@ -137,37 +147,84 @@
                         </div>
                     </div>
                 </div>
-
-                When one of the squares scores high, the detection system applies a few other checks to
-                discard cases that are unlikely to be smoke from real fires.
-                A detailed description of an earlier version of the system and how it performed during a pilot period
-                in Oct 2019 are published in this
-                <a href="https://doi.org/10.3390/rs12010166">paper</a>
-                published in peer reviewed Remote Sensing journal.
-
-                Also, the <a href="https://github.com/open-climate-tech/firecam">source code</a>
-                for the detection system is available on Github.
             </p>
+            <h5 class="w3-padding-16">Moves like smoke</h5>
             <p>
-                <h3 class="w3-padding-16">Wildfire Checking</h3>
-                The real-time potential fire notifications from the detection service are displayed on
+                This machine learning based filter uses the same image object recognitionon model (Inception V3)
+                mentioned above, but this time the model was trained on specially prepared composite images that
+                highlight changes between successive images (usually one minute apart) from the same view.
+                Similar to the earlier model, this one was also trained on many thousands of unique composite
+                images containing real smoke from early phases of wildfires and images without smoke.
+                Below are a few sample composite images of smoke with the changes highlighted in red.
+                <div class="w3-row-padding">
+                    <div class="w3-col m4">
+                        <img src="https://storage.googleapis.com/oct-fire-public/website/rdiff_true1.jpg"
+                        alt="Composite changes image 1" style="width:100%">
+                    </div>
+                    <div class="w3-col m4">
+                        <img src="https://storage.googleapis.com/oct-fire-public/website/rdiff_true2.jpg"
+                        alt="Composite changes image 2" style="width:100%">
+                    </div>
+                    <div class="w3-col m4">
+                        <img src="https://storage.googleapis.com/oct-fire-public/website/rdiff_true3.jpg"
+                        alt="Composite changes image 3" style="width:100%">
+                    </div>
+                </div>
+            </p>
+            </p>
+            <h5 class="w3-padding-16">Fire weather</h5>
+            <p>
+                This machine learning based filter uses the weather data (e.g., temperature, humidity, wind, visibility, etc...)
+                at both the camera location as well as the location of the potentail fire.
+                It has been trained with thousands of datapoints of both real fires and situations when false positives
+                were not caught by earlier filters.
+            </p>
+            <h3 class="w3-padding-16">Wildfire Checking</h3>
+            <p>
+                The real-time potential wildfire notifications from the detection service are displayed on
                 <a href="/wildfirecheck/">this live updating site</a>.
-
-                In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
-                dispatch center to take appropriate action.  Please note that this site does not alert the authorities directly.
+                The display for each potential wildfire event is optimized so users can quickly determine if the event
+                is real fire or a false positive.  Each event includes a time-lapse video of previous few minutes of
+                the same area as well as a map with a highligheted triangle indicating the view from the associated video.
             </p>
             <p>
-                The site also allows users to vote on each notificaton to indicate whether it was a real fire or not.
+                The site allows users to vote on each notificaton to indicate whether it was a real fire or not.
                 The events where the majority of the users confirm a real fire are displayed on a separate
                 <a href="/confirmed/">Confirmed Fires</a> tab.
                 The votes are also helpful for improving the system by retraining the machine learning system with new images.
                 Users can also specify a desired geographical region to limit the notifications to those that may
                 overlap the specified region.
-
-                The <a href="https://github.com/open-climate-tech/checkfire">source code</a> for the wildfire checking
-                website is available is available on Github.
+            </p>
+            <p>
+                In case someone discovers a real fire that recently ignited, they should consider informing the wildfire
+                dispatch center to take appropriate action.  Please note that this site does not alert the authorities directly.
             </p>
             <a href="/wildfirecheck/" class="w3-large w3-button w3-round-large w3-black">Check potential wildfires</a>
+            <h3 class="w3-padding-16">Publications</h3>
+            <ul>
+                <li>
+                    2020 Jan: <a href="https://doi.org/10.3390/rs12010166">Paper</a> published in the peer reviewed
+                    <a href="https://www.mdpi.com/journal/remotesensing">Remote Sensing journal</a> containing a
+                    detailed description of an earlier version of the system.
+                </li>
+                <li>
+                    2021 Apr: <a href="http://hpwren.ucsd.edu/news/20210430/">Article</a> describing some lessons
+                    learned while operating the system.
+                </li>
+                <li>
+                    2021 Dec: <a href="https://youtu.be/pswjrsIot4U?t=9898">Video</a> recording of a 15-minute
+                    presentation about the project at <a href="https://fsapps.nwcg.gov/nirops/pages/tfrsac">TFRSAC</a>
+                    wildfire conference.
+                </li>
+            </ul>
+            <h3 class="w3-padding-16">Source code</h3>
+            <p>
+                This is an open source project with the code available on Github.
+                The backend code for detecting fires is mostly written in Python and available
+                <a href="https://github.com/open-climate-tech/firecam">here</a>.
+                The frontend code for displaying and cheking potential wildfires is mostly written in Javascript and available
+                <a href="https://github.com/open-climate-tech/checkfire">here</a>.
+            </p>
         </div>
     </div>
 
