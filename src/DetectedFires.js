@@ -18,7 +18,7 @@
 // Detected Fires
 
 import React, { Component } from "react";
-import {getServerUrl, serverGet, serverPost, FirePreview, VoteButtons, Legalese} from './OctReactUtils';
+import {getServerUrl, serverGet, serverPost, FirePreview, VoteButtons} from './OctReactUtils';
 
 class DetectedFires extends Component {
   constructor(props) {
@@ -68,7 +68,6 @@ class DetectedFires extends Component {
         <h1 className="w3-padding-32 w3-row-padding">
           Detected Fires
         </h1>
-        <Legalese/>
         <p>
           This page shows detected fires that did not made it to alerts due to low scores or prototype status
         </p>

@@ -21,7 +21,7 @@ import React, { Component } from "react";
 import {Link} from "react-router-dom";
 import Notification  from "react-web-notification";
 
-import {getServerUrl, serverPost, getUserPreferences, FirePreview, VoteButtons, Legalese} from './OctReactUtils';
+import {getServerUrl, serverPost, getUserPreferences, FirePreview, VoteButtons} from './OctReactUtils';
 
 class VoteFires extends Component {
   constructor(props) {
@@ -342,7 +342,6 @@ class VoteFires extends Component {
           <h1>
             WildfireCheck: Potential fires
           </h1>
-          <Legalese/>
           <p>
             Please note that this site does not alert the fire authorities directly.
             If you discover a real fire that recently ignited,
