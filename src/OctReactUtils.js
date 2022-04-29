@@ -101,7 +101,7 @@ export function ZoomableMaps(props) {
         </p>
         <p>View area</p>
       </div> */}
-      <p>View area</p>
+      <p style={{marginBottom:0}}>View area</p>
       <div className="w3-display-container" style={{height: "280px"}}>
         <div className="w3-display-topmiddle" style={{width: "280px"}}>
           {(mapsList.length > 1) &&
@@ -128,7 +128,7 @@ function TimeLapseVideo(props) {
         The rectangle is colored yellow on images prior to the detection and colored red on the image with the detection.
         To see a broader view for more context, click on the "full image" link above the video.
       </p>
-      <video controls autoPlay muted loop playsInline width="640" height="460" poster={props.videoUrl}>
+      <video controls autoPlay muted loop playsInline width="640" height="412" poster={props.videoUrl}>
         <source src={props.videoUrl} type="video/mp4" />
         Your browser does not support the video tag
       </video>
@@ -145,8 +145,8 @@ export function FirePreview(props) {
   const sideBySide = useMediaQuery({ query: '(min-width: 1000px)' });
   return (
     <div key={props.potFire.annotatedUrl} data-testid="FireListElement">
-      <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
-        <h5>
+      <div className="w3-row-padding w3-padding-small w3-container w3-light-grey">
+        <h5 style={{marginTop:0}}>
           {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
           {props.potFire.camInfo.cityName}
           &nbsp;(
@@ -194,7 +194,7 @@ export function VoteButtons(props) {
   if (!props.validCookie) {
     return (
     <div>
-      <p>Sign in to vote if this is a fire</p>
+      <p style={{margin:0}}>Sign in to vote if this is a fire</p>
       <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> props.signin()}>
       <img src={googleSigninImg} alt="Sign in with Google"
          onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
@@ -211,7 +211,7 @@ export function VoteButtons(props) {
   } else {
     return (
     <div>
-      <p>Is this a fire?</p>
+      <p style={{margin:0}}>Is this a fire?</p>
       <div className="w3-tooltip w3-col m6 w3-right-align">
         <p className="tooltip-text" style={{width: '120px'}}>
           Wildfires and prescribed burns
