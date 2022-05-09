@@ -123,9 +123,9 @@ function TimeLapseVideo(props) {
   return (
     <div className="w3-tooltip">
       <p className="tooltip-text" style={{width: '640px'}}>
-        Time-lapse video of few minutes prior to the automatically detected potential wildfire.
+        Time-lapse video starting a few minutes prior to the automatically detected potential wildfire.
         The video shows a portion of the images near the suspected location of fire smoke (highlighted by a rectangle).
-        The rectangle is colored yellow on images prior to the detection and colored red on the image with the detection.
+        The rectangle is colored yellow on images prior to the detection and colored red afterwards.
         To see a broader view for more context, click on the "full image" link above the video.
       </p>
       <video controls autoPlay muted loop playsInline width="640" height="412" poster={props.videoUrl}>
@@ -144,7 +144,7 @@ export function FirePreview(props) {
   // wide enough to show video and map side by side
   const sideBySide = useMediaQuery({ query: '(min-width: 1000px)' });
   return (
-    <div key={props.potFire.annotatedUrl} data-testid="FireListElement">
+    <div key={props.potFire.croppedUrl} data-testid="FireListElement">
       <div className="w3-row-padding w3-padding-small w3-container w3-light-grey">
         <h5 style={{marginTop:0}}>
           {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;

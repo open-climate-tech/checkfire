@@ -225,24 +225,30 @@ class VoteFires extends Component {
       return;
     }
 
-    // next check for duplicate
+    // check for duplicates, updates to existing fires, or new fires
     const alreadyExists = this.state.potentialFires.find(i =>
        ((i.timestamp === parsed.timestamp) && (i.cameraID === parsed.cameraID)));
     if (alreadyExists) {
-      return;
-    }
+      if (alreadyExists.croppedUrl === parsed.croppedUrl) { // exact same, so ignore
+        return;
+      } else { // new video on existing fire, so update existing entry
+        alreadyExists.croppedUrl = parsed.croppedUrl;
+        console.log('newPotentialFire: diff cropped', parsed.croppedUrl);
+        this.updateFiresAndCounts(this.state.potentialFires);
+      }
+    } else { // new fire
+      // now insert new fires at right timeslot and remove old fires
+      const updatedFires = [parsed].concat(this.state.potentialFires)
+        .sort((a,b) => (b.sortId - a.sortId)) // sort by sortId descending
+        .slice(0, 20);  // limit to most recent 20
 
-    // now insert new fires at right timeslot and remove old fires
-    const updatedFires = [parsed].concat(this.state.potentialFires)
-      .sort((a,b) => ((a.sortId && b.sortId) ? b.sortId - a.sortId : b.timestamp - a.timestamp)) // sort by timestamp descending
-      .slice(0, 20);  // limit to most recent 20
-
-    // if this is a new real-time fire, and notifications are enabled, trigger notification
-    const newTop = updatedFires.length ? updatedFires[0] : {};
-    if (newTop && newTop.isRealTime && this.state.webNotify && (newTop.timestamp === parsed.timestamp) && (newTop.cameraID === parsed.cameraID)) {
-      this.notify(updatedFires);
+      // if this is a new real-time fire, and notifications are enabled, trigger notification
+      const newTop = updatedFires.length ? updatedFires[0] : {};
+      if (newTop && newTop.isRealTime && this.state.webNotify && (newTop.timestamp === parsed.timestamp) && (newTop.cameraID === parsed.cameraID)) {
+        this.notify(updatedFires);
+      }
+      this.updateFiresAndCounts(updatedFires);
     }
-    this.updateFiresAndCounts(updatedFires);
   }
 
   calculateRecentCounts(potentialFires) {
@@ -359,9 +365,10 @@ class VoteFires extends Component {
             </p>
             <p>
               This page shows recent potential fires as detected by the automated system.
-              Each event displays a time-lapse video starting few minutes prior to the detection.
+              Each event displays a time-lapse video starting a few minutes prior to the detection.
+              The video updates automatically for a few minutes after.
               The video shows a portion of the images near the suspected location of fire smoke (highlighted by a rectangle).
-              The rectangle is colored yellow on images prior to the detection and colored red on the image with the detection.
+              The rectangle is colored yellow on images prior to the detection and colored red afterwards.
               To see a broader view for more context, click on the "Full image" link above the video.
             </p>
             <p>

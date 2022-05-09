@@ -23,7 +23,7 @@ const oct_utils = require('./oct_utils');
 const logger = oct_utils.getLogger('sse');
 
 // Interface versioning to ensure browser and nodejs are synced up
-const SSE_INTERFACE_VERSION = 6;
+const SSE_INTERFACE_VERSION = 7;
 
 // Array of all the connections to the frontend
 var connections = [];
@@ -51,6 +51,9 @@ async function sendEvent(potFire, connectionInfo, db, config) {
 
   // add detail camera info, parse polygon, and associate user votes to potFire
   await oct_utils.augmentVotes(db, potFire, connectionInfo.email);
+
+  // DB objects already have croppedUrl fixed, but this is needed for pubsub objects and is idempotent
+  potFire.croppedUrl = potFire.croppedUrl.split(',')[0];
 
   let eventParts = [
     'id: ' + potFire.timestamp,
