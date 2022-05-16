@@ -67,7 +67,7 @@ app.use('/static', express.static(path.join(__dirname, 'build/static')));
 // initialize dyanmic services
 services.initServices(app, () => {
   // Start the server
-  const PORT = process.env.PORT || 5000;
+  const PORT = process.env.PORT || 3141;
   app.listen(PORT, () => {
     logger.info(`WildfireCheck back listening on port ${PORT}`);
     logger.info('Press Ctrl+C to quit.');
