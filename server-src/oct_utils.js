@@ -251,7 +251,7 @@ function dbAlertToUiObj(dbEvent) {
     "adjScore": dbEvent.AdjScore || dbEvent.adjscore,
     "weatherScore": dbEvent.WeatherScore || dbEvent.weatherscore,
     "annotatedUrl": dbEvent.ImageID || dbEvent.imageid,
-    "croppedUrl": (dbEvent.CroppedID || dbEvent.croppedid).split(',')[0],
+    "croppedUrl": (dbEvent.CroppedID || dbEvent.croppedid || '').split(',')[0],
     "mapUrl": dbEvent.MapID || dbEvent.mapid,
     "polygon": dbEvent.polygon,
     "isProto": dbEvent.IsProto || dbEvent.isproto,
