@@ -55,7 +55,7 @@ async function apiWrapper(req, res, config, apiDesc, cb) {
   let decoded;
   try {
     decoded = await verifyAuth(req, res, config);
-    cb(decoded);
+    await cb(decoded);
   } catch (err) {
     logger.error('%s failure: %s', apiDesc, err);
     if (decoded) { // non-decoded cases get errored out in verifyAuth
