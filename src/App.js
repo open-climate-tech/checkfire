@@ -34,6 +34,8 @@ import Preferences from './Preferences';
 import LabelImage from './LabelImage';
 import Prototypes from './Prototypes';
 
+import V2 from './v2/App.jsx'
+
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
 import Cookies from 'js-cookie';
@@ -41,6 +43,17 @@ import jwt_decode from 'jwt-decode'
 import {getServerUrl, Legalese, serverGet} from './OctReactUtils';
 
 const qs = require('qs');
+
+const LEGACY_PATHS = [
+  '/',
+  '/confirmed',
+  '/detected',
+  '/labelImage',
+  '/preferences',
+  '/prototypes',
+  '/selected',
+  '/wildfirecheck'
+]
 
 function FirePagesHeader(props) {
   return (<div>
@@ -132,8 +145,11 @@ class App extends Component {
           {
             (this.state.redirect && <Redirect to={this.state.redirect} />)
           }
-          <FirePagesHeader validCookie={this.state.validCookie} signin={()=> this.signin()}/>
+          <Route path={LEGACY_PATHS} exact>
+            <FirePagesHeader validCookie={this.state.validCookie} signin={()=> this.signin()}/>
+          </Route>
           <Switch>
+            <Route path="/v2/wildfirecheck" exact component={V2} />
             <Route path="/prototypes" exact component={Prototypes} />
             <Route path="/confirmed" exact render={props =>
                     <ConfirmedFires {...props} />} />
@@ -149,10 +165,12 @@ class App extends Component {
                     <VoteFires {...props} validCookie={this.state.validCookie}
                       signin={() => this.signin()} invalidateCookie={() => this.invalidateCookie()} />} />
           </Switch>
+          <Route path={LEGACY_PATHS} exact>
+            <Legalese/>
+          </Route>
         </Router>
-        <Legalese/>
       </div>
-    );  
+    );
   }
 }
 
