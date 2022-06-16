@@ -14,25 +14,29 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React from 'react'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+import Icon from './Icon.jsx'
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
+/**
+ * Provides an icon marker whose bearing (rotation) can be specified.
+ *
+ * @param {Object} props
+ * @param {Icon=} props.icon - Optional icon to use as the marker; defaults to
+ *     `'c7e-icon--potential-fire'`.
+ *
+ * @returns {React.Element}
+ */
+export default function CameraMarker(props) {
+  const {bearing = 0, icon = 'c7e-icon--potential-fire'} = props
+  const styles = {
+    left: '50%',
+    position: 'absolute',
+    top: '50%',
+    transform: `rotate(${bearing}deg) translate(-50%, -50%)`,
+    transformOrigin: 'top left'
+  }
 
   return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+  <Icon className="c7e-map--marker" icon={icon} style={styles}/>
 }

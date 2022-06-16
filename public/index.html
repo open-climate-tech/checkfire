@@ -15,6 +15,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+      integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+      crossorigin=""/>
     <style>
       .oct-head-margin{margin-top:40px;}
     </style>
@@ -39,30 +42,29 @@
     <!-- Navbar -->
     <div class="w3-top">
       <div class="w3-bar w3-white w3-wide w3-padding w3-card">
-          <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-hover-white w3-large w3-light-grey"
-              href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
-          <div class="w3-col s3">
-              <a href="/#" class="w3-button w3-block">Home</a>
-          </div>
-          <div class="w3-col s3 w3-hide-small">
-              <a href="/#projects" class="w3-button w3-block">Projects</a>
-          </div>
-          <div class="w3-col s3 w3-hide-small">
-              <a href="/#about" class="w3-button w3-block">About</a>
-          </div>
-          <div class="w3-col s3 w3-hide-small">
-              <a href="/#contact" class="w3-button w3-block">Contact</a>
-          </div>
+        <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-hover-white w3-large w3-light-grey"
+        href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+        <div class="w3-col s3">
+          <a href="/#" class="w3-button w3-block">Home</a>
+        </div>
+        <div class="w3-col s3 w3-hide-small">
+          <a href="/#projects" class="w3-button w3-block">Projects</a>
+        </div>
+        <div class="w3-col s3 w3-hide-small">
+          <a href="/#about" class="w3-button w3-block">About</a>
+        </div>
+        <div class="w3-col s3 w3-hide-small">
+          <a href="/#contact" class="w3-button w3-block">Contact</a>
+        </div>
       </div>
 
       <!-- Navbar on small screens -->
       <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium w3-large">
-          <a href="/#projects" class="w3-bar-item w3-button w3-padding-large">Projects</a>
-          <a href="/#about" class="w3-bar-item w3-button w3-padding-large">About</a>
-          <a href="/#contact" class="w3-bar-item w3-button w3-padding-large">Contact</a>
+        <a href="/#projects" class="w3-bar-item w3-button w3-padding-large">Projects</a>
+        <a href="/#about" class="w3-bar-item w3-button w3-padding-large">About</a>
+        <a href="/#contact" class="w3-bar-item w3-button w3-padding-large">Contact</a>
       </div>
-  </div>
-  <noscript>You need to enable JavaScript to run this app.</noscript>
+    </div>
     <div id="root"></div>
     <!--
       This HTML file is a template.
@@ -75,15 +77,19 @@
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
     <script>
-      // Used to toggle the menu on small screens when clicking on the menu button
-      function myFunction() {
-        var x = document.getElementById("navDemo");
-        if (x.className.indexOf("w3-show") == -1) {
-          x.className += " w3-show";
-        } else {
-          x.className = x.className.replace(" w3-show", "");
-        }
+    // Used to toggle the menu on small screens when clicking on the menu button
+    function myFunction() {
+      var x = document.getElementById("navDemo");
+      if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+      } else {
+        x.className = x.className.replace(" w3-show", "");
       }
+    }
     </script>
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+      integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+      crossorigin=""></script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
   </body>
 </html>

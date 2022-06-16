@@ -14,25 +14,26 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import Dom from 'react-dom'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+/**
+ * Coverts `element` to HTML.
+ *
+ * @param {Object} element - The React element to render.
+ *
+ * @returns {string} HTML corresponding to `component`.
+ */
+export default function render(element) {
+  const div = document.createElement('div')
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
+  return new Promise((resolve, reject) => {
+    try {
+      Dom.render(element, div)
+      setTimeout(() => {
+        resolve(div.innerHTML)
+      })
+    } catch (error) {
+      reject(error)
+    }
   })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
 }

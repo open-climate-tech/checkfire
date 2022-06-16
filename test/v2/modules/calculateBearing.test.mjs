@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// Copyright 2022 Open Climate Tech Contributors
+// Copyright 2020 Open Climate Tech Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,13 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import {expect} from 'chai'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+import calculateBearing from '../../../src/v2/modules/calculateBearing.mjs'
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
+describe('calculateBearing()', () => {
+  it('should return about 96.51', () => {
+    const actual = calculateBearing([39.099912, -94.581213], [38.627089, -90.200203])
+    expect(actual.toFixed(2)).to.equal('96.51')
   })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
-}
+})

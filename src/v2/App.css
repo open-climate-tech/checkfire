@@ -1,0 +1,207 @@
+/* -----------------------------------------------------------------------------
+ * Copyright 2020 Open Climate Tech Contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * -----------------------------------------------------------------------------
+ */
+
+/* -----------------------------------------------------------------------------
+ * Checkfire (c7e)
+ */
+
+.c7e-root {
+  margin: 0;
+  text-align: initial; /* TODO: Remove when no longer necessary. */
+}
+
+.c7e-app-footer {
+  background: #FFF;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  bottom: 0;
+  color: #444;
+  display: flex;
+  font-size: 12px;
+  justify-content: space-between;
+  left: 0;
+  line-height: 24px;
+  padding: 11px 24px 12px;
+  position: fixed;
+  right: 0;
+}
+
+/* -----------------------------------------------------------------------------
+ * Buttons
+ */
+
+.c7e-button,
+.c7e-button-output {
+  background: #F6F9FE;
+  border: 1px solid #E0E9FA;
+  border-radius: 50%;
+  color: #0D57AF;
+  cursor: pointer;
+  display: inline-flex;
+  fill: #0D57AF;
+  font-weight: 500;
+  line-height: 24px;
+  padding: 5px;
+}
+
+.c7e-button-output {
+  color: #444;
+  cursor: default;
+  fill: #444;
+}
+
+.c7e-button-group {
+  display: inline-flex;
+}
+
+.c7e-button-group > .c7e-button,
+.c7e-button-group > .c7e-button-output {
+  border-radius: 0;
+  margin-right: -1px;
+}
+
+.c7e-button-group > .c7e-button:first-child,
+.c7e-button-group > .c7e-button-output:first-child {
+  border-bottom-left-radius: 18px;
+  border-top-left-radius: 18px;
+}
+
+.c7e-button-group > .c7e-button:last-child,
+.c7e-button-group > .c7e-button-output:last-child {
+  border-bottom-right-radius: 18px;
+  border-top-right-radius: 18px;
+  margin-right: 0;
+}
+
+.c7e-button--fire {
+  color: #B81414;
+  fill: #C51616;
+}
+
+.c7e-button--label {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.c7e-button--infix-caption > .c7e-button--label {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.c7e-button--icon + .c7e-button--label {
+  padding-left: 8px;
+}
+
+/* -----------------------------------------------------------------------------
+ * Fire
+ */
+
+.c7e-fire {
+  box-sizing: border-box;
+  margin-bottom: 36px;
+  opacity: 0.40;
+  padding-top: 24px;
+  transition: opacity 300ms;
+}
+
+.c7e-fire.c7e-fire--selected {
+  opacity: 1.00;
+}
+
+.c7e-fire--attribution {
+  font-size: 14px;
+}
+
+.c7e-fire--date-time {
+  color: #444;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.c7e-fire--caption {
+  margin: 12px 0 0;
+}
+
+.c7e-fire--caption p {
+  margin: 0;
+}
+
+.c7e-fire--caption a {
+  color: #0D57AF;
+}
+
+/* -----------------------------------------------------------------------------
+ * Fire List
+ */
+
+.c7e-fire-list {
+  bottom: 0;
+  left: 24px;
+  pointer-events: none;
+  position: absolute;
+  right: 24px;
+  top: 0;
+}
+
+.c7e-fire-list--loading {
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.1px;
+  padding: 194px 0;
+  text-align: center;
+}
+
+.c7e-fire-list--content {
+  padding: 133px 0 100%;
+  pointer-events: all;
+  width: 640px;
+}
+
+.c7e-fire-list--control {
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: fixed;
+  right: 0;
+  top: 54px;
+}
+
+.c7e-fire-list--map {
+  border: 1px solid #CCC;
+  bottom: 72px;
+  left: 688px;
+  pointer-events: all;
+  position: fixed;
+  right: 24px;
+  top: 80px;
+}
+
+.c7e-fire-list--pagination {
+  font-variant-numeric: tabular-nums;
+}
+
+.c7e-fire-list--toolbar {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.93);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  justify-content: space-between;
+  padding: 24px 24px 18px;
+  pointer-events: all;
+  width: 688px;
+}

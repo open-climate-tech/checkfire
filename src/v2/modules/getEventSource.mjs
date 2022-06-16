@@ -14,25 +14,20 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import getUrl from './getUrl.mjs'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+/**
+ * Constructs a server-sent events source for `endpoint` URL.
+ *
+ * @param {string} endpoint - The URL for the server-sent events source.
+ * @param {Object} options - Settings for the server-sent events source.
+ *
+ * @returns {EventSource} The server-sent events source.
+ */
+export default function getEventSource(endpoint, options = {}) {
+  if (process.env.NODE_ENV === 'development') {
+    options.withCredentials = true // Allow cross-origin requests.
+  }
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+  return new EventSource(getUrl(endpoint), options)
 }
