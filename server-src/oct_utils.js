@@ -254,6 +254,8 @@ function dbAlertToUiObj(dbEvent) {
     "croppedUrl": (dbEvent.CroppedID || dbEvent.croppedid || '').split(',')[0],
     "mapUrl": dbEvent.MapID || dbEvent.mapid,
     "polygon": dbEvent.polygon,
+    "sourcePolygons": dbEvent.sourcePolygons || dbEvent.sourcepolygons,
+    "fireHeading": dbEvent.FireHeading || dbEvent.fireheading,
     "isProto": dbEvent.IsProto || dbEvent.isproto,
     "sortId": dbEvent.SortId || dbEvent.sortid,
   }
