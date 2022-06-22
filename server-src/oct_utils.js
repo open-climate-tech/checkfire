@@ -184,26 +184,7 @@ async function getCameraInfo(db, config, cameraID) {
   return camInfo;
 }
 
-function getFireCardinalHeading(firePolygon, camLatitude, camLongitude) {
-  // first get lat/long for firePolygon
-  let polygon;
-  if ((firePolygon[0][0] === firePolygon[firePolygon.length-1][0]) && (firePolygon[0][1] === firePolygon[firePolygon.length-1][1])) {
-    polygon = firePolygon.slice(0, firePolygon.length - 1);
-  } else {
-    polygon = firePolygon.slice();
-  }
-  const polySum = polygon.reduce((sum,point) => [sum[0] + point[0], sum[1] + point[1]], [0,0]);
-  const fireCenter = [polySum[0]/polygon.length, polySum[1]/polygon.length];
-
-  // diff the lat/long with camera and use atan2 to get numerical heading
-  const latDiff = fireCenter[0] - camLatitude;
-  const longDiff = fireCenter[1] - camLongitude;
-  const angleEast = Math.round(Math.atan2(latDiff, longDiff) * 180/Math.PI);
-  let heading = 90 - angleEast;
-  if (heading < 0) {
-    heading += 360;
-  }
-
+function getCardinalHeading(heading) {
   // convert numerical heading to cardinal name
   const cardinalHeadings = {
     0: 'North',
@@ -228,7 +209,12 @@ async function augmentCameraInfo(db, config, potFire) {
   // parse polygon and calculate direction
   if (potFire.polygon && (typeof(potFire.polygon) === 'string')) {
     potFire.polygon = JSON.parse(potFire.polygon);
-    potFire.camInfo.cameraDir = getFireCardinalHeading(potFire.polygon, camInfo.latitude, camInfo.longitude);
+    if (potFire.fireHeading === null) {
+      // old fires in DB don't have fireHeading data.  Don't report any direction
+      potFire.camInfo.cameraDir = '';
+    } else {
+      potFire.camInfo.cameraDir = getCardinalHeading(potFire.fireHeading);
+    }
   }
   return potFire;
 }
