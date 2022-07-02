@@ -14,21 +14,18 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import getCssName from './getCssName.mjs'
+import getCssValue from './getCssValue.mjs'
 
 /**
- * Provides a simple footer for the main app layout.
+ * Formats `styles` (e.g., `{paddingBottom: 24}`) as a valid style attribute
+ * value (e.g., `'padding-bottom: 24px'`).
  *
- * @returns {React.Element}
+ * @param {Object} styles - A collection of camel-cased CSS properties.
+ *
+ * @returns {string} A valid style attribute value.
  */
-export default function AppFooter(props) {
-  // TODO:
-  //   - Link Open Climate Tech if the final design calls for it
-  //   - Section links (About, Privacy, Terms)
-  //   - Social media links
-  //   - Donation link
-  return 0,
-  <div className="c7e-app-footer">
-    Open Climate Tech › Wildfire Check
-  </div>
+export default function renderStyles(styles) {
+  return Object.entries(styles).map(([k, v]) =>
+    `${getCssName(k)}: ${getCssValue(v)}`).join('; ')
 }

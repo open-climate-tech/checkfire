@@ -21,10 +21,6 @@ import Icon from './Icon.jsx'
 import concatClassNames from '../modules/concatClassNames.mjs'
 
 /**
- * Receives a list of `fires` as well as the list’s `loading` status from a
- * higher-order component and is responsible for coordinating toolbar, map, and
- * list content around scrolling and fire-selection events.
- *
  * @param {Object} props
  * @param {string} props.className - A list of CSS class names.
  * @param {string=} props.icon - Optional icon ID to include with the button.
@@ -33,11 +29,12 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function Button(props) {
-  const {className, icon, label, ...otherProps} = props
-  const classNames = concatClassNames(className, 'c7e-button')
+  const {className, disabled, icon, label, ...otherProps} = props
+  const classNames =
+    concatClassNames(className, 'c7e-button', disabled && 'c7e-button--disabled')
 
   return 0,
-  <button className={classNames} {...otherProps}>
+  <button disabled={disabled} className={classNames} {...otherProps}>
     { icon &&
       <Icon className="c7e-button--icon" icon={icon}/>
     }

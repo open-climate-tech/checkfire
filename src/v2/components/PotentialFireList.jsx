@@ -18,7 +18,9 @@
 //   - Implement voting.
 //   - Allow older fires to be viewed.
 //   - Handle new incoming fires.
-//   - Implement camera selection for multicamera fires.
+//   - Handle updates to existing fires.
+//   - Handle fires aging out (on a timer?).
+//   - Implement camera selection for multicamera fires (from list and map).
 //   - Implement user preferences.
 //   - Implement user region.
 //   - Implement search params.
@@ -30,22 +32,21 @@ import React, {useCallback, useEffect, useRef, useState} from 'react'
 
 import Duration from '../modules/Duration.mjs'
 
+import getCameraKey from '../modules/getCameraKey.mjs'
 import getEventSource from '../modules/getEventSource.mjs'
+import hasCameraKey from '../modules/hasCameraKey.mjs'
 
 import FireList from './FireList.jsx'
 
-const TIMESTAMP_LIMIT = 1.25 * 365 * Duration.DAY // 2 * Duration.HOUR
+const TIMESTAMP_LIMIT = 2 * Duration.HOUR
 
 /**
  * Responsible for querying the detected fire list, monitoring new fire events,
  * and transitioning between lists of new, extant, and old potential fires.
  */
 export default function PotentialFireList() {
-  const [isLoading, setIsLoading] = useState(true)
-
   // Fires newer than `TIMESTAMP_LIMIT` displayed to the user for review.
   const [fires, setFires] = useState([])
-  const [firesBuffer, setFiresBuffer] = useState([])
 
   // Fires newer than `TIMESTAMP_LIMIT` not yet included in `fires`.
   // const [newFires, setNewFires] = useState([])
@@ -56,13 +57,10 @@ export default function PotentialFireList() {
   const allFiresRef = useRef([])
   const eventSourceRef = useRef()
   const sseVersionRef = useRef()
-  const nowRef = useRef()
-  const timerRef = useRef()
 
   const handlePotentialFire = useCallback((event) => {
     const fire = JSON.parse(event.data)
-    const {cameraID, croppedUrl, timestamp, version} = fire
-    const {current: allFires} = allFiresRef
+    const {croppedUrl, version} = fire
 
     if (!croppedUrl || croppedUrl.startsWith('c:/')) {
       return
@@ -76,53 +74,26 @@ export default function PotentialFireList() {
       return window.location.reload()
     }
 
-    const existingFire =
-      allFires.find((x) => x.cameraID === cameraID && x.timestamp === timestamp)
+    const {current: allFires} = allFiresRef
+    const key = getCameraKey(fire)
+    const existingFire = allFires.find((x) => hasCameraKey(x, key))
 
-    if (existingFire) {
+    if (existingFire != null) {
       if (existingFire.croppedUrl !== croppedUrl) {
         // Fire is already indexed, but its video has been updated.
         existingFire.croppedUrl = croppedUrl
         console.error('Not implemented: updateFires()')
       }
     } else {
-      allFires.unshift(fire)
-      allFires.sort((a, b) => b.sortId - a.sortId)
-
       const now = Date.now()
       const timestampLimit = Math.round((now - TIMESTAMP_LIMIT) / 1000)
 
-      if (nowRef.current === undefined) {
-        nowRef.current = now
-      }
+      allFires.unshift(fire)
+      allFires.sort((a, b) => b.sortId - a.sortId)
 
-      if (now - nowRef.current < 100) {
-        // Multiple fires are streaming in from the server during initial load.
-        nowRef.current = now
-        setFiresBuffer(allFires.filter((x) => x.timestamp >= timestampLimit))
-        // setOldFires(allFires.filter((x) => x.timestamp < timestampLimit))
-      } else {
-        // const mostRecentFire = fires[0]
-        // const indexOfMostRecentFire = allFires.indexOf(mostRecentFire)
-        //
-        // setNewFires(allFires.slice(0, indexOfMostRecentFire))
-        // setOldFires(allFires.slice(indexOfMostRecentFire + fires.length))
-      }
+      setFires(allFires.filter((x) => x.timestamp >= timestampLimit))
     }
   }, [])
-
-  useEffect(() => {
-    if (isLoading && firesBuffer.length > 0) {
-      clearTimeout(timerRef.current)
-      timerRef.current = setTimeout(() => {
-        if (Date.now() - nowRef.current >= 150) {
-          setFires(firesBuffer)
-          setFiresBuffer([])
-          setIsLoading(false)
-        }
-      }, 150)
-    }
-  }, [firesBuffer, isLoading])
 
   useEffect(() => {
     eventSourceRef.current = getEventSource('/fireEvents')
@@ -142,5 +113,5 @@ export default function PotentialFireList() {
     return tidy
   }, [handlePotentialFire])
 
-  return <FireList fires={isLoading ? firesBuffer : fires} loading={isLoading}/>
+  return <FireList fires={fires}/>
 }

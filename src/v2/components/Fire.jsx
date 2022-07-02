@@ -61,6 +61,8 @@ export default function Fire(props) {
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false)
 
   const containerRef = useRef()
+  const isVideoLoadedRef = useRef(false)
+  const timerRef = useRef()
   const videoRef = useRef()
 
   const selected = index === selectedIndex
@@ -78,7 +80,7 @@ export default function Fire(props) {
         // When this fire scrolls off the top of the page (underneath and fully
         // occluded by the toolbar), pass control to the next fire.
         onSelectFire(index + 1)
-      } else if (top >= scrollTopThreshold + height) {
+      } else if (top + height / 4 >= scrollTopThreshold + height) {
         // When this fire scrolls more than its own height away from the top of
         // the page (i.e., from the toolbar), pass control to the previous fire.
         onSelectFire(index - 1)
@@ -86,15 +88,24 @@ export default function Fire(props) {
     }
 
     // Load video if we haven’t yet loaded it and the video is visible.
-    if (!shouldLoadVideo) {
-      const {current: container} = containerRef
+    if (!isVideoLoadedRef.current) {
+      // XXX: The newest fires render at the top of the page, which means that
+      // during initial page load as each fire is added in response to a
+      // discrete `/fireEvents` event, it’s always “visible” even if subsequent
+      // events push it below the fold before the user even perceives the page
+      // load. So we wait for the next animation frame to avoid loading video
+      // source for offscreen videos.
+      cancelAnimationFrame(timerRef.current)
+      timerRef.current = requestAnimationFrame(() => {
+        const {current: container} = containerRef
 
-      if (container != null) {
-        const {height, top} = container.getBoundingClientRect()
-        if (top + height / 4 < scrollBottomThreshold) {
-          setShouldLoadVideo(true)
+        if (container != null) {
+          const {height, top} = container.getBoundingClientRect()
+          if (top + height / 4 < scrollBottomThreshold) {
+            setShouldLoadVideo(isVideoLoadedRef.current = true)
+          }
         }
-      }
+      })
     }
   }, [
     index, onSelectFire, selected, scrollBottomThreshold, scrollingTo,
@@ -105,8 +116,8 @@ export default function Fire(props) {
     // Scroll this fire into view when it is explicitly selected.
     if (index === scrollToIndex && scrollingTo === null) {
       const {current: container} = containerRef
-      const top =
-        Math.round(scrollTop + container.getBoundingClientRect().top - scrollTopThreshold)
+      const top = Math.round(scrollTop + container.getBoundingClientRect().top
+        - scrollTopThreshold)
 
       setScrollingTo(top)
       window.scrollTo({top, behavior: 'smooth'})

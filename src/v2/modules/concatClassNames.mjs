@@ -25,21 +25,11 @@
  * // → 'a b c x y z'
  * ```
  *
- * @param {...?(string|boolean|number)=} className - One or more class name
+ * @param {...?(string|boolean|number)=} classNames - One or more class name
  *     strings or falsey values.
  *
  * @returns {string} The concatenated class names.
  */
-export default function concatClassNames(className) {
-  const classNames = []
-
-  for (let i = 0, ni = arguments.length; i < ni; ++i) {
-    const argument = arguments[i]
-
-    if (argument /* is truthy */) {
-      classNames.push(argument)
-    }
-  }
-
-  return classNames.join(' ')
+export default function concatClassNames(...classNames) {
+  return classNames.filter((x) => !!x).join(' ')
 }

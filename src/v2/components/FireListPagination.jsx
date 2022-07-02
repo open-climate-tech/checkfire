@@ -44,13 +44,17 @@ export default function FireListPagination(props) {
   }, [selectedIndex, onScrollToFire])
 
   const pagination = nFires > 0 ? `Fire ${selectedIndex + 1} of ${nFires}` : '…'
+  const disabledNext = selectedIndex === nFires - 1
+  const disabledPrev = selectedIndex === 0
+
+  // TODO: Animate transition when `nFires` changes, possibly whenever `fires` changes.
 
   return 0,
   <div className="c7e-fire-list--pagination">
     <ButtonGroup>
-      <Button aria-label="Previous fire" icon="c7e-icon--prev" onClick={handlePrev}/>
+      <Button disabled={disabledPrev} aria-label="Previous fire" icon="c7e-icon--prev" onClick={handlePrev}/>
       <ButtonOutput label={pagination}/>
-      <Button aria-label="Next fire" icon="c7e-icon--next" onClick={handleNext}/>
+      <Button disabled={disabledNext} aria-label="Next fire" icon="c7e-icon--next" onClick={handleNext}/>
     </ButtonGroup>
   </div>
 }

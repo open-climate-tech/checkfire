@@ -20,22 +20,32 @@ import Duration from '../modules/Duration.mjs'
 
 import CameraMarker from './CameraMarker.jsx'
 
-import calculateBearing from '../modules/calculateBearing.mjs'
-import calculateMidpoint from '../modules/calculateMidpoint.mjs'
-import render from '../modules/render.mjs'
+import getCameraKey from '../modules/getCameraKey.mjs'
+import hasCameraKey from '../modules/hasCameraKey.mjs'
 
 const Props = {
+  BOUNDS: [[32.4, -122.1], [36.9, -115.8]], // Corners of `midsocalCams` region.
+  CENTER: [34.69, 240.96], // Midpoint between corners of `BOUNDS`.
   MAP: {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18,
     zoomAnimationThreshold: 18
   },
   POLYGON: {
+    color: '#00f',
+    dashArray: '3',
+    fill: '#00f',
+    fillOpacity: 0.07,
+    opacity: 0.33,
+    weight: 1.50
+  },
+  POV_POLYGON: {
     color: '#f0f',
+    dashArray: null,
     fill: '#f0f',
     fillOpacity: 0.15,
     opacity: 0.60,
-    weight: 1.5
+    weight: 1.50
   },
   SET_VIEW: {
     animate: true,
@@ -44,12 +54,13 @@ const Props = {
   URL_TEMPLATE: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 }
 
+// TODO: Implement prescribed fire markers.
+
 /**
  * Provides an interactive map of detected fires.
  *
  * @param {Object} props
  * @param {Array} fires - The list of fires to plot on the map.
- * @param {boolean} loading - Whether the list of fires is still paging in.
  * @param {function(number)} onScrollToFire - Event handler to be called when
  *     when a fire at a specific index should scroll itself into view.
  * @param {number} props.selectedIndex - The index of the active fire.
@@ -57,7 +68,7 @@ const Props = {
  * @returns {React.Element}
  */
 export default function FireMap(props) {
-  const {fires, loading, onScrollToFire, selectedIndex} = props
+  const {fires, onScrollToFire, selectedIndex} = props
 
   const [scrollingTo, setScrollingTo] = useState(-1)
 
@@ -72,23 +83,15 @@ export default function FireMap(props) {
   const mapRef = useRef()
   const markersRef = useRef({})
   const onScrollToFireRef = useRef()
-  const timersRef = useRef([])
+  const timerRef = useRef()
 
   firesRef.current = fires
   onScrollToFireRef.current = onScrollToFire
 
-  // `selectedIndex` will change rapidly when fires are loading, once for each
-  // fire loaded.
-  const fire = fires[selectedIndex]
-  const latitude = fire != null ? fire.camInfo.latitude : null
-  const longitude = fire != null ? fire.camInfo.longitude : null
-  const cameraId = fire != null ? fire.cameraID : null
-  const timestamp = fire != null ? fire.timestamp : null
-
-  const handleCameraClick = useCallback((cameraId, timestamp) => {
+  const handleCameraClick = useCallback((key) => {
     const {current: fires} = firesRef
     const {current: onScrollToFire} = onScrollToFireRef
-    const index = fires.findIndex((x) => x.cameraID === cameraId && x.timestamp === timestamp)
+    const index = fires.findIndex((x) => hasCameraKey(x, key))
 
     setScrollingTo(index)
     onScrollToFire(index)
@@ -102,73 +105,124 @@ export default function FireMap(props) {
   }, [scrollingTo, selectedIndex])
 
   useEffect(() => {
-    if (latitude != null && longitude != null && scrollingTo === -1) {
-      const coordinates = [latitude, longitude]
-      const key = `${cameraId}: ${latitude}, ${longitude} (${timestamp})`
+    // Generate map objects (markers, polygons, ...) once whenever the list of
+    // fires changes as opposed to each time the user activates a given fire.
 
-      const {L} = window
-      const {current: markers} = markersRef
-      const {current: map} = initializeMap(L, mapRef, coordinates)
+    // Start by clearing all cached markers.
+    Object.keys(markersRef.current).forEach((key) => {
+      const marker = markersRef.current[key]
+      marker.icon.remove()
+      marker.polygons.forEach((x) => x.remove())
+    })
 
-      // Generate map objects (markers, polygons, ...) once as opposed to each
-      // time the user activates a fire in the list.
-      if (markers[key] == null) {
-        // Assume `polygon` is triangular with a base between the 2nd and 3rd vertices.
-        const midpoint = calculateMidpoint(fire.polygon[1], fire.polygon[2])
-        const bearing = calculateBearing(coordinates, midpoint)
+    const {L} = window
+    const {current: map} = initializeMap(mapRef, timerRef)
+    const markers = (markersRef.current = {})
 
-        ;(async function () {
-          const html = await render(<CameraMarker bearing={bearing}/>)
-          const cameraMarker = L.divIcon({html})
-          const cameraPolygon = L.polygon(fire.polygon.slice(), Props.POLYGON)
+    fires.forEach((x) => {
+      const key = getCameraKey(x)
 
-          markers[key] = {
-            cameraId,
-            icon: L.marker(coordinates, {icon: cameraMarker}),
-            polygon: cameraPolygon,
-            timestamp
-          }
-
-          markers[key].icon.on({click: () => {
-            handleCameraClick(markers[key].cameraId, markers[key].timestamp)
-          }})
-
-          markers[key].icon.addTo(map)
-        })()
+      if (markers[key] != null) {
+        console.error(`Marker '${key}' already exists`)
+        return
       }
 
-      if (loading === false) {
-        // Debounce map pan and zoom.
-        const {current: timers} = timersRef
-        timers.forEach((x) => clearTimeout(x))
+      const {
+        camInfo: {
+          latitude, longitude
+        }, fireHeading: bearing, polygon, sourcePolygons = []
+      } = x
 
-        if (markers[key] != null) {
-          // Zoom out to give the user some context.
-          map.setZoom(8, Props.SET_VIEW)
+      if (sourcePolygons.length === 0) {
+        sourcePolygons[0] = polygon
+      }
 
-          timers[0] = setTimeout(() => {
-            Object.values(markers).forEach((x) => x !== markers[key] && x.polygon.remove())
-            map.panTo(coordinates, Props.SET_VIEW)
+      const coordinates = [latitude, longitude]
+      const html = CameraMarker.render({bearing})
+      const cameraMarker = L.divIcon({html})
 
-            timers[1] = setTimeout(() => {
-              // XXX: Force icon to front.
-              markers[key].icon.remove()
-              markers[key].icon.addTo(map)
+      const greatPolygon = []
+      const polygons = sourcePolygons.map((p) => {
+        // NOTE: Points passed when creating a polygon shouldn’t have a last
+        // point equal to the first one. It’s better to filter out such points.
+        // https://leafletjs.com/reference.html#polygon
+        const vertices = p.slice(0, p.length - 1)
 
-              markers[key].polygon.addTo(map)
+        greatPolygon.splice(greatPolygon.length, 0, ...vertices)
 
-              timers[2] = setTimeout(() => {
-                map.fitBounds(markers[key].polygon.getBounds(), Props.SET_VIEW)
-              }, Duration.SECOND / 1)
-            }, Duration.SECOND / 4)
+        return L.polygon(vertices, Props.POLYGON)
+      })
+
+      markers[key] = {
+        coordinates,
+        key,
+        greatPolygon: L.polygon(greatPolygon, Props.POLYGON),
+        icon: L.marker(coordinates, {icon: cameraMarker}),
+        polygons
+      }
+
+      markers[key].icon.on({click: () => {
+        handleCameraClick(key)
+      }})
+
+      markers[key].icon.addTo(map)
+    })
+  }, [fires, handleCameraClick])
+
+  useEffect(() => {
+    // `selectedIndex` will change rapidly when fires are loading, once for each
+    // fire loaded.
+    const fire = fires[selectedIndex]
+
+    if (fire != null && scrollingTo === -1) {
+      const {current: map} = initializeMap(mapRef, timerRef)
+      const {current: markers} = markersRef
+      const {camInfo: {latitude, longitude}} = fire
+      const coordinates = [latitude, longitude]
+      const key = getCameraKey(fire)
+
+      // Debounce map pan and zoom.
+      clearTimeout(timerRef.current)
+
+      if (markers[key] != null) {
+        // Zoom out to give the user some context.
+        map.setZoom(8, Props.SET_VIEW)
+
+        timerRef.current = setTimeout(() => {
+          Object.values(markers).forEach((x) => {
+            if (x !== markers[key]) {
+              x.polygons.forEach((p) => p.remove())
+            }
+          })
+
+          map.panTo(coordinates, Props.SET_VIEW)
+
+          timerRef.current = setTimeout(() => {
+            // XXX: Force icon to front.
+            markers[key].icon.remove()
+            markers[key].icon.addTo(map)
+
+            markers[key].polygons.forEach((p) => {
+              const {lat, lng} = p.getLatLngs()[0][0]
+
+              if (coordinates[0] === lat && coordinates[1] === lng) {
+                p.setStyle(Props.POV_POLYGON)
+                p.bringToFront()
+              } else {
+                p.setStyle(Props.POLYGON)
+              }
+
+              p.addTo(map)
+            })
+
+            timerRef.current = setTimeout(() => {
+              map.fitBounds(markers[key].greatPolygon.getBounds(), Props.SET_VIEW)
+            }, Duration.SECOND)
           }, Duration.SECOND / 4)
-        }
+        }, Duration.SECOND / 4)
       }
     }
-  }, [
-    cameraId, handleCameraClick, latitude, loading, longitude,
-    scrollingTo, timestamp
-  ])
+  }, [fires, scrollingTo, selectedIndex])
 
   return 0,
   <div className="c7e-fire-list--map" id="map">
@@ -177,9 +231,13 @@ export default function FireMap(props) {
 
 // -----------------------------------------------------------------------------
 
-function initializeMap(L, mapRef, coordinates) {
+function initializeMap(mapRef, timerRef) {
   if (mapRef.current == null) {
-    mapRef.current = L.map('map').setView(coordinates, 11)
+    const {L} = window
+
+    mapRef.current = L.map('map').setView(Props.CENTER, 8)
+    mapRef.current.fitBounds(Props.BOUNDS, Props.SET_VIEW)
+
     L.tileLayer(Props.URL_TEMPLATE, Props.MAP).addTo(mapRef.current)
   }
 

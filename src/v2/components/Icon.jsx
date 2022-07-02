@@ -18,6 +18,7 @@ import PropTypes from 'prop-types'
 import React from 'react'
 
 import concatClassNames from '../modules/concatClassNames.mjs'
+import renderStyles from '../modules/renderStyles.mjs'
 
 /**
  * Provides a renderer for SVG icons stored in a single SVG spritesheet file,
@@ -44,6 +45,28 @@ export default function Icon(props) {
       <use xlinkHref={`/img/spritesheet.svg#${icon}`}></use>
     </svg>
   </span>
+}
+
+/**
+ * Synchronously enders HTML equivalent to an `Icon` React element, which is
+ * all but necessary when using non-React 3rd-party packages such as Leaflet.
+ *
+ * @see Icon
+ */
+Icon.render = function (props) {
+  const {className, icon, size = Icon.Size.STANDARD, style} = props
+
+  const classNames = concatClassNames('c7e-icon', className)
+  const styles = renderStyles({...style, height: size, width: size})
+
+  // TODO: Add test to compare rendered string value to element instance.
+
+  return `\
+<span icon="${icon}" class="${classNames}" style="${styles}">
+  <svg width="${size}" height="${size}">
+    <use xlink:Href="${`/img/spritesheet.svg#${icon}`}"></use>
+  </svg>
+</span>`
 }
 
 Icon.propTypes = {

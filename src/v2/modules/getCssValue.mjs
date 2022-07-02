@@ -14,26 +14,13 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import Dom from 'react-dom'
-
 /**
- * Coverts `element` to HTML.
+ * Formats `value` (e.g., `24`) as a CSS string (e.g., `'24px'`).
  *
- * @param {Object} element - The React element to render.
+ * @param {(number|string)} value - A JavaScript value.
  *
- * @returns {string} HTML corresponding to `component`.
+ * @returns {string} A CSS value string.
  */
-export default function render(element) {
-  const div = document.createElement('div')
-
-  return new Promise((resolve, reject) => {
-    try {
-      Dom.render(element, div)
-      setTimeout(() => {
-        resolve(div.innerHTML)
-      })
-    } catch (error) {
-      reject(error)
-    }
-  })
+export default function getCssValue(value) {
+  return typeof value === 'number' ? `${value}px` : value
 }

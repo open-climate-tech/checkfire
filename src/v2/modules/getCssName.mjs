@@ -14,21 +14,15 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+const caseSeparatorRegExp = /([a-z])([A-Z])/g
 
 /**
- * Provides a simple footer for the main app layout.
+ * Formats `key` (e.g., `'camelCase'`) as a CSS name (e.g., `'camel-case'`).
  *
- * @returns {React.Element}
+ * @param {string} key - A camel-cased JavaScript key.
+ *
+ * @returns {string} A lowercase dashed CSS name.
  */
-export default function AppFooter(props) {
-  // TODO:
-  //   - Link Open Climate Tech if the final design calls for it
-  //   - Section links (About, Privacy, Terms)
-  //   - Social media links
-  //   - Donation link
-  return 0,
-  <div className="c7e-app-footer">
-    Open Climate Tech › Wildfire Check
-  </div>
+export default function getCssName(key) {
+  return key.replace(caseSeparatorRegExp, '$1-$2').toLowerCase()
 }

@@ -57,6 +57,12 @@
   padding: 5px;
 }
 
+.c7e-button.c7e-button--disabled {
+  color: rgba(13, 87, 175, 0.4);
+  cursor: default;
+  fill: rgba(13, 87, 175, 0.4);
+}
+
 .c7e-button-output {
   color: #444;
   cursor: default;
@@ -154,15 +160,6 @@
   position: absolute;
   right: 24px;
   top: 0;
-}
-
-.c7e-fire-list--loading {
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 24px;
-  letter-spacing: 0.1px;
-  padding: 194px 0;
-  text-align: center;
 }
 
 .c7e-fire-list--content {

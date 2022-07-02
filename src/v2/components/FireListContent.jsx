@@ -18,27 +18,27 @@ import React from 'react'
 
 import Fire from './Fire.jsx'
 
+import getCameraKey from '../modules/getCameraKey.mjs'
+
 /**
- * Provides a container for the list of fires, displaying a message while the
- * fires load or in the even that there are no fires to display.
+ * Provides a container for the list of fires, displaying a message in the event
+ * that there are no fires to display.
  *
  * @param {Object} props
  * @param {Array} fires - The list of fires to display.
- * @param {boolean} loading - Whether the list of fires is still paging in.
  *
  * @returns {React.Element}
  */
 export default function FireListContent(props) {
-  const {fires, loading, ...other} = props
+  const {fires, ...other} = props
+
+  // TODO: Impement empty state.
 
   return 0,
   <div className="c7e-fire-list--content">
-    { loading === true &&
-      <div className="c7e-fire-list--loading">Loading{fires.length > 0 && ` ${fires.length}`}…</div>
-    }
-    { loading === false && fires.length > 0 &&
+    { fires.length > 0 &&
       fires.map((x, i) =>
-        <Fire key={`${x.cameraID}:${x.timestamp}`} fire={x} index={i} {...other}/>)
+        <Fire key={getCameraKey(x)} fire={x} index={i} {...other}/>)
     }
   </div>
 }

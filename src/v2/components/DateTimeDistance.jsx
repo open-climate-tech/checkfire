@@ -29,12 +29,15 @@ export default function DateTime(props) {
   const {date: startDate} = props
   const endDate = new Date()
 
-  return <span className="c7e-date-time-distance">{ago(Duration.calculateCalendarDistance(startDate, endDate))}</span>
+  return <span className="c7e-date-time-distance">{ago(startDate, endDate)}</span>
 }
 
 // -----------------------------------------------------------------------------
 
-function ago({years, months, weeks, days, hours, minutes, seconds, milliseconds}) {
+function ago(startDate, endDate) {
+  const {years, months, weeks, days, hours, minutes, seconds} =
+    Duration.calculateCalendarDistance(startDate, endDate)
+
   if (years > 1) {
     return `about ${years} years ago`
   }
@@ -91,21 +94,7 @@ function ago({years, months, weeks, days, hours, minutes, seconds, milliseconds}
     return 'a minute ago'
   }
 
-  if (seconds > 40 && seconds < 60) {
+  if (seconds < 60) {
     return 'less than a minute ago'
   }
-
-  if (seconds > 20 && seconds < 40) {
-    return 'half a minute ago'
-  }
-
-  if (seconds > 10 && seconds < 20) {
-    return 'less than 20 seconds'
-  }
-
-  if (seconds > 5 && seconds < 10) {
-    return 'less than 10 seconds'
-  }
-
-  return 'less than 5 seconds'
 }

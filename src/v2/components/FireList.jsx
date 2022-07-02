@@ -22,17 +22,15 @@ import FireListControl from './FireListControl.jsx'
 import debounce from '../modules/debounce.mjs'
 
 /**
- * Receives a list of `fires` as well as the list’s `loading` status from a
- * higher-order component and is responsible for coordinating toolbar, map, and
- * list content around scrolling and fire-selection events.
+ * Receives a list of `fires` from a higher-order component and is responsible
+ * for coordinating toolbar, map, and list content around scrolling and
+ * fire-selection events.
  *
  * @param {Object} props
  * @param {Array} props.fires - A list of fires to be shown to the user.
- * @param {boolean} props.loading - `true` if `fires` is loading; `false` if it
- *    is complete.
  */
 export default function FireList(props) {
-  const {fires, loading} = props
+  const {fires} = props
 
   // The top position at which DOM elements become either visible or occluded
   // by the voting and pagination toolbar while scrolling.
@@ -116,7 +114,6 @@ export default function FireList(props) {
   const Props = {
     FIRE_LIST_CONTENT: {
       fires,
-      loading,
       onSelectFire: handleSelectFire,
       scrollBottomThreshold,
       scrollTopThreshold,
@@ -126,7 +123,6 @@ export default function FireList(props) {
     },
     FIRE_LIST_CONTROL: {
       fires,
-      loading,
       onScrollToFire: handleScrollToFire,
       onSelectFire: handleSelectFire,
       selectedIndex,

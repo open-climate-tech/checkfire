@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// Copyright 2020 Open Climate Tech Contributors
+// Copyright 2022 Open Climate Tech Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,18 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import {expect} from 'chai'
+import getCameraKey from './getCameraKey.mjs'
 
-import calculateBearing from '../../../src/v2/modules/calculateBearing.mjs'
-
-describe('calculateBearing()', () => {
-  it('should return about 96.51', () => {
-    const actual = calculateBearing([39.099912, -94.581213], [38.627089, -90.200203])
-    expect(actual.toFixed(2)).to.equal('96.51')
-  })
-})
+/**
+ * Compares the unique ID derived from `fireEvent` with `key`.
+ *
+ * @param {Object} fireEvent - The detected fire for which a unique camera ID
+ *     should be checked.
+ * @param {string} key - The unique ID to check `fireEvent` for.
+ *
+ * @returns {boolean} `true` if `fireEvent` has a unique ID equal to `key`;
+ *     otherwise, `false`.
+ */
+export default function hasCameraKey(fireEvent, key) {
+  return getCameraKey(fireEvent) === key
+}
