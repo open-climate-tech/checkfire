@@ -25,6 +25,10 @@ const jwt = require("jsonwebtoken");
 const { assert } = require('chai');
 const fetch = require('node-fetch');
 const { DateTime } = require('luxon');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const crypto = require('crypto');
 
 const scopes = [
   'email',
@@ -33,34 +37,81 @@ const scopes = [
 
 const cameraHpwrenRegex = /^[0-9a-z\-]+\-mobo-c$/;
 
-/**
- * Verify that request has a valid signed JWT cookie
- * @param {*} req
- * @param {*} res
- * @param {*} config
- */
-async function verifyAuth(req, res, config) {
-  try {
-    const decoded = await oct_utils.checkAuth(req, config);
-    return decoded;
-  } catch (err) {
-    console.log('jwt verify err', err);
-    res.status(403).send('Forbidden').end();
+function getUserId(type, username) {
+  if (type === 'local') {
+    return 'Local:' + username;
+  } else if (type === 'google') {
+    // ideally should have 'Google:' prefix, but for legacy reasons, leaving it untouched
+    return username;
+  } else if (type === 'dev') {
+    return 'Dev:' + username;
+  } else {
+    throw new Error('getUserId unsupported type: ' + type);
   }
 }
 
+function initPassportAuth(config, app, db) {
+  passport.use(new LocalStrategy(async function verify(username, password, cb) {
+    try {
+      logger.info('Passport use local');
+      const authQueryRes = await oct_utils.getUserAuth(db, username, 'local');
+      if (authQueryRes.length === 0) {
+        logger.error('PassportJS Local bad username');
+        return cb(null, false, {message: 'Incorrect username or password.'});
+      }
+      const dbSaltHex = authQueryRes[0].salt || authQueryRes[0].Salt;
+      const dbHashedPasswordHex = authQueryRes[0].hashedpassword || authQueryRes[0].HashedPassword;
+      const dbSalt = Buffer.from(dbSaltHex, 'hex');
+      const dbHashedPassword = Buffer.from(dbHashedPasswordHex, 'hex');
+      crypto.pbkdf2(password, dbSalt, 310000, 32, 'sha256', function(err, hashedPassword) {
+        if (err) {
+          return cb(err);
+        }
+        if (!crypto.timingSafeEqual(dbHashedPassword, hashedPassword)) {
+          logger.error('PassportJS Local Bad password');
+          return cb(null, false, {message: 'Incorrect username or password.'});
+        }
+        return cb(null, {userID: getUserId('local', username)});
+      });
+    } catch (err) {
+      logger.error('Passport local err', err);
+      return cb(err);
+    }
+  }));
 
+  const redirectUrl = (process.env.NODE_ENV === 'development') ?
+                       "http://localhost:3141/oauth2callback" :
+                       config.webOauthCallbackURL;
+  passport.use(new GoogleStrategy({
+    clientID: config.webOauthClientID,
+    clientSecret: config.webOauthClientSecret,
+    callbackURL: redirectUrl,
+    scope: ['email'],
+  }, function(accessToken, refreshToken, profile, cb) {
+    logger.info('Passport use Google');
+    const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
+    return cb(null, {userID: getUserId('google', email)});
+  }));
+}
+
+/**
+ * Verify that request is signed in
+ * @param {*} req
+ * @param {*} res
+ * @param {*} config
+ * @param {*} apiDesc
+ * @param {*} cb
+ * @returns
+ */
 async function apiWrapper(req, res, config, apiDesc, cb) {
   logger.info(apiDesc);
   let decoded;
   try {
-    decoded = await verifyAuth(req, res, config);
+    decoded = await oct_utils.checkAuth(req, config);
     await cb(decoded);
   } catch (err) {
     logger.error('%s failure: %s', apiDesc, err);
-    if (decoded) { // non-decoded cases get errored out in verifyAuth
-      res.status(400).send('Bad Request').end();
-    }
+    res.status(401).send('Unauthorized').end();
   }
 }
 
@@ -71,96 +122,90 @@ async function apiWrapper(req, res, config, apiDesc, cb) {
  * @param {db_mgr} db
  */
 function initApis(config, app, db) {
+  initPassportAuth(config, app, db);
+
   // This route is just a stub for testing.
   app.get('/api/testGet', async (req, res) => {
     logger.info('GET testGet');
-    try {
-      const decoded = await verifyAuth(req, res, config);
-      res
-        .status(200)
-        .send('Hello, m24.1610 world!')
-        .end();
-    } catch (err) {
-    }
+    res.status(200).send('Hello, m24.1610 world!').end();
   });
 
   app.post('/api/testPost', async (req, res) => {
     logger.info('POST testPost');
-    try {
-      const decoded = await verifyAuth(req, res, config);
-      console.log('body', req.body);
+    res.status(200).send('success').end();
+  });
+
+  app.get('/api/checkAuth', async (req, res) => {
+    apiWrapper(req, res, config, 'GET checkAuth', decoded => {
       res.status(200).send('success').end();
-    } catch (err) {
-    }
+    });
   });
 
-  const redirectUrl = (process.env.NODE_ENV === 'development') ?
-                       "http://localhost:5000/oauth2callback" :
-                       config.webOauthCallbackURL;
-  const oauth2Client = new google.auth.OAuth2(
-    config.webOauthClientID,
-    config.webOauthClientSecret,
-    redirectUrl
-  );
+  function genJwtCookie(res, userId) {
+    const expirationDays = 30; // 1 month
+    const expirationMS = expirationDays * 24 * 60 * 60 * 1000;
+    const expiration = expirationDays.toString() + 'd';
+    const signed = jwt.sign({email: userId}, config.cookieJwtSecret, { expiresIn: expiration });
+    console.log('genJwtCookie auth token', JSON.stringify(signed));
 
-  /**
-   * Generate the Google Oauth URL to authenticate user.
-   * On successful oauth completion, this will redirect user to /oauth2callback below
-   */
-  app.get('/api/oauthUrl', async (req, res) => {
-    try {
-      logger.info('GET /api/oauthUrl %s', JSON.stringify(req.query));
-      const url = oauth2Client.generateAuthUrl({
-          scope: scopes,
-          state: req.query.path,
-          code_challenge_method: 'S256',
-          code_challenge: config.webOauthCodeChallenge,
-      });
-      logger.info('goog url %s', url);
-      res
-        .status(200)
-        .send(url)
-        .end();
-    } catch (err) {
-      logger.error('Failure %s', err.message);
-      res.status(400).end();
+    const cookieOptions = {
+      httpOnly: true,
+      secure: false,
+      path: '/',
+      maxAge: expirationMS,
+      expires: new Date((new Date()).getTime() + expirationMS),
+    };
+    if (process.env.NODE_ENV !== 'development') {
+      cookieOptions.secure = true;
     }
+    console.log('genJwtCookie cookie opts', JSON.stringify(cookieOptions));
+    res.cookie('cf_token', signed, cookieOptions);
+  }
+
+  app.get('/api/oauthUrl', (req, res, next) => {
+    logger.info('GET /api/oauthUrl %s', JSON.stringify(req.query));
+    return passport.authenticate('google', {
+      state: req.query.path,
+    })(req, res, next);
   });
 
-  /**
-   * User just finished Google Oauth, now generate signed JWT as send as cookie for stateless auth.
-   * And redirect the web browser to desired client URL
-   */
-  app.get('/oauth2callback', async (req, res) => {
+  app.get('/oauth2callback', passport.authenticate('google', {session: false}), function(req, res) {
+    logger.info('GET /oauth2callback');
+    genJwtCookie(res, req.user.userID);
+    // send client browser to desired URL specified in state by leveraging react redirect in client JS
+    const qState = req && req.query && req.query.state;
+    res.redirect(qState);
+  });
+
+
+  app.post('/api/loginPassword', passport.authenticate('local', {session: false}), (req, res) => {
+    logger.info('POST /api/loginPassword');
+    genJwtCookie(res, req.user.userID);
+    return res.status(200).send('success').end();
+  });
+
+  app.post('/api/register', async function(req, res, next) {
     try {
-      logger.info('GET /oauth2callback: %s', JSON.stringify(req.query));
-
-      // verify code and get token.email
-      const code = req.query.code;
-      const {tokens} = await oauth2Client.getToken({code: code, codeVerifier: config.webOauthCodeVerifier});
-      // logger.info('tokens: %s', JSON.stringify(tokens));
-      const tokId = jwt.decode(tokens.id_token);
-      logger.info('tokId: %s', JSON.stringify(tokId));
-      logger.info('email: %s', tokId.email);
-
-      // now generate signed JWT to send as cookie to client
-      const expiration = '30d'; // 1 month
-      const signed = jwt.sign({email: tokId.email}, config.cookieJwtSecret, { expiresIn: expiration });
-      const cookieOptions = {
-        // httpOnly: true, // cannot use this because client JS checks this to see user is authenticated already
-        // expires: expiration, // expiration of cookie shoud match JWT, but currently pushing work to client JS
-      };
-      if (process.env.NODE_ENV !== 'development') {
-        cookieOptions.secure = true;
+      logger.info('POST /api/register');
+      // check for existing account for given user
+      const authQueryRes = await oct_utils.getUserAuth(db, req.body.username, 'local');
+      if (authQueryRes.length !== 0) {
+        return res.status(403).send('Forbidden').end();
       }
-      res.cookie('cf_token', signed, cookieOptions);
-
-      // finally, send client browser to desired URL specified in state by leveraging react redirect in client JS
-      const state = req.query.state;
-      res.redirect('/wildfirecheck?redirect=' + state);
+      // create new user+salt+password entry in DB
+      const salt = crypto.randomBytes(16);
+      crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', async function(err, hashedPassword) {
+        if (err) { return next(err); }
+        const saltHex = salt.toString('hex');
+        const passwordHex = hashedPassword.toString('hex');
+        await db.insert('auth', ['userid, type, hashedpassword, salt, email'], [req.body.username, 'local', passwordHex, saltHex, req.body.email]);
+        // login
+        genJwtCookie(res, getUserId('local', req.body.username));
+        res.status(200).send('success').end();
+      });
     } catch (err) {
-      logger.error('Failure %s', err.message);
-      res.status(400).end();
+      logger.error('POST Register err', err);
+      res.status(403).send('Forbidden').end();
     }
   });
 
@@ -169,14 +214,15 @@ function initApis(config, app, db) {
     app.get('/api/devlogin', async (req, res) => {
       logger.info('GET /devlogin: %s', JSON.stringify(req.query));
 
-      // now generate signed JWT to send as cookie to client
-      const expiration = '1d';
-      const signed = jwt.sign({email: req.query.email}, config.cookieJwtSecret, { expiresIn: expiration });
-      const cookieOptions = {};
-      res.cookie('cf_token', signed, cookieOptions);
-      res.status(200).send('success').end();
+      genJwtCookie(res, getUserId('dev', req.query.email));
+      return res.status(200).send('success').end();
     });
   }
+
+  app.get('/api/logout', function(req, res, next) {
+    res.clearCookie('cf_token');
+    return res.status(200).send('success').end();
+  });
 
   app.post('/api/voteFire', async (req, res) => {
     apiWrapper(req, res, config, 'POST voteFire', async decoded => {

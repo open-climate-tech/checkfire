@@ -19,7 +19,7 @@
 // UI backend server
 
 const express = require('express');
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const path = require('path');
@@ -48,6 +48,7 @@ app.use(function (req, res, next) {
 
 app.use(helmet());
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Redirect http to https

@@ -419,7 +419,7 @@ class VoteFires extends Component {
             this.state.potentialFires.slice(0, this.state.numRecentFires).map(potFire =>
               <FirePreview key={potFire.annotatedUrl} potFire={potFire} showProto={this.state.showProto}
                 childComponent={<VoteButtons validCookie={this.props.validCookie} potFire={potFire}
-                                  onVote={(f,v) => this.vote(f,v)} signin={this.props.signin} />}
+                                  onVote={(f,v) => this.vote(f,v)} />}
               />)
         :
             <p>No fire starts detected in last {this.state.hoursLimit} hours.</p>
@@ -438,7 +438,7 @@ class VoteFires extends Component {
                 this.state.potentialFires.slice(this.state.numRecentFires).map(potFire =>
                   <FirePreview key={potFire.annotatedUrl} potFire={potFire} showProto={this.state.showProto}
                     childComponent={<VoteButtons validCookie={this.props.validCookie} potFire={potFire}
-                                      onVote={(f,v) => this.vote(f,v)} signin={this.props.signin} />}
+                                      onVote={(f,v) => this.vote(f,v)} />}
                   />)
               }
             </div>)}

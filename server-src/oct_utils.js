@@ -90,6 +90,9 @@ async function getConfig(gcp_storage) {
  */
 function checkAuth(req, config) {
   return new Promise((resolve, reject) => {
+    if (!req.cookies.cf_token) {
+      reject('missing cookie');
+    }
     jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err, decoded) => {
       if (err) {
         reject(err);
@@ -265,6 +268,17 @@ function findClosest(allValues, desired, direction) {
   return closest.value;
 }
 
+/**
+ * Check the DB to get the user auth credentials
+ * @param {db_mgr} db
+ * @param {string} userID
+ * @param {string} type
+ */
+ async function getUserAuth(db, userID, type) {
+  const authQuery = `select type,hashedpassword,salt from auth where userid='${userID}' and type='${type}'`;
+  return await db.query(authQuery);
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
@@ -276,3 +290,4 @@ exports.augmentCameraInfo = augmentCameraInfo;
 exports.augmentVotes = augmentVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
 exports.findClosest = findClosest;
+exports.getUserAuth = getUserAuth;
