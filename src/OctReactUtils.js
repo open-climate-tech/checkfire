@@ -18,8 +18,7 @@
 // Utility functions for react code
 
 import React from "react";
-import googleSigninImg from './btn_google_signin_dark_normal_web.png';
-import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
+import {Link, useLocation} from "react-router-dom";
 import { useMediaQuery } from 'react-responsive'
 
 /**
@@ -66,9 +65,17 @@ export async function serverPost(serverUrl, body) {
 }
 
 export async function getUserPreferences() {
-  const serverUrl = getServerUrl('/api/getPreferences');
-  const resp = await serverGet(serverUrl);
-  return await resp.json();
+  try {
+    const serverUrl = getServerUrl('/api/getPreferences');
+    const resp = await serverGet(serverUrl);
+    return await resp.json();
+  } catch (err) {
+    console.log('getUserPreferences err', err);
+    return {
+      region: {},
+      webNotify: false,
+    };
+  }
 }
 
 export function Legalese(props) {
@@ -187,19 +194,18 @@ export function FirePreview(props) {
 }
 
 /**
- * Show voting buttons (yes/no), or already cast vote, or signin button
+ * Show voting buttons (yes/no), or already cast vote, or signin link
  * @param {*} props
  */
 export function VoteButtons(props) {
-  if (!props.validCookie) {
+  const myLoc = useLocation();
+  const myPath = myLoc.pathname;
+if (!props.validCookie) {
     return (
     <div>
-      <p style={{margin:0}}>Sign in to vote if this is a fire</p>
-      <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> props.signin()}>
-      <img src={googleSigninImg} alt="Sign in with Google"
-         onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
-         onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
-      </button>
+      <p style={{margin:0}}>
+        <Link to={{pathname: '/login', query: {fwdPath: myPath} }}>Sign in</Link> to vote if this is a fire
+      </p>
     </div>
     );
   } else if (props.potFire.voted !== undefined) {

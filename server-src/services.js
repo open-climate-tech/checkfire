@@ -42,7 +42,7 @@ async function initServices(app, done) {
   await pubsub.initPubSub(config, updateFromDetect);
   // detectMgr.initMgr(config);
 
-  const redirects = ['/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected'];
+  const redirects = ['/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected', '/login', '/register'];
   redirects.forEach(redirectUrl => {
     app.get(redirectUrl, (req,res) => {res.redirect('/wildfirecheck/?redirect=' + redirectUrl);});
   });

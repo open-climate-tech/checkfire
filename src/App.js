@@ -23,7 +23,8 @@ import {
   Switch,
   Route,
   Link,
-  Redirect
+  Redirect,
+  useLocation
 } from "react-router-dom";
 import './App.css';
 import VoteFires from './VoteFires';
@@ -32,14 +33,13 @@ import SelectedFires from './SelectedFires';
 import DetectedFires from './DetectedFires';
 import Preferences from './Preferences';
 import LabelImage from './LabelImage';
+import Login from './Login';
+import Register from './Register';
+
 import Prototypes from './Prototypes';
 
 import V2 from './v2/App.jsx'
 
-import googleSigninImg from './btn_google_signin_dark_normal_web.png';
-import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
-import Cookies from 'js-cookie';
-import jwt_decode from 'jwt-decode'
 import {getServerUrl, Legalese, serverGet} from './OctReactUtils';
 
 const qs = require('qs');
@@ -52,10 +52,23 @@ const LEGACY_PATHS = [
   '/preferences',
   '/prototypes',
   '/selected',
-  '/wildfirecheck'
+  '/wildfirecheck',
+  '/login',
+  '/register'
 ]
 
 function FirePagesHeader(props) {
+  async function logout() {
+    const serverUrl = getServerUrl('/api/logout');
+    const logoutResp = await serverGet(serverUrl);
+    const logoutText = await logoutResp.text();
+    console.log('logout ret', logoutText);
+    if (logoutText === 'success') {
+      window.location.reload();
+    }
+  }
+  const myLoc = useLocation();
+  const myPath = myLoc.pathname;
   return (<div>
     <div className="w3-bar w3-wide w3-padding w3-card">
       <div className="w3-col s3 w3-button w3-block">
@@ -67,16 +80,14 @@ function FirePagesHeader(props) {
       <div className="w3-col s3 w3-button w3-block">
         <Link to='/preferences'>Preferences</Link>
       </div>
-      <div className="w3-col s3 w3-block">
+      <div className="w3-col s3 w3-button w3-block">
         {props.validCookie ?
-          <span className="w3-button w3-disabled">Logged in</span>
-        :
-          <button style={{padding: 0, outline: "none", border: "none"}} onClick={props.signin}>
-            <img src={googleSigninImg} alt="Sign in with Google"
-              onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
-              onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
+          <button className={"w3-black w3-round-large"} onClick={() => logout()}>
+            Sign off
           </button>
-        }
+        :
+        <Link to={{ pathname: '/login', query: {fwdPath: myPath} }}>Sign in</Link>
+      }
       </div>
     </div>
   </div>);
@@ -90,47 +101,24 @@ class App extends Component {
     };
   }
 
-  checkCookie() {
-    const cf_token = Cookies.get('cf_token');
-    if (cf_token) {
-      const decoded = jwt_decode(cf_token);
-      const now = new Date().valueOf()/1000;
-      console.log('now', now, decoded.exp, now < decoded.exp);
-      const newState = {
-        validCookie: now < decoded.exp
-      }
-      this.setState(newState);
-    }
+  async checkCookie() {
+    const serverUrl = getServerUrl('/api/checkAuth');
+    const authResp = await serverGet(serverUrl);
+    const authText = await authResp.text();
+    console.log('checkAuth resp', authText);
+    this.setState({
+      validCookie: authText === 'success',
+    });
   }
 
   componentDidMount() {
     this.checkCookie();
-    this.getOauthUrl();
     const queryParams = qs.parse(window.location.search, {ignoreQueryPrefix: true});
     // console.log('qp', queryParams);
     if (queryParams.redirect && (queryParams.redirect[0] === '/')) {
       console.log('redirecting to ', queryParams.redirect);
       this.setState({redirect: queryParams.redirect});
       return;
-    }
-  }
-
-  async getOauthUrl () {
-    const serverUrl = getServerUrl('/api/oauthUrl?path=' + encodeURIComponent(window.location.pathname));
-    const oauthUrlResp = await serverGet(serverUrl);
-    this.oauthUrl = await oauthUrlResp.text();
-    // console.log('oauth url', this.oauthUrl);
-  }
-
-  async signin() {
-    if (process.env.NODE_ENV === 'development') {
-      const serverUrl = getServerUrl('/api/devlogin?email=secret@example.com');
-      const resp = await serverGet(serverUrl);
-      const serverRes = await resp.text();
-      console.log('get res', serverRes);
-      this.checkCookie();
-    } else {
-      window.location.href = this.oauthUrl;
     }
   }
 
@@ -146,11 +134,15 @@ class App extends Component {
             (this.state.redirect && <Redirect to={this.state.redirect} />)
           }
           <Route path={LEGACY_PATHS} exact>
-            <FirePagesHeader validCookie={this.state.validCookie} signin={()=> this.signin()}/>
+            <FirePagesHeader validCookie={this.state.validCookie} />
           </Route>
           <Switch>
             <Route path="/v2/wildfirecheck" exact component={V2} />
             <Route path="/prototypes" exact component={Prototypes} />
+            <Route path="/login" exact render={props =>
+                    <Login />} />
+            <Route path="/register" exact render={props =>
+                    <Register />} />
             <Route path="/confirmed" exact render={props =>
                     <ConfirmedFires {...props} />} />
             <Route path="/selected" exact render={props =>
@@ -163,7 +155,7 @@ class App extends Component {
                     <LabelImage {...props} validCookie={this.state.validCookie} />} />
             <Route path={["/", "/wildfirecheck"]} render={props =>
                     <VoteFires {...props} validCookie={this.state.validCookie}
-                      signin={() => this.signin()} invalidateCookie={() => this.invalidateCookie()} />} />
+                      invalidateCookie={() => this.invalidateCookie()} />} />
           </Switch>
           <Route path={LEGACY_PATHS} exact>
             <Legalese/>

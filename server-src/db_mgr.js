@@ -85,7 +85,7 @@ async function initDB(config, useSocket=false) {
    */
   db.insert = async function dbInsert(tableName, keys, values) {
     let sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
-    console.log('sqlC', sqlCmd);
+    // console.log('sqlC', sqlCmd);
     if (db.dbType === 'sqlite') {
       let dbRunP = util.promisify(db.sqlite.run).bind(db.sqlite);
       return await dbRunP(sqlCmd);
