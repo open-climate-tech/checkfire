@@ -28,6 +28,7 @@ const { DateTime } = require('luxon');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook');
 const crypto = require('crypto');
 
 const scopes = [
@@ -45,6 +46,8 @@ function getUserId(type, username) {
     return username;
   } else if (type === 'dev') {
     return 'Dev:' + username;
+  } else if (type === 'facebook') {
+    return 'FB:' + username;
   } else {
     throw new Error('getUserId unsupported type: ' + type);
   }
@@ -91,6 +94,19 @@ function initPassportAuth(config, app, db) {
     logger.info('Passport use Google');
     const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
     return cb(null, {userID: getUserId('google', email)});
+  }));
+
+  const redirectUrlFB = (process.env.NODE_ENV === 'development') ?
+                         "http://localhost:3141/oauth2FbCallback" :
+                         config.facebookCallbackURL;
+  passport.use(new FacebookStrategy({
+    clientID: config.facebookAppID,
+    clientSecret: config.facebookAppSecret,
+    callbackURL: redirectUrlFB,
+  }, function(accessToken, refreshToken, profile, cb) {
+    logger.info('Passport use Facebook');
+    const email = profile.id;
+    return cb(null, {userID: getUserId('facebook', email)});
   }));
 }
 
@@ -171,6 +187,23 @@ function initApis(config, app, db) {
 
   app.get('/oauth2callback', passport.authenticate('google', {session: false}), function(req, res) {
     logger.info('GET /oauth2callback');
+    genJwtCookie(res, req.user.userID);
+    // send client browser to desired URL specified in state by leveraging react redirect in client JS
+    const qState = req && req.query && req.query.state;
+    res.redirect(qState);
+  });
+
+
+  app.get('/api/oauthFbUrl', (req, res, next) => {
+    logger.info('GET /api/oauthFbUrl %s', JSON.stringify(req.query));
+    return passport.authenticate('facebook', {
+      scope: ['email', 'public_profile'],
+      state: req.query.path,
+    })(req, res, next);
+  });
+
+  app.get('/oauth2FbCallback', passport.authenticate('facebook', {session: false}), function(req, res) {
+    logger.info('GET /oauth2FbCallback');
     genJwtCookie(res, req.user.userID);
     // send client browser to desired URL specified in state by leveraging react redirect in client JS
     const qState = req && req.query && req.query.state;

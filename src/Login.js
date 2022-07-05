@@ -59,6 +59,12 @@ export default function Login(props) {
     }
   }
 
+  async function loginFacebook(fwdPath) {
+    const fwdPath2 = fwdPath || '/';
+    console.log('loginFacebook fwd ', fwdPath2);
+    window.location.href = getServerUrl('/api/oauthFbUrl?path=' + fwdPath2);
+  }
+
   return (
     <div>
       <div className="container">
@@ -69,15 +75,19 @@ export default function Login(props) {
           </div>
 
           <div className="col">
-            <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> loginGoogle(fwdPath)}>
-              <img src={googleSigninImg} alt="Sign in with Google"
-                onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
-                onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
-            </button>
-            {/* <a href="/#" class="fb btn">
-              <i class="fa fa-facebook fa-fw"></i> Login with Facebook
-            </a>
-            <a href="/#" class="twitter btn">
+            <div>
+              <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> loginGoogle(fwdPath)}>
+                <img src={googleSigninImg} alt="Sign in with Google"
+                  onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
+                  onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
+              </button>
+            </div>
+            <div>
+              <button className="fb btn" style={{maxWidth:"225px"}} onClick={()=> loginFacebook(fwdPath)}>
+                <i className="fa fa-facebook fa-fw"></i> Log in With Facebook
+              </button>
+            </div>
+            {/* <a href="/#" class="twitter btn">
               <i class="fa fa-twitter fa-fw"></i> Login with Twitter
             </a> */}
           </div>
