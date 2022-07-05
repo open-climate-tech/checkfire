@@ -44,8 +44,8 @@ export default function FireListPagination(props) {
   }, [selectedIndex, onScrollToFire])
 
   const pagination = nFires > 0 ? `Fire ${selectedIndex + 1} of ${nFires}` : '…'
-  const disabledNext = selectedIndex === nFires - 1
-  const disabledPrev = selectedIndex === 0
+  const disabledNext = nFires < 2 || selectedIndex === nFires - 1
+  const disabledPrev = nFires < 2 || selectedIndex === 0
 
   // TODO: Animate transition when `nFires` changes, possibly whenever `fires` changes.
 

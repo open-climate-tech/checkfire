@@ -210,7 +210,7 @@ async function augmentCameraInfo(db, config, potFire) {
   potFire.camInfo = camInfo;
 
   // parse polygon and calculate direction
-  if (potFire.polygon && (typeof(potFire.polygon) === 'string')) {
+  if (potFire.polygon && typeof potFire.polygon === 'string') {
     potFire.polygon = JSON.parse(potFire.polygon);
     if (potFire.fireHeading === null) {
       // old fires in DB don't have fireHeading data.  Don't report any direction
@@ -219,6 +219,15 @@ async function augmentCameraInfo(db, config, potFire) {
       potFire.camInfo.cameraDir = getCardinalHeading(potFire.fireHeading);
     }
   }
+
+  if (potFire.sourcePolygons) {
+    if (typeof potFire.sourcePolygons === 'string') {
+      potFire.sourcePolygons = JSON.parse(potFire.sourcePolygons)
+    }
+  } else {
+    potFire.sourcePolygons = []
+  }
+
   return potFire;
 }
 
@@ -234,7 +243,7 @@ async function augmentVotes(db, potFire, userID) {
 }
 
 function dbAlertToUiObj(dbEvent) {
-  const uiObj = {
+  return {
     timestamp: dbEvent.Timestamp || dbEvent.timestamp,
     cameraID: dbEvent.CameraName || dbEvent.cameraname,
     adjScore: dbEvent.AdjScore || dbEvent.adjscore,
@@ -248,16 +257,6 @@ function dbAlertToUiObj(dbEvent) {
     isProto: dbEvent.IsProto || dbEvent.isproto,
     sortId: dbEvent.SortId || dbEvent.sortid
   }
-
-  if (!!uiObj.sourcePolygons) {
-    if (typeof uiObj.sourcePolygons === 'string') {
-      uiObj.sourcePolygons = JSON.parse(uiObj.sourcePolygons)
-    }
-  } else {
-    delete uiObj.sourcePolygons
-  }
-
-  return uiObj
 }
 
 /**
