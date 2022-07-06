@@ -47,8 +47,8 @@ class VoteFires extends Component {
     const latLongStr = queryParams.get('latLong');
     const notifyStr = queryParams.get('notify');
      // lat/long for northern (> 10 latitude) and western (<-100) longitude
-    const twoPointOne = '([0-9]{2}(?:\.[0-9])?)';
-    const negThreePointOne = '(-[0-9]{3}(?:\.[0-9])?)';
+    const twoPointOne = '([0-9]{2}(?:\\.[0-9])?)';
+    const negThreePointOne = '(-[0-9]{3}(?:\\.[0-9])?)';
     const regexLatLong = RegExp('^' + twoPointOne + ',' + twoPointOne + ',' + negThreePointOne + ',' + negThreePointOne + '$')
     const latLongParsed = regexLatLong.exec(latLongStr);
     let userRegion = null;
@@ -133,7 +133,7 @@ class VoteFires extends Component {
     if (Math.abs(vertices[1][0] - vertices[0][0]) < 0.01) {
       return false; // too close to horizontal -- ignore this segment and see if other segments intersect
     }
-    // t1 is parameterized value on ilne segment where 0 represents vertices[0] and 1 represents vertices[1]
+    // t1 is parameterized value on line segment where 0 represents vertices[0] and 1 represents vertices[1]
     const t1 = (commonLat - vertices[0][0]) / (vertices[1][0] - vertices[0][0]);
     if ((t1 >= 0) && (t1 <= 1)) { // commonLat is between the two vertices
       // now check if intersection point is within leftLong and rightLong

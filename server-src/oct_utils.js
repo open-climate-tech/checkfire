@@ -45,7 +45,7 @@ const logger = getLogger('oct_utils');
 
 /**
  * Retry the given function up to MAX_RETRIES with increasing delays until it succeeds
- * @param {function} mainFn 
+ * @param {function} mainFn
  */
 async function retryWrap(mainFn) {
   const MAX_RETRIES = 5;
@@ -55,7 +55,7 @@ async function retryWrap(mainFn) {
     } catch (err) {
       if (retryNum < MAX_RETRIES) {
         logger.warn('Failure %s.  Retry %d in %d seconds:', err.message, retryNum, retryNum);
-        await sleep(retryNum * 1000);  
+        await sleep(retryNum * 1000);
       } else {
         logger.error('Failure %s.  No more retries', err.message);
         throw new Error(err);
@@ -210,7 +210,7 @@ async function augmentCameraInfo(db, config, potFire) {
   potFire.camInfo = camInfo;
 
   // parse polygon and calculate direction
-  if (potFire.polygon && (typeof(potFire.polygon) === 'string')) {
+  if (potFire.polygon && typeof potFire.polygon === 'string') {
     potFire.polygon = JSON.parse(potFire.polygon);
     if (potFire.fireHeading === null) {
       // old fires in DB don't have fireHeading data.  Don't report any direction
@@ -219,6 +219,15 @@ async function augmentCameraInfo(db, config, potFire) {
       potFire.camInfo.cameraDir = getCardinalHeading(potFire.fireHeading);
     }
   }
+
+  if (potFire.sourcePolygons) {
+    if (typeof potFire.sourcePolygons === 'string') {
+      potFire.sourcePolygons = JSON.parse(potFire.sourcePolygons)
+    }
+  } else {
+    potFire.sourcePolygons = []
+  }
+
   return potFire;
 }
 
@@ -235,18 +244,18 @@ async function augmentVotes(db, potFire, userID) {
 
 function dbAlertToUiObj(dbEvent) {
   return {
-    "timestamp": dbEvent.Timestamp || dbEvent.timestamp,
-    "cameraID": dbEvent.CameraName || dbEvent.cameraname,
-    "adjScore": dbEvent.AdjScore || dbEvent.adjscore,
-    "weatherScore": dbEvent.WeatherScore || dbEvent.weatherscore,
-    "annotatedUrl": dbEvent.ImageID || dbEvent.imageid,
-    "croppedUrl": (dbEvent.CroppedID || dbEvent.croppedid || '').split(',')[0],
-    "mapUrl": dbEvent.MapID || dbEvent.mapid,
-    "polygon": dbEvent.polygon,
-    "sourcePolygons": dbEvent.sourcePolygons || dbEvent.sourcepolygons,
-    "fireHeading": dbEvent.FireHeading || dbEvent.fireheading,
-    "isProto": dbEvent.IsProto || dbEvent.isproto,
-    "sortId": dbEvent.SortId || dbEvent.sortid,
+    timestamp: dbEvent.Timestamp || dbEvent.timestamp,
+    cameraID: dbEvent.CameraName || dbEvent.cameraname,
+    adjScore: dbEvent.AdjScore || dbEvent.adjscore,
+    weatherScore: dbEvent.WeatherScore || dbEvent.weatherscore,
+    annotatedUrl: dbEvent.ImageID || dbEvent.imageid,
+    croppedUrl: (dbEvent.CroppedID || dbEvent.croppedid || '').split(',')[0],
+    mapUrl: dbEvent.MapID || dbEvent.mapid,
+    polygon: dbEvent.polygon,
+    sourcePolygons: dbEvent.sourcePolygons || dbEvent.sourcepolygons,
+    fireHeading: dbEvent.FireHeading || dbEvent.fireheading,
+    isProto: dbEvent.IsProto || dbEvent.isproto,
+    sortId: dbEvent.SortId || dbEvent.sortid
   }
 }
 

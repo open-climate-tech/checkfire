@@ -14,25 +14,31 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React from 'react'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+import Fire from './Fire.jsx'
 
-import './App.css'
+import getCameraKey from '../modules/getCameraKey.mjs'
 
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
+/**
+ * Provides a container for the list of fires, displaying a message in the event
+ * that there are no fires to display.
+ *
+ * @param {Object} props
+ * @param {Array} fires - The list of fires to display.
+ *
+ * @returns {React.Element}
+ */
+export default function FireListContent(props) {
+  const {fires, ...other} = props
+
+  // TODO: Impement empty state.
 
   return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
+  <div className="c7e-fire-list--content">
+    { fires.length > 0 &&
+      fires.map((x, i) =>
+        <Fire key={getCameraKey(x)} fire={x} index={i} {...other}/>)
+    }
   </div>
 }

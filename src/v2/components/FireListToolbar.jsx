@@ -14,25 +14,26 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React from 'react'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+import FireListPagination from './FireListPagination.jsx'
+import FireListVoting from './FireListVoting.jsx'
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
+/**
+ * Provides a simple toolbar for the main app layout.
+ *
+ * @param {Object} props
+ * @param {Object} props.toolbarRef - A mutable ref object whose `.current`
+ *     value will be set to this toolbar’s container element.
+ *
+ * @returns {React.Element}
+ */
+export default function FireListToolbar(props) {
+  const {toolbarRef, ...otherProps} = props
 
   return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
+  <div ref={toolbarRef} className="c7e-fire-list--toolbar">
+    <FireListVoting {...otherProps}/>
+    <FireListPagination {...otherProps}/>
   </div>
 }

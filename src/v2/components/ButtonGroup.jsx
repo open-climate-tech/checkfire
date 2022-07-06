@@ -14,25 +14,21 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React from 'react'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
+/**
+ * Provides a styled container for two or more buttons.
+ *
+ * @param {Object} props
+ * @param {Array<Button>} props.children
+ *
+ * @returns {React.Element}
+ */
+export default function ButtonGroup(props) {
+  const {children} = props
 
   return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
+  <div className="c7e-button-group">
+    {children}
   </div>
 }

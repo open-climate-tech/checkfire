@@ -14,25 +14,18 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import getCssName from './getCssName.mjs'
+import getCssValue from './getCssValue.mjs'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+/**
+ * Formats `styles` (e.g., `{paddingBottom: 24}`) as a valid style attribute
+ * value (e.g., `'padding-bottom: 24px'`).
+ *
+ * @param {Object} styles - A collection of camel-cased CSS properties.
+ *
+ * @returns {string} A valid style attribute value.
+ */
+export default function renderStyles(styles) {
+  return Object.entries(styles).map(([k, v]) =>
+    `${getCssName(k)}: ${getCssValue(v)}`).join('; ')
 }

@@ -14,25 +14,15 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+const caseSeparatorRegExp = /([a-z])([A-Z])/g
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+/**
+ * Formats `key` (e.g., `'camelCase'`) as a CSS name (e.g., `'camel-case'`).
+ *
+ * @param {string} key - A camel-cased JavaScript key.
+ *
+ * @returns {string} A lowercase dashed CSS name.
+ */
+export default function getCssName(key) {
+  return key.replace(caseSeparatorRegExp, '$1-$2').toLowerCase()
 }

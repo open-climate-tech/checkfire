@@ -14,25 +14,13 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
-
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+/**
+ * Formats `value` (e.g., `24`) as a CSS string (e.g., `'24px'`).
+ *
+ * @param {(number|string)} value - A JavaScript value.
+ *
+ * @returns {string} A CSS value string.
+ */
+export default function getCssValue(value) {
+  return typeof value === 'number' ? `${value}px` : value
 }

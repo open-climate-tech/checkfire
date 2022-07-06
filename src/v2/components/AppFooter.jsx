@@ -14,25 +14,21 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React from 'react'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
+/**
+ * Provides a simple footer for the main app layout.
+ *
+ * @returns {React.Element}
+ */
+export default function AppFooter(props) {
+  // TODO:
+  //   - Link Open Climate Tech if the final design calls for it
+  //   - Section links (About, Privacy, Terms)
+  //   - Social media links
+  //   - Donation link
   return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
+  <div className="c7e-app-footer">
+    Open Climate Tech › Wildfire Check
   </div>
 }

@@ -14,25 +14,22 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
-
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+/**
+ * Joins one or more string arguments into a single CSS class name string,
+ * ignoring any falsey values (e.g., `''`, `false`, `null`, `undefined`, ...).
+ *
+ * @example
+ * ```js
+ * const classNames = ['x y', 'z']
+ * concatClassNames('a', 'b c', falsey && 'l m n', ...classNames)
+ * // → 'a b c x y z'
+ * ```
+ *
+ * @param {...?(string|boolean|number)=} classNames - One or more class name
+ *     strings or falsey values.
+ *
+ * @returns {string} The concatenated class names.
+ */
+export default function concatClassNames(...classNames) {
+  return classNames.filter((x) => !!x).join(' ')
 }

@@ -14,25 +14,24 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React from 'react'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+// import Button from './Button.jsx'
+// import ButtonGroup from './ButtonGroup.jsx'
+// import ButtonOutput from './ButtonOutput.jsx'
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
+/**
+ * Provides a button group for confirming whether the active detected fire is
+ * in fact a fire.
+ */
+export default function FireListVoting(props) {
   return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
+  <div className="c7e-fire-list--voting">
+    { // <ButtonGroup>
+      //   <Button className="c7e-button--fire" icon="c7e-icon--fire" label="Confirm"/>
+      //   <ButtonOutput label="0﹪"/>
+      //   <Button aria-label="Not a fire" icon="c7e-icon--not"/>
+      // </ButtonGroup>
+    }
   </div>
 }

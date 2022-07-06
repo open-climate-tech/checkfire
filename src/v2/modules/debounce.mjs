@@ -14,25 +14,24 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+/**
+ * Prevents `callback` from being invoked more than once per repaint so that
+ * processing time isn’t expended when it won’t be perceived by the user.
+ *
+ * @param {funciton(...?)} callback
+ */
+export default function debounce(callback) {
+  let requestId
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+  // eslint-disable-next-line func-names
+  return function (...argv) {
+    const [event] = argv
+    if (event && typeof event.persist === 'function') {
+      // Preserve event properties so they can be accessed after debouncing.
+      event.persist()
+    }
 
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+    cancelAnimationFrame(requestId)
+    requestId = requestAnimationFrame(() => callback.apply(this, argv))
+  }
 }

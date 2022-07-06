@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// Copyright 2022 Open Climate Tech Contributors
+// Copyright 2020 Open Climate Tech Contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,25 +14,15 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import {expect} from 'chai'
 
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
+import concatClassNames from '../../../src/v2/modules/concatClassNames.mjs'
 
-import './App.css'
+describe('concatClassNames()', () => {
+  it("should return 'a b c x y z'", () => {
+    const classNames = ['x y', 'z']
+    const actual = concatClassNames('a', 'b c', null && 'l m n', ...classNames)
 
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
+    expect(actual).to.equal('a b c x y z')
   })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
-}
+})

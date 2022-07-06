@@ -14,25 +14,15 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
-
-import AppFooter from './components/AppFooter.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-
-import './App.css'
-
-export default function App() {
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
-  useEffect(() => {
-    ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
-    })()
-  })
-
-  return 0,
-  <div className="c7e-root">
-    <PotentialFireList/>
-    <AppFooter/>
-  </div>
+/**
+ * Extracts values from `fireEvent` to construct a unique ID.
+ *
+ * @param {Object} fireEvent - The detected fire from which a unique camera ID
+ *     should be derived.
+ *
+ * @returns {string} A unique camera ID suitable for React keys and the like.
+ */
+export default function getCameraKey(fireEvent) {
+  const {cameraID, timestamp} = fireEvent
+  return `${cameraID}:${timestamp}`
 }
