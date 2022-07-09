@@ -64,6 +64,7 @@ app.use('/', express.static(path.join(__dirname, 'webroot')));
 // react app for /wildfirecheck
 app.use('/wildfirecheck', express.static(path.join(__dirname, 'build')));
 app.use('/static', express.static(path.join(__dirname, 'build/static')));
+app.use('/img', express.static(path.join(__dirname, 'build/img')));
 
 // initialize dyanmic services
 services.initServices(app, () => {
