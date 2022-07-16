@@ -71,17 +71,17 @@ export default function Fire(props) {
 
   useEffect(() => {
     // Handle scrolling events while this fire is active as long as we’re not
-    // scrolling to it automatically.
-    if (selected && scrollingTo === null) {
+    // scrolling to it or another fire automatically.
+    if (selected && scrollToIndex < 0) {
       const {current: container} = containerRef
       const {bottom, height, top} = container.getBoundingClientRect()
 
       if (bottom - height / 4 <= scrollTopThreshold) {
-        // When this fire scrolls off the top of the page (underneath and fully
+        // When this fire scrolls off the top of the page (underneath and 3/4
         // occluded by the toolbar), pass control to the next fire.
         onSelectFire(index + 1)
       } else if (top + height / 4 >= scrollTopThreshold + height) {
-        // When this fire scrolls more than its own height away from the top of
+        // When this fire scrolls more than 3/4 its own height from the top of
         // the page (i.e., from the toolbar), pass control to the previous fire.
         onSelectFire(index - 1)
       }
@@ -108,7 +108,7 @@ export default function Fire(props) {
       })
     }
   }, [
-    index, onSelectFire, selected, scrollBottomThreshold, scrollingTo,
+    index, onSelectFire, selected, scrollBottomThreshold, scrollToIndex,
     scrollTopThreshold, scrollTop, shouldLoadVideo
   ])
 
