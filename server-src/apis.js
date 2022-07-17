@@ -82,32 +82,52 @@ function initPassportAuth(config, app, db) {
     }
   }));
 
-  const redirectUrl = (process.env.NODE_ENV === 'development') ?
-                       "http://localhost:3141/oauth2callback" :
-                       config.webOauthCallbackURL;
-  passport.use(new GoogleStrategy({
-    clientID: config.webOauthClientID,
-    clientSecret: config.webOauthClientSecret,
-    callbackURL: redirectUrl,
-    scope: ['email'],
-  }, function(accessToken, refreshToken, profile, cb) {
-    logger.info('Passport use Google');
-    const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
-    return cb(null, {userID: getUserId('google', email)});
-  }));
+  const hasGoogleStrategyOptions = config.webOauthCallbackURL
+    && config.webOauthClientID
+    && config.webOauthClientSecret
 
-  const redirectUrlFB = (process.env.NODE_ENV === 'development') ?
-                         "http://localhost:3141/oauth2FbCallback" :
-                         config.facebookCallbackURL;
-  passport.use(new FacebookStrategy({
-    clientID: config.facebookAppID,
-    clientSecret: config.facebookAppSecret,
-    callbackURL: redirectUrlFB,
-  }, function(accessToken, refreshToken, profile, cb) {
-    logger.info('Passport use Facebook');
-    const email = profile.id;
-    return cb(null, {userID: getUserId('facebook', email)});
-  }));
+  // Only attempt to configure this strategy if it’s expected in production or
+  // defined in development.
+  if (process.env.NODE_ENV === 'production' || hasGoogleStrategyOptions) {
+    // If it’s expected or defined, allow it to throw (i.e., server won’t start).
+    passport.use(new GoogleStrategy({
+      clientID: config.webOauthClientID,
+      clientSecret: config.webOauthClientSecret,
+      callbackURL: config.webOauthCallbackURL,
+      scope: ['email'],
+    }, function(accessToken, refreshToken, profile, cb) {
+      logger.info('Passport use Google');
+      const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
+      return cb(null, {userID: getUserId('google', email)});
+    }));
+  }
+
+  if (process.env.NODE_ENV === 'development' && !hasGoogleStrategyOptions) {
+    logger.warn('Google authentication strategy isn’t configured.')
+  }
+
+  const hasFacebookStrategyOptions = config.facebookCallbackURL
+    && config.facebookAppID
+    && config.facebookAppSecret
+
+  // Only attempt to configure this strategy if it’s expected in production or
+  // defined in development.
+  if (process.env.NODE_ENV === 'production' || hasFacebookStrategyOptions) {
+    // If it’s expected or defined, allow it to throw (i.e., server won’t start).
+    passport.use(new FacebookStrategy({
+      clientID: config.facebookAppID,
+      clientSecret: config.facebookAppSecret,
+      callbackURL: config.facebookCallbackURL,
+    }, function(accessToken, refreshToken, profile, cb) {
+      logger.info('Passport use Facebook');
+      const email = profile.id;
+      return cb(null, {userID: getUserId('facebook', email)});
+    }));
+  }
+
+  if (process.env.NODE_ENV === 'development' && !hasFacebookStrategyOptions) {
+    logger.warn('Facebook authentication strategy isn’t configured.')
+  }
 }
 
 /**
