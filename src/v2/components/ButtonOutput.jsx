@@ -26,14 +26,17 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  *
  * @param {Object} props
  * @param {string} props.className - A list of CSS class names.
+ * @param {boolean} props.disabled - Whether users should be able to interact
+ *     with this button.
  * @param {Icon=} props.icon - Optional icon to include with the button.
  * @param {string=} props.label - Optional label to include with the button.
  *
  * @returns {React.Element}
  */
 export default function ButtonOutput(props) {
-  const {className, icon, label} = props
-  const classNames = concatClassNames(className, 'c7e-button-output')
+  const {className, disabled, icon, label} = props
+  const classNames =
+    concatClassNames(className, 'c7e-button-output', disabled && 'c7e-button--disabled')
 
   return 0,
   <span className={classNames}>

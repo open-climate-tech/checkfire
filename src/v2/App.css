@@ -47,7 +47,7 @@
 .c7e-button-output {
   background: #F6F9FE;
   border: 1px solid #E0E9FA;
-  border-radius: 50%;
+  border-radius: 12px;
   color: #0D57AF;
   cursor: pointer;
   display: inline-flex;
@@ -63,10 +63,9 @@
   fill: rgba(13, 87, 175, 0.4);
 }
 
-.c7e-button-output {
-  color: #444;
-  cursor: default;
-  fill: #444;
+.c7e-button-output.c7e-button--disabled {
+  color: rgba(68, 68, 68, 0.4);
+  fill: rgba(68, 68, 68, 0.4);
 }
 
 .c7e-button-group {
@@ -176,6 +175,27 @@
   position: fixed;
   right: 0;
   top: 54px;
+}
+
+.c7e-fire-list--empty {
+  margin: 30px auto 18px auto;
+  padding: 0;
+  pointer-events: all;
+  position: relative;
+  text-align: center;
+  width: 640px;
+}
+
+/* Draws a line centered vertically behind empty-state content. */
+.c7e-fire-list--empty::before {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  content: "";
+  height: 0;
+  left: 0;
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  z-index: -1;
 }
 
 .c7e-fire-list--map {

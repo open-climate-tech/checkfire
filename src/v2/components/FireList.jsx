@@ -28,9 +28,16 @@ import debounce from '../modules/debounce.mjs'
  *
  * @param {Object} props
  * @param {Array} props.fires - A list of fires to be shown to the user.
+ * @param {number} props.indexOfOldFires - The index in `props.fires` where old
+ *     fires begin (-1 if `props.fires` doesn’t currently contain older fires).
+ * @param {number} props.nOldFires - The total number of old fires, regardless
+ *     of whether they are currently displayed or not.
+ * @param {function()} props.onToggleAllFires - Callback to hide/show old fires.
+ *
+ * @returns {React.Element}
  */
 export default function FireList(props) {
-  const {fires} = props
+  const {fires, indexOfOldFires, nOldFires, onToggleAllFires} = props
 
   // The top position at which DOM elements become either visible or occluded
   // by the voting and pagination toolbar while scrolling.
@@ -80,6 +87,19 @@ export default function FireList(props) {
   }, [nFires, selectedIndex])
 
   useEffect(() => {
+    // Ensure that `selectedIndex` is within the current array’s bounds. If it’s
+    // not, scroll to the closest fire (assuming there is one).
+    if (selectedIndex >= fires.length) {
+      if (fires.length > 0) {
+        handleScrollToFire(fires.length - 1)
+      } else {
+        setSelectedIndex(0)
+        setScrollToIndex(-1)
+      }
+    }
+  }, [fires, handleScrollToFire, selectedIndex])
+
+  useEffect(() => {
     if (toolbarRef.current) {
       const threshold = toolbarRef.current.getBoundingClientRect().bottom
       setscrollTopThreshold(threshold)
@@ -114,7 +134,10 @@ export default function FireList(props) {
   const Props = {
     FIRE_LIST_CONTENT: {
       fires,
+      indexOfOldFires,
+      nOldFires,
       onSelectFire: handleSelectFire,
+      onToggleAllFires,
       scrollBottomThreshold,
       scrollTopThreshold,
       scrollToIndex,
@@ -123,6 +146,7 @@ export default function FireList(props) {
     },
     FIRE_LIST_CONTROL: {
       fires,
+      indexOfOldFires,
       onScrollToFire: handleScrollToFire,
       onSelectFire: handleSelectFire,
       selectedIndex,

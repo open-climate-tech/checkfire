@@ -16,6 +16,7 @@
 
 import React from 'react'
 
+import Button from './Button.jsx'
 import Fire from './Fire.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
@@ -25,20 +26,43 @@ import getCameraKey from '../modules/getCameraKey.mjs'
  * that there are no fires to display.
  *
  * @param {Object} props
- * @param {Array} fires - The list of fires to display.
+ * @param {Array} props.fires - The list of fires to display.
+ * @param {number} props.indexOfOldFires - The index in `props.fires` where old
+ *     fires begin (-1 if `props.fires` doesn’t currently contain older fires).
+ * @param {number} props.nOldFires - The total number of old fires, regardless
+ *     of whether they are currently displayed or not.
+ * @param {function()} props.onToggleAllFires - Callback to hide/show old fires.
  *
  * @returns {React.Element}
  */
 export default function FireListContent(props) {
-  const {fires, ...other} = props
+  const {fires, indexOfOldFires, nOldFires, onToggleAllFires, ...other} = props
 
-  // TODO: Impement empty state.
+  const oldFires = indexOfOldFires > -1 ? fires.slice(indexOfOldFires) : []
+  const nFires = fires.length - oldFires.length
 
   return 0,
   <div className="c7e-fire-list--content">
-    { fires.length > 0 &&
-      fires.map((x, i) =>
+    { nFires > 0 &&
+      fires.slice(0, nFires).map((x, i) =>
         <Fire key={getCameraKey(x)} fire={x} index={i} {...other}/>)
+    }
+
+    <div className="c7e-fire-list--empty">
+      { nOldFires < 1 && nFires < 1 &&
+        <Button disabled label="There are no recent fires"/>
+      }
+      { nOldFires > 0 && indexOfOldFires < 0 &&
+        <Button label={`Show ${nOldFires} older fires`} onClick={onToggleAllFires}/>
+      }
+      { nOldFires > 0 && indexOfOldFires > -1 &&
+        <Button label={`Hide ${nOldFires} older fires`} onClick={onToggleAllFires}/>
+      }
+    </div>
+
+    { oldFires.length > 0 > 0 &&
+      oldFires.map((x, i) =>
+        <Fire key={getCameraKey(x)} fire={x} index={indexOfOldFires + i} {...other}/>)
     }
   </div>
 }

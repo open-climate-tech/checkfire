@@ -16,7 +16,6 @@
 
 // TODO:
 //   - Implement voting.
-//   - Allow older fires to be viewed.
 //   - Handle new incoming fires.
 //   - Handle updates to existing fires.
 //   - Handle fires aging out (on a timer?).
@@ -43,20 +42,36 @@ const TIMESTAMP_LIMIT = 2 * Duration.HOUR
 /**
  * Responsible for querying the detected fire list, monitoring new fire events,
  * and transitioning between lists of new, extant, and old potential fires.
+ *
+ * @returns {React.Element}
  */
 export default function PotentialFireList() {
-  // Fires newer than `TIMESTAMP_LIMIT` displayed to the user for review.
+  // Fires newer than `TIMESTAMP_LIMIT` (or all fires if `includesAllFires` is
+  // `true`) displayed to the user for review.
   const [fires, setFires] = useState([])
-
-  // Fires newer than `TIMESTAMP_LIMIT` not yet included in `fires`.
-  // const [newFires, setNewFires] = useState([])
-
-  // Fires older than `TIMESTAMP_LIMIT`.
-  // const [oldFires, setOldFires] = useState([])
+  const [includesAllFires, setIncludesAllFires] = useState(false)
+  const [indexOfOldFires, setIndexOfOldFires] = useState(-1)
 
   const allFiresRef = useRef([])
   const eventSourceRef = useRef()
   const sseVersionRef = useRef()
+
+  const updateFires = useCallback((shouldIncludeAllFires) => {
+    const {current: allFires} = allFiresRef
+    const timestampLimit = Math.round((Date.now() - TIMESTAMP_LIMIT) / 1000)
+    const index = allFires.findIndex((x) => x.timestamp < timestampLimit)
+    const fires =
+      shouldIncludeAllFires ? allFires.slice(0) : allFires.slice(0, index)
+
+    setFires(fires)
+    setIndexOfOldFires(index)
+  }, [])
+
+  const handleToggleAllFires = useCallback(() => {
+    const shouldIncludeAllFires = !includesAllFires
+    setIncludesAllFires(shouldIncludeAllFires)
+    updateFires(shouldIncludeAllFires)
+  }, [includesAllFires, updateFires])
 
   const handlePotentialFire = useCallback((event) => {
     const fire = JSON.parse(event.data)
@@ -82,18 +97,15 @@ export default function PotentialFireList() {
       if (existingFire.croppedUrl !== croppedUrl) {
         // Fire is already indexed, but its video has been updated.
         existingFire.croppedUrl = croppedUrl
+        // TODO: Update video source, reload video.
         console.error('Not implemented: updateFires()')
       }
     } else {
-      const now = Date.now()
-      const timestampLimit = Math.round((now - TIMESTAMP_LIMIT) / 1000)
-
       allFires.unshift(fire)
       allFires.sort((a, b) => b.sortId - a.sortId)
-
-      setFires(allFires.filter((x) => x.timestamp >= timestampLimit))
+      updateFires(includesAllFires)
     }
-  }, [])
+  }, [includesAllFires, updateFires])
 
   useEffect(() => {
     eventSourceRef.current = getEventSource('/fireEvents')
@@ -113,5 +125,9 @@ export default function PotentialFireList() {
     return tidy
   }, [handlePotentialFire])
 
-  return <FireList fires={fires}/>
+  return <FireList
+    fires={fires}
+    indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
+    nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
+    onToggleAllFires={handleToggleAllFires}/>
 }
