@@ -53,7 +53,7 @@ export default function FireListPagination(props) {
   <div className="c7e-fire-list--pagination">
     <ButtonGroup>
       <Button disabled={disabledPrev} aria-label="Previous fire" icon="c7e-icon--prev" onClick={handlePrev}/>
-      <ButtonOutput label={pagination}/>
+      <ButtonOutput disabled={disabledPrev && disabledNext} label={pagination}/>
       <Button disabled={disabledNext} aria-label="Next fire" icon="c7e-icon--next" onClick={handleNext}/>
     </ButtonGroup>
   </div>
