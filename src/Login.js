@@ -18,7 +18,7 @@
 // Login page
 
 import './Login.css';
-import React, {useState, useEffect} from "react";
+import React, {useState} from "react";
 import {useLocation, Link} from 'react-router-dom';
 import {getServerUrl, serverGet, serverPost} from './OctReactUtils';
 
