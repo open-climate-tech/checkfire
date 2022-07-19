@@ -33,6 +33,7 @@ import Duration from '../modules/Duration.mjs'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
 import getEventSource from '../modules/getEventSource.mjs'
+import hasAngleOfFire from '../modules/hasAngleOfFire.mjs'
 import hasCameraKey from '../modules/hasCameraKey.mjs'
 
 import FireList from './FireList.jsx'
@@ -101,8 +102,13 @@ export default function PotentialFireList() {
         console.error('Not implemented: updateFires()')
       }
     } else {
+      allFires.forEach((x) => {
+        hasAngleOfFire(x, fire)
+      })
+
       allFires.unshift(fire)
       allFires.sort((a, b) => b.sortId - a.sortId)
+
       updateFires(includesAllFires)
     }
   }, [includesAllFires, updateFires])

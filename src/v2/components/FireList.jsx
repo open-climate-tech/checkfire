@@ -20,6 +20,7 @@ import FireListContent from './FireListContent.jsx'
 import FireListControl from './FireListControl.jsx'
 
 import debounce from '../modules/debounce.mjs'
+import getCameraKey from '../modules/getCameraKey.mjs'
 
 /**
  * Receives a list of `fires` from a higher-order component and is responsible
@@ -70,8 +71,9 @@ export default function FireList(props) {
     if (index > -1 && index < nFires && index !== selectedIndex) {
       setSelectedIndex(index)
       setScrollToIndex(-1)
+      console.log('selected:', index + 1, getCameraKey(fires[index]), fires[index]._anglesByKey != null ? Object.keys(fires[index]._anglesByKey).join(', ') : '')
     }
-  }, [nFires, selectedIndex])
+  }, [fires, nFires, selectedIndex])
 
   /**
    * Cues a lower-order component to initiate scrolling to the fire at `index`
