@@ -82,32 +82,42 @@ function initPassportAuth(config, app, db) {
     }
   }));
 
-  const redirectUrl = (process.env.NODE_ENV === 'development') ?
-                       "http://localhost:3141/oauth2callback" :
-                       config.webOauthCallbackURL;
-  passport.use(new GoogleStrategy({
-    clientID: config.webOauthClientID,
-    clientSecret: config.webOauthClientSecret,
-    callbackURL: redirectUrl,
-    scope: ['email'],
-  }, function(accessToken, refreshToken, profile, cb) {
-    logger.info('Passport use Google');
-    const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
-    return cb(null, {userID: getUserId('google', email)});
-  }));
+  const hasGoogleAuthParams = config.webOauthCallbackURL && config.webOauthClientID && config.webOauthClientSecret;
+  if (hasGoogleAuthParams || (process.env.NODE_ENV !== 'development')) {
+    const redirectUrl = (process.env.NODE_ENV === 'development') ?
+                         "http://localhost:3141/oauth2callback" :
+                         config.webOauthCallbackURL;
+    passport.use(new GoogleStrategy({
+      clientID: config.webOauthClientID,
+      clientSecret: config.webOauthClientSecret,
+      callbackURL: redirectUrl,
+      scope: ['email'],
+    }, function(accessToken, refreshToken, profile, cb) {
+      logger.info('Passport use Google');
+      const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
+      return cb(null, {userID: getUserId('google', email)});
+    }));
+  } else {
+    logger.warn('Passport Google strategy not configured');
+  }
 
-  const redirectUrlFB = (process.env.NODE_ENV === 'development') ?
-                         "http://localhost:3141/oauth2FbCallback" :
-                         config.facebookCallbackURL;
-  passport.use(new FacebookStrategy({
-    clientID: config.facebookAppID,
-    clientSecret: config.facebookAppSecret,
-    callbackURL: redirectUrlFB,
-  }, function(accessToken, refreshToken, profile, cb) {
-    logger.info('Passport use Facebook');
-    const email = profile.id;
-    return cb(null, {userID: getUserId('facebook', email)});
-  }));
+  const hasFacebookAuthParams = config.facebookCallbackURL && config.facebookAppID && config.facebookAppSecret;
+  if (hasFacebookAuthParams || (process.env.NODE_ENV !== 'development')) {
+    const redirectUrlFB = (process.env.NODE_ENV === 'development') ?
+                           "http://localhost:3141/oauth2FbCallback" :
+                           config.facebookCallbackURL;
+    passport.use(new FacebookStrategy({
+      clientID: config.facebookAppID,
+      clientSecret: config.facebookAppSecret,
+      callbackURL: redirectUrlFB,
+    }, function(accessToken, refreshToken, profile, cb) {
+      logger.info('Passport use Facebook');
+      const email = profile.id;
+      return cb(null, {userID: getUserId('facebook', email)});
+    }));
+  } else {
+    logger.warn('Passport Facebook strategy not configured');
+  }
 }
 
 /**
