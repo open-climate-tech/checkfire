@@ -21,8 +21,18 @@ import getCameraKey from './getCameraKey.mjs'
 
 const TIMESTAMP_LIMIT_SECONDS = 15 * Duration.MINUTE / Duration.SECOND
 
-let count = 0
-
+/**
+ * Determines whether the polygon camera angles of `candidate` are a strict
+ * subset of `fire`; each overlapping fire event will be annotated with an
+ * `_anglesByKey` property indexing its related secondary events.
+ *
+ * @param {Object} candidate - A fire event to be inspected to find out if it
+ *     overlaps with `fire`.
+ * @param {Object} fire - A fire event that might overlap with `candidate`.
+ *
+ * @returns {boolean} `true` if `candidate` polygons are a subset of `fire`
+ *     polygons; otherwise, `false`.
+ */
 export default function hasAngleOfFire(candidate, fire) {
   const key = getCameraKey(candidate)
 
@@ -48,10 +58,6 @@ export default function hasAngleOfFire(candidate, fire) {
           }
         }
       }
-    }
-
-    if  (fire._anglesByKey[key] === true) {
-      console.log(key, getCameraKey(fire))
     }
   }
 

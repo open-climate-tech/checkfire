@@ -34,7 +34,6 @@ import Duration from '../modules/Duration.mjs'
 import getCameraKey from '../modules/getCameraKey.mjs'
 import getEventSource from '../modules/getEventSource.mjs'
 import hasAngleOfFire from '../modules/hasAngleOfFire.mjs'
-import hasCameraKey from '../modules/hasCameraKey.mjs'
 
 import FireList from './FireList.jsx'
 
@@ -55,6 +54,7 @@ export default function PotentialFireList() {
 
   const allFiresRef = useRef([])
   const eventSourceRef = useRef()
+  const firesByKeyRef = useRef({})
   const sseVersionRef = useRef()
 
   const updateFires = useCallback((shouldIncludeAllFires) => {
@@ -91,17 +91,19 @@ export default function PotentialFireList() {
     }
 
     const {current: allFires} = allFiresRef
+    const {current: firesByKey} = firesByKeyRef
     const key = getCameraKey(fire)
-    const existingFire = allFires.find((x) => hasCameraKey(x, key))
 
-    if (existingFire != null) {
-      if (existingFire.croppedUrl !== croppedUrl) {
+    if (firesByKey[key] != null) {
+      if (firesByKey[key].croppedUrl !== croppedUrl) {
         // Fire is already indexed, but its video has been updated.
-        existingFire.croppedUrl = croppedUrl
+        firesByKey[key].croppedUrl = croppedUrl
         // TODO: Update video source, reload video.
         console.error('Not implemented: updateFires()')
       }
     } else {
+      firesByKey[key] = fire
+
       allFires.unshift(fire)
       allFires.sort((a, b) => b.sortId - a.sortId)
 
@@ -135,6 +137,7 @@ export default function PotentialFireList() {
 
   return <FireList
     fires={fires}
+    firesByKey={firesByKeyRef.current}
     indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
     nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
     onToggleAllFires={handleToggleAllFires}/>
