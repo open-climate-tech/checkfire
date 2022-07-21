@@ -14,8 +14,6 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import getCameraKey from './getCameraKey.mjs'
-
 /**
  * Finds the polygon in `fire`’s polygon camera angles that originates at the
  * same coordinates as the fire event itself.
@@ -27,14 +25,6 @@ import getCameraKey from './getCameraKey.mjs'
  * @throws {Error} If a such a polygon isn’t found.
  */
 export default function findPrimaryPolygon(fire) {
-  const {camInfo: {latitude, longitude}, sourcePolygons} = fire
-
-  for (let i = sourcePolygons.length - 1; i > -1; --i) {
-    const polygon = sourcePolygons[i]
-    if (polygon[0][0] === latitude && polygon[0][1] === longitude) {
-      return polygon
-    }
-  }
-
-  throw new Error(`Expected to find primary polygon for ${getCameraKey(fire)} starting at ${latitude}, ${longitude}`)
+  const {sourcePolygons} = fire
+  return sourcePolygons[sourcePolygons.length - 1]
 }

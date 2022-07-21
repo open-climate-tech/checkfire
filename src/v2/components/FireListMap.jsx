@@ -24,8 +24,6 @@ import getCameraKey from '../modules/getCameraKey.mjs'
 import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs'
 import hasCameraKey from '../modules/hasCameraKey.mjs'
 
-const {log: println} = console
-
 const Props = {
   BOUNDS: [[32.4, -122.1], [36.9, -115.8]], // Corners of `midsocalCams` region.
   CENTER: [34.69, 240.96], // Midpoint between corners of `BOUNDS`.
@@ -247,7 +245,7 @@ export default function FireMap(props) {
 
 function addPolygon(fire, polygons, greatPolygon) {
   const {L} = window
-  const p = getBestPolygon(fire)
+  const p = findPrimaryPolygon(fire)
 
   // NOTE: Points passed when creating a polygon shouldn’t have a last
   // point equal to the first one. It’s better to filter out such points.
@@ -257,16 +255,6 @@ function addPolygon(fire, polygons, greatPolygon) {
   greatPolygon.splice(greatPolygon.length, 0, ...vertices)
 
   polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON))
-}
-
-function getBestPolygon(fire) {
-  try {
-    return findPrimaryPolygon(fire)
-  } catch (error) {
-    println(error)
-    println('Falling back to fire.polygon')
-    return fire.polygon
-  }
 }
 
 function initializeMap(mapRef, timerRef) {
