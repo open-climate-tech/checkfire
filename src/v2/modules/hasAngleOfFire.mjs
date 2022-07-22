@@ -22,44 +22,54 @@ import getCameraKey from './getCameraKey.mjs'
 const TIMESTAMP_LIMIT_SECONDS = 15 * Duration.MINUTE / Duration.SECOND
 
 /**
- * Determines whether the polygon camera angles of `candidate` are a strict
- * subset of `fire`; each overlapping fire event will be annotated with an
+ * Determines whether the polygon camera angles of fire event `a` are a strict
+ * subset of `b`; each overlapping fire event will be annotated with an
  * `_anglesByKey` property indexing its related secondary events.
  *
- * @param {Object} candidate - A fire event to be inspected to find out if it
- *     overlaps with `fire`.
- * @param {Object} fire - A fire event that might overlap with `candidate`.
+ * @param {Object} a - A fire event to be inspected to find out if it is a
+ *     strict subset of `b`.
+ * @param {Object} b - A fire event that might overlap `a`.
  *
- * @returns {boolean} `true` if `candidate` polygons are a subset of `fire`
+ * @returns {boolean} `true` if `candidate` polygons are a subset of `b`
  *     polygons; otherwise, `false`.
  */
-export default function hasAngleOfFire(candidate, fire) {
-  const key = getCameraKey(candidate)
+export default function hasAngleOfFire(a, b, firesByKey) {
+  const key = getCameraKey(a)
 
-  if (candidate._anglesByKey == null) {
-    candidate._anglesByKey = {}
+  if (a._anglesByKey == null) {
+    a._anglesByKey = {}
   }
 
-  if (fire._anglesByKey == null) {
-    fire._anglesByKey = {}
+  if (b._anglesByKey == null) {
+    b._anglesByKey = {}
   }
 
-  if (candidate !== fire && fire._anglesByKey[key] !== true) {
-    if (candidate.sourcePolygons.length < fire.sourcePolygons.length) {
-      if (candidate.timestamp <= fire.timestamp) {
-        if (candidate.timestamp >= fire.timestamp - TIMESTAMP_LIMIT_SECONDS) {
-          const found = candidate.sourcePolygons.every((a) => {
-            return fire.sourcePolygons.find((b) => arePolygonsEqual(a, b))
+  if (a !== b && b._anglesByKey[key] == null) {
+    if (a.sourcePolygons.length < b.sourcePolygons.length) {
+      // XXX: Because `TIMESTAMP_LIMIT_SECONDS` only applies between successive
+      // events, it’s possible for `b._anglesByKey` to contain events that
+      // collectively span more than `TIMESTAMP_LIMIT_SECONDS`. Therefore, the
+      // oldest known `b._anglesByKey` event or `b.timestamp` establishes the
+      // actual limit for determining whether `a` is viewing the same detected
+      // fire as `b`.
+      const minTimestamp = Object.values(b._anglesByKey)
+        .reduce((min, timestamp) => Math.min(min, timestamp), b.timestamp)
+
+      if (a.timestamp <= minTimestamp) {
+        // Could be off by a few minutes due to `timestamp` vs `sortId`.
+        if (a.timestamp >= minTimestamp - TIMESTAMP_LIMIT_SECONDS) {
+          const found = a.sourcePolygons.every((a) => {
+            return b.sourcePolygons.find((b) => arePolygonsEqual(a, b))
           })
 
           if (found === true) {
-            candidate._anglesByKey[getCameraKey(fire)] = true
-            fire._anglesByKey[key] = true
+            a._anglesByKey[getCameraKey(b)] = b.timestamp
+            b._anglesByKey[key] = a.timestamp
           }
         }
       }
     }
   }
 
-  return fire._anglesByKey[key] === true
+  return b._anglesByKey[key] != null
 }

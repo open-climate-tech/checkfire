@@ -21,8 +21,6 @@
  * @param {Object} fire - The fire event to inspect.
  *
  * @returns {Array} The polygon originating at the fire event’s coordinates.
- *
- * @throws {Error} If a such a polygon isn’t found.
  */
 export default function findPrimaryPolygon(fire) {
   const {sourcePolygons} = fire
