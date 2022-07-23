@@ -19,7 +19,7 @@ import Duration from './Duration.mjs'
 import arePolygonsEqual from './arePolygonsEqual.mjs'
 import getCameraKey from './getCameraKey.mjs'
 
-const TIMESTAMP_LIMIT_SECONDS = 15 * Duration.MINUTE / Duration.SECOND
+const LIMIT_SECONDS = 15 * Duration.MINUTE / Duration.SECOND
 
 /**
  * Determines whether the polygon camera angles of fire event `a` are a strict
@@ -46,25 +46,30 @@ export default function hasAngleOfFire(a, b, firesByKey) {
 
   if (a !== b && b._anglesByKey[key] == null) {
     if (a.sourcePolygons.length < b.sourcePolygons.length) {
-      // XXX: Because `TIMESTAMP_LIMIT_SECONDS` only applies between successive
-      // events, it’s possible for `b._anglesByKey` to contain events that
-      // collectively span more than `TIMESTAMP_LIMIT_SECONDS`. Therefore, the
-      // oldest known `b._anglesByKey` event or `b.timestamp` establishes the
-      // actual limit for determining whether `a` is viewing the same detected
-      // fire as `b`.
-      const minTimestamp = Object.values(b._anglesByKey)
-        .reduce((min, timestamp) => Math.min(min, timestamp), b.timestamp)
+      // XXX: `timestamp` is the date-time that an image was captured. `sortId`
+      // is the date-time when the same image was processed and its potential
+      // fire detected. A newer `timestamp` from one camera may get processed
+      // before an older `timestamp` from another camera looking at the same
+      // fire so we use `sortId` instead so that overlapping angles accumulate
+      // in the expected order.
 
-      if (a.timestamp <= minTimestamp) {
-        // Could be off by a few minutes due to `timestamp` vs `sortId`.
-        if (a.timestamp >= minTimestamp - TIMESTAMP_LIMIT_SECONDS) {
+      // XXX: Because `LIMIT_SECONDS` only applies between successive events,
+      // it’s possible for `b._anglesByKey` to contain events that collectively
+      // span more than `LIMIT_SECONDS`. Therefore, the oldest known
+      // `b._anglesByKey` event or `b.sortId` establishes the actual limit for
+      // determining whether `a` is viewing the same detected fire as `b`.
+      const minSortId = Object.values(b._anglesByKey)
+        .reduce((min, sortId) => Math.min(min, sortId), b.sortId)
+
+      if (a.sortId <= minSortId) {
+        if (a.sortId >= minSortId - LIMIT_SECONDS) {
           const found = a.sourcePolygons.every((a) => {
             return b.sourcePolygons.find((b) => arePolygonsEqual(a, b))
           })
 
           if (found === true) {
-            a._anglesByKey[getCameraKey(b)] = b.timestamp
-            b._anglesByKey[key] = a.timestamp
+            a._anglesByKey[getCameraKey(b)] = b.sortId
+            b._anglesByKey[key] = a.sortId
           }
         }
       }

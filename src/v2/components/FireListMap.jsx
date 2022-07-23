@@ -213,11 +213,7 @@ export default function FireMap(props) {
             markers[key].polygons.forEach((p, _, a) => {
               const {lat, lng} = p.getLatLngs()[0][0]
 
-              // XXX: As observed, some fire events include polygons that do not
-              // begin at the same latitude and longitude as the camera itself.
-              // In these cases, there’s only a single polygon so we use it as
-              // the primary one...
-              if ((coordinates[0] === lat && coordinates[1] === lng) || a.length === 1) {
+              if (coordinates[0] === lat && coordinates[1] === lng) {
                 p.setStyle(Props.PRIMARY_POLYGON)
                 p.bringToFront()
               } else {
