@@ -210,10 +210,13 @@ export default function FireMap(props) {
               }
             })
 
-            markers[key].polygons.forEach((p, _, a) => {
-              const {lat, lng} = p.getLatLngs()[0][0]
+            markers[key].polygons.forEach((p) => {
+              // Search polygon `p` for coordinates at the same latitude and
+              // longitude as the camera itself.
+              const isPrimary = p.getLatLngs()[0].some(({lat, lng}) =>
+                lat === coordinates[0] && lng === coordinates[1])
 
-              if (coordinates[0] === lat && coordinates[1] === lng) {
+              if (isPrimary) {
                 p.setStyle(Props.PRIMARY_POLYGON)
                 p.bringToFront()
               } else {
