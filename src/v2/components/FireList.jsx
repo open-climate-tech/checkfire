@@ -28,6 +28,7 @@ import debounce from '../modules/debounce.mjs'
  *
  * @param {Object} props
  * @param {Array} props.fires - A list of fires to be shown to the user.
+ * @param {Array} props.firesByKey - An index of all known fires.
  * @param {number} props.indexOfOldFires - The index in `props.fires` where old
  *     fires begin (-1 if `props.fires` doesn’t currently contain older fires).
  * @param {number} props.nOldFires - The total number of old fires, regardless
@@ -37,7 +38,9 @@ import debounce from '../modules/debounce.mjs'
  * @returns {React.Element}
  */
 export default function FireList(props) {
-  const {fires, indexOfOldFires, nOldFires, onToggleAllFires} = props
+  const {
+    fires, firesByKey, indexOfOldFires, nOldFires, onToggleAllFires
+  } = props
 
   // The top position at which DOM elements become either visible or occluded
   // by the voting and pagination toolbar while scrolling.
@@ -146,6 +149,7 @@ export default function FireList(props) {
     },
     FIRE_LIST_CONTROL: {
       fires,
+      firesByKey,
       indexOfOldFires,
       onScrollToFire: handleScrollToFire,
       onSelectFire: handleSelectFire,

@@ -21,6 +21,7 @@ import Duration from '../modules/Duration.mjs'
 import CameraMarker from './CameraMarker.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
+import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs'
 import hasCameraKey from '../modules/hasCameraKey.mjs'
 
 const Props = {
@@ -39,7 +40,7 @@ const Props = {
     opacity: 0.33,
     weight: 1.50
   },
-  POV_POLYGON: {
+  PRIMARY_POLYGON: {
     color: '#f0f',
     dashArray: null,
     fill: '#f0f',
@@ -60,15 +61,16 @@ const Props = {
  * Provides an interactive map of detected fires.
  *
  * @param {Object} props
- * @param {Array} fires - The list of fires to plot on the map.
- * @param {function(number)} onScrollToFire - Event handler to be called when
+ * @param {Array} props.fires - The list of fires to plot on the map.
+ * @param {Array} props.firesByKey - An index of all fires.
+ * @param {function(number)} props.onScrollToFire - Event handler to be called
  *     when a fire at a specific index should scroll itself into view.
  * @param {number} props.selectedIndex - The index of the active fire.
  *
  * @returns {React.Element}
  */
 export default function FireMap(props) {
-  const {fires, onScrollToFire, selectedIndex} = props
+  const {fires, firesByKey, onScrollToFire, selectedIndex} = props
 
   const [scrollingTo, setScrollingTo] = useState(-1)
 
@@ -142,16 +144,14 @@ export default function FireMap(props) {
       const cameraMarker = L.divIcon({html})
 
       const greatPolygon = []
-      const polygons = sourcePolygons.map((p) => {
-        // NOTE: Points passed when creating a polygon shouldn’t have a last
-        // point equal to the first one. It’s better to filter out such points.
-        // https://leafletjs.com/reference.html#polygon
-        const vertices = p.slice(0, p.length - 1)
+      const polygons = []
 
-        greatPolygon.splice(greatPolygon.length, 0, ...vertices)
+      // Generate polygons for each secondary angle on this fire.
+      Object.keys(x._anglesByKey).forEach((k) =>
+        addPolygon(firesByKey[k], polygons, greatPolygon))
 
-        return L.polygon(vertices, Props.POLYGON)
-      })
+      // Generate a polygon for this fire’s primary angle.
+      addPolygon(x, polygons, greatPolygon)
 
       markers[key] = {
         coordinates,
@@ -167,7 +167,7 @@ export default function FireMap(props) {
 
       markers[key].icon.addTo(map)
     })
-  }, [fires, handleCameraClick])
+  }, [fires, firesByKey, handleCameraClick])
 
   useEffect(() => {
     // `selectedIndex` will change rapidly when fires are loading, once for each
@@ -202,11 +202,22 @@ export default function FireMap(props) {
             markers[key].icon.remove()
             markers[key].icon.addTo(map)
 
-            markers[key].polygons.forEach((p) => {
-              const {lat, lng} = p.getLatLngs()[0][0]
+            Object.keys(fire._anglesByKey).forEach((k) => {
+              if (markers[k] != null) {
+                // XXX: Force icon to front.
+                markers[k].icon.remove()
+                markers[k].icon.addTo(map)
+              }
+            })
 
-              if (coordinates[0] === lat && coordinates[1] === lng) {
-                p.setStyle(Props.POV_POLYGON)
+            markers[key].polygons.forEach((p) => {
+              // Search polygon `p` for coordinates at the same latitude and
+              // longitude as the camera itself.
+              const isPrimary = p.getLatLngs()[0].some(({lat, lng}) =>
+                lat === coordinates[0] && lng === coordinates[1])
+
+              if (isPrimary) {
+                p.setStyle(Props.PRIMARY_POLYGON)
                 p.bringToFront()
               } else {
                 p.setStyle(Props.POLYGON)
@@ -230,6 +241,20 @@ export default function FireMap(props) {
 }
 
 // -----------------------------------------------------------------------------
+
+function addPolygon(fire, polygons, greatPolygon) {
+  const {L} = window
+  const p = findPrimaryPolygon(fire)
+
+  // NOTE: Points passed when creating a polygon shouldn’t have a last
+  // point equal to the first one. It’s better to filter out such points.
+  // https://leafletjs.com/reference.html#polygon
+  const vertices = p.slice(0, p.length - 1)
+
+  greatPolygon.splice(greatPolygon.length, 0, ...vertices)
+
+  polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON))
+}
 
 function initializeMap(mapRef, timerRef) {
   if (mapRef.current == null) {
