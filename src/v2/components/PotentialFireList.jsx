@@ -102,15 +102,9 @@ export default function PotentialFireList() {
         console.error('Not implemented: updateFires()')
       }
     } else {
+      allFires.forEach((x) => hasAngleOfFire(x, fire))
+
       firesByKey[key] = fire
-
-      allFires.forEach((x) => {
-        // XXX: Check both directions because fire events are not guaranteed to
-        // arrive in order so `x` might be a subset of `fire`, or vice versa.
-        hasAngleOfFire(x, fire)
-        hasAngleOfFire(fire, x)
-      })
-
       allFires.unshift(fire)
       allFires.sort((a, b) => b.sortId - a.sortId)
 
