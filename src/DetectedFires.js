@@ -41,12 +41,12 @@ class DetectedFires extends Component {
     this.setState({detectedFires: detectedFires});
   }
 
-  async vote(potFire, isRealFire) {
-    const serverUrl = getServerUrl('/api/voteFire');
+  async vote(potFire, voteType) {
+    const serverUrl = getServerUrl((voteType === 'undo') ? '/api/undoVoteFire' : '/api/voteFire');
     const serverRes = await serverPost(serverUrl, {
       cameraID: potFire.cameraID,
       timestamp: potFire.timestamp,
-      isRealFire: isRealFire,
+      isRealFire: voteType === 'yes'
     });
     console.log('post res', serverRes);
     if (serverRes === 'success') {
@@ -55,10 +55,16 @@ class DetectedFires extends Component {
           return pFire;
         }
         const updatedFire = Object.assign({}, pFire);
-        updatedFire.voted = isRealFire;
+        if (voteType === 'undo') {
+          delete updatedFire.voted;
+        } else {
+          updatedFire.voted = (voteType === 'yes');
+        }
         return updatedFire;
       });
       this.setState({detectedFires: detectedFires});
+    } else {
+      window.location.reload();
     }
   }
 
