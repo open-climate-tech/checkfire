@@ -209,11 +209,16 @@ if (!props.validCookie) {
     </div>
     );
   } else if (props.potFire.voted !== undefined) {
-    if (props.potFire.voted) {
-      return <p>Thanks for confirming this is a real fire</p>;
-    } else {
-      return <p>Thanks for confirming this is not a fire</p>;
-    }
+    return (<div>
+      <p style={{margin:0}}>
+        Thanks for confirming this is&nbsp;
+        {props.potFire.voted ? 'a real' : 'not a'}
+        &nbsp;fire.
+      </p>
+      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, 'undo')}>
+        Undo vote
+      </button>
+    </div>);
   } else {
     return (
     <div>
@@ -222,7 +227,7 @@ if (!props.validCookie) {
         <p className="tooltip-text" style={{width: '120px'}}>
           Wildfires and prescribed burns
         </p>
-        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, true)}>
+        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, 'yes')}>
           <i className="fa fa-fire" style={{color: "red"}} />
           &nbsp;Real fire
         </button>
@@ -231,7 +236,7 @@ if (!props.validCookie) {
         <p className="tooltip-text" style={{width: '120px'}}>
           Fog, clouds, chimney smoke, dust, and glare
         </p>
-        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, false)}>
+        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, 'no')}>
           <i className="fa fa-close" />
           &nbsp;Not a fire
         </button>
