@@ -284,7 +284,7 @@ function initApis(config, app, db) {
       // validate given info matches an detection
       const detectionsQuery = `select * from detections where timestamp=${req.body.timestamp} and cameraname='${req.body.cameraID}'`;
       const matchingDetections = await db.query(detectionsQuery);
-      assert(matchingDetections.length === 1);
+      assert(matchingDetections.length > 0);
 
       const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
       // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
@@ -295,6 +295,31 @@ function initApis(config, app, db) {
       }
       const sqlStr = `insert into votes (cameraname,timestamp,isrealfire,userid) values
                       ('${req.body.cameraID}',${req.body.timestamp},${req.body.isRealFire ? 1 : 0},'${decoded.email}')`;
+      await db.query(sqlStr);
+      res.status(200).send('success').end();
+    });
+  });
+
+  app.post('/api/undoVoteFire', async (req, res) => {
+    apiWrapper(req, res, config, 'POST undoVoteFire', async decoded => {
+      assert(req.body.cameraID && req.body.timestamp);
+
+      // cameraID validation
+      assert(typeof(req.body.cameraID) === 'string');
+
+      // timestamp validation
+      assert(typeof(req.body.timestamp) === 'number');
+      assert(req.body.timestamp > 1510001000); // Nov 2017
+      assert(req.body.timestamp < new Date().valueOf()/1000);
+
+      const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
+      // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
+      if (!existingVotesByUser || (existingVotesByUser.length === 0)) {
+        logger.warn('No votes to undo %s', existingVotesByUser);
+        res.status(400).send('Bad Request').end();
+        return;
+      }
+      const sqlStr = `delete from votes where cameraname='${req.body.cameraID}' and timestamp=${req.body.timestamp} and userid='${decoded.email}'`;
       await db.query(sqlStr);
       res.status(200).send('success').end();
     });

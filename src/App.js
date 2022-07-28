@@ -122,10 +122,6 @@ class App extends Component {
     }
   }
 
-  invalidateCookie() {
-    this.setState({validCookie: false});
-  }
-
   render() {
     return (
       <div className="App">
@@ -154,8 +150,7 @@ class App extends Component {
             <Route path="/labelImage" exact render={props =>
                     <LabelImage {...props} validCookie={this.state.validCookie} />} />
             <Route path={["/", "/wildfirecheck"]} render={props =>
-                    <VoteFires {...props} validCookie={this.state.validCookie}
-                      invalidateCookie={() => this.invalidateCookie()} />} />
+                    <VoteFires {...props} validCookie={this.state.validCookie} />} />
           </Switch>
           <Route path={LEGACY_PATHS} exact>
             <Legalese/>
