@@ -27,6 +27,13 @@ import hasCameraKey from '../modules/hasCameraKey.mjs'
 const Props = {
   BOUNDS: [[32.4, -122.1], [36.9, -115.8]], // Corners of `midsocalCams` region.
   CENTER: [34.69, 240.96], // Midpoint between corners of `BOUNDS`.
+  INTERSECTING_POLYGON: {
+    color: '#c00',
+    fill: '#c00',
+    fillOpacity: 0.15,
+    opacity: 0.80,
+    weight: 1.50
+  },
   MAP: {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18,
@@ -121,8 +128,8 @@ export default function FireMap(props) {
     const {current: map} = initializeMap(mapRef, timerRef)
     const markers = (markersRef.current = {})
 
-    fires.forEach((x) => {
-      const key = getCameraKey(x)
+    fires.forEach((fire) => {
+      const key = getCameraKey(fire)
 
       if (markers[key] != null) {
         console.error(`Marker '${key}' already exists`)
@@ -133,7 +140,7 @@ export default function FireMap(props) {
         camInfo: {
           latitude, longitude
         }, fireHeading: bearing, polygon, sourcePolygons = []
-      } = x
+      } = fire
 
       if (sourcePolygons.length === 0) {
         sourcePolygons[0] = polygon
@@ -147,18 +154,20 @@ export default function FireMap(props) {
       const polygons = []
 
       // Generate polygons for each secondary angle on this fire.
-      Object.keys(x._anglesByKey).forEach((k) =>
+      Object.keys(fire._anglesByKey).forEach((k) =>
         addPolygon(firesByKey[k], polygons, greatPolygon))
 
       // Generate a polygon for this fire’s primary angle.
-      addPolygon(x, polygons, greatPolygon)
+      addPolygon(fire, polygons, greatPolygon)
 
       markers[key] = {
-        coordinates,
-        key,
         greatPolygon: L.polygon(greatPolygon, Props.POLYGON),
         icon: L.marker(coordinates, {icon: cameraMarker}),
         polygons
+      }
+
+      if (fire.sourcePolygons.length > 1) {
+        markers[key].intersection = L.polygon(fire.polygon, Props.INTERSECTING_POLYGON)
       }
 
       markers[key].icon.on({click: () => {
@@ -192,6 +201,9 @@ export default function FireMap(props) {
           Object.values(markers).forEach((x) => {
             if (x !== markers[key]) {
               x.polygons.forEach((p) => p.remove())
+              if (x.intersection != null ) {
+                x.intersection.remove()
+              }
             }
           })
 
@@ -226,6 +238,11 @@ export default function FireMap(props) {
               p.addTo(map)
             })
 
+            if (markers[key].intersection != null) {
+              markers[key].intersection.bringToFront()
+              markers[key].intersection.addTo(map)
+            }
+
             timerRef.current = setTimeout(() => {
               map.fitBounds(markers[key].greatPolygon.getBounds(), Props.SET_VIEW)
             }, Duration.SECOND)
@@ -235,9 +252,7 @@ export default function FireMap(props) {
     }
   }, [fires, scrollingTo, selectedIndex])
 
-  return 0,
-  <div className="c7e-fire-list--map" id="map">
-  </div>
+  return <div className="c7e-fire-list--map" id="map"/>
 }
 
 // -----------------------------------------------------------------------------
