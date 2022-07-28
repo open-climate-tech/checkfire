@@ -26,7 +26,11 @@ export default function App() {
   // scrolled a couple hundred pixels down (not sure why).
   useEffect(() => {
     ;(function check() {
-      /complete/.test(document.readyState) ? window.scrollTo(0, 0) : setTimeout(check)
+      /complete/.test(document.readyState)
+        // XXX: Set scroll position asynchronously; otherwise, as observed,
+        // scroll position setting isn’t guaranteed to take effect.
+        ? requestAnimationFrame(() => window.scrollTo(0, 0))
+        : setTimeout(check)
     })()
   })
 
