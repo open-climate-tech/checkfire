@@ -162,7 +162,7 @@ export default function Fire(props) {
 
     <div className="c7e-fire--caption">
       <p className="c7e-fire--location">
-        <strong className="c7e-fire--city-name">{cityName}</strong>
+        <strong className="c7e-fire--city-name">({index + 1}) {cityName}</strong>
         <span className="c7e-fire--date-time"> · <DateTimeDistance date={date}/> · <DateTime date={date}/></span>
       </p>
       <p className="c7e-fire--attribution">

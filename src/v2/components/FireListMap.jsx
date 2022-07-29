@@ -19,6 +19,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react'
 import Duration from '../modules/Duration.mjs'
 
 import CameraMarker from './CameraMarker.jsx'
+import DateTime from './DateTime.jsx'
 import MulticameraBadge from './MulticameraBadge.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
@@ -135,7 +136,7 @@ export default function FireMap(props) {
     const markers = (markersRef.current = {})
     const stacks = (stacksRef.current = {})
 
-    fires.forEach((fire) => {
+    fires.forEach((fire, i) => {
       const key = getCameraKey(fire)
 
       if (markers[key] != null) {
@@ -155,7 +156,7 @@ export default function FireMap(props) {
 
       const coordinates = [latitude, longitude]
       const html = CameraMarker.render({bearing})
-      const cameraMarker = L.divIcon({html})
+      const cameraMarker = L.divIcon({html, tooltipAnchor: [12, 0]})
 
       const greatPolygon = []
       const polygons = []
@@ -176,6 +177,20 @@ export default function FireMap(props) {
         polygons
       }
 
+      markers[key].icon.bindTooltip(renderToooltip(fire, i))
+      markers[key].icon.on({click: () => {
+        handleCameraClick(key)
+      }})
+
+      markers[key].icon.addTo(map)
+
+      if (fire.sourcePolygons.length > 1) {
+        // NOTE: Points passed when creating a polygon shouldn’t have a last
+        // point equal to the first one. It’s better to filter out such points.
+        // https://leafletjs.com/reference.html#polygon
+        const vertices = fire.polygon.slice(0, fire.polygon.length - 1)
+        markers[key].intersection = L.polygon(vertices, Props.INTERSECTING_POLYGON)
+      }
       if (fire.sourcePolygons.length > 1) {
         markers[key].intersection = L.polygon(fire.polygon, Props.INTERSECTING_POLYGON)
       }
@@ -309,7 +324,11 @@ export default function FireMap(props) {
             })
 
             if (markers[key].intersection != null) {
-              markers[key].intersection.bringToFront()
+              // BUG: Somehow `intersection` is not removed during development
+              // with Webpack Hot Module Replacement. The intersecting polygon
+              // is rendered multiple times, and the only way to clear all such
+              // instances is to reload the page.
+              markers[key].intersection.remove()
               markers[key].intersection.addTo(map)
             }
 
@@ -391,6 +410,17 @@ function initializeMap(mapRef, timerRef) {
   }
 
   return mapRef
+}
+
+function renderToooltip(fire, index) {
+  const {camInfo: {cameraName, cityName}, timestamp} = fire
+  const date = new Date(timestamp * 1000)
+
+  return `\
+<div class="c7e-fire--location">
+  <strong class="c7e-fire--city-name">(${index + 1}) ${cityName}</strong> · ${cameraName}<br/>
+  <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
+</div>`
 }
 
 function toggleStack(map, markersRef, stacksRef, expandedStackRef, stack) {
