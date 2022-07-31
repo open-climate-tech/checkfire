@@ -19,14 +19,17 @@ import React, {useCallback, useEffect, useRef, useState} from 'react'
 import Duration from '../modules/Duration.mjs'
 
 import CameraMarker from './CameraMarker.jsx'
+import MulticameraBadge from './MulticameraBadge.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
 import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs'
 import hasCameraKey from '../modules/hasCameraKey.mjs'
 
 const Props = {
+  BADGE_Z_INDEX_OFFSET: 500,
   BOUNDS: [[32.4, -122.1], [36.9, -115.8]], // Corners of `midsocalCams` region.
   CENTER: [34.69, 240.96], // Midpoint between corners of `BOUNDS`.
+  DEFAULT_Z_INDEX_OFFSET: 0,
   INTERSECTING_POLYGON: {
     color: '#c00',
     fill: '#c00',
@@ -39,6 +42,7 @@ const Props = {
     maxZoom: 18,
     zoomAnimationThreshold: 18
   },
+  MARKER_Z_INDEX_OFFSET: 250,
   POLYGON: {
     color: '#00f',
     dashArray: '3',
@@ -88,10 +92,12 @@ export default function FireMap(props) {
   // register an event listener with cached markers, we need a stable callback
   // and list of fires (otherwise the cached markers will use stale instances of
   // these in the closure created by the React render cycle).
+  const expandedStackRef = useRef(null)
   const firesRef = useRef()
   const mapRef = useRef()
   const markersRef = useRef({})
   const onScrollToFireRef = useRef()
+  const stacksRef = useRef({})
   const timerRef = useRef()
 
   firesRef.current = fires
@@ -127,6 +133,7 @@ export default function FireMap(props) {
     const {L} = window
     const {current: map} = initializeMap(mapRef, timerRef)
     const markers = (markersRef.current = {})
+    const stacks = (stacksRef.current = {})
 
     fires.forEach((fire) => {
       const key = getCameraKey(fire)
@@ -139,7 +146,7 @@ export default function FireMap(props) {
       const {
         camInfo: {
           latitude, longitude
-        }, fireHeading: bearing, polygon, sourcePolygons = []
+        }, fireHeading: bearing = -0, polygon, sourcePolygons = []
       } = fire
 
       if (sourcePolygons.length === 0) {
@@ -161,8 +168,11 @@ export default function FireMap(props) {
       addPolygon(fire, polygons, greatPolygon)
 
       markers[key] = {
+        bearing,
         greatPolygon: L.polygon(greatPolygon, Props.POLYGON),
         icon: L.marker(coordinates, {icon: cameraMarker}),
+        latitude,
+        longitude,
         polygons
       }
 
@@ -170,11 +180,58 @@ export default function FireMap(props) {
         markers[key].intersection = L.polygon(fire.polygon, Props.INTERSECTING_POLYGON)
       }
 
-      markers[key].icon.on({click: () => {
-        handleCameraClick(key)
-      }})
+      markers[key].icon.on({
+        click() {
+          handleCameraClick(key)
+        },
+
+        // Handle hover events when this marker’s stack is expanded (actually,
+        // when any stack is expanded, but this marker will be hidden when any
+        // other marker’s stack is expanded).
+
+        mouseout(event) {
+          if (expandedStackRef.current != null) {
+            event.target.setZIndexOffset(Props.DEFAULT_Z_INDEX_OFFSET)
+          }
+        },
+        mouseover(event) {
+          if (expandedStackRef.current != null) {
+            event.target.setZIndexOffset(Props.MARKER_Z_INDEX_OFFSET)
+          }
+        }
+      })
 
       markers[key].icon.addTo(map)
+
+      const coordinatesKey = getCoordinatesKey(coordinates)
+      if (stacks[coordinatesKey] == null) {
+        stacks[coordinatesKey] = {
+          badge: null,
+          keys: new Set()
+        }
+      }
+
+      const stack = stacks[coordinatesKey]
+
+      stack.keys.add(key)
+
+      // The existing badge will be orphaned. Unregister its event handler.
+      if (stack.badge != null) {
+        stack.badge.off('click')
+      }
+
+      // Render a new badge each time to reflect changing `keys.size`.
+      stack.badge =
+        L.marker(coordinates, {
+          icon: L.divIcon({
+            html: MulticameraBadge.render({count: stack.keys.size})
+          }),
+          zIndexOffset: Props.BADGE_Z_INDEX_OFFSET
+        })
+
+      stack.badge.on({
+        click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef, stack)
+      })
     })
   }, [fires, firesByKey, handleCameraClick])
 
@@ -186,9 +243,14 @@ export default function FireMap(props) {
     if (fire != null && scrollingTo === -1) {
       const {current: map} = initializeMap(mapRef, timerRef)
       const {current: markers} = markersRef
+      const {current: stacks} = stacksRef
       const {camInfo: {latitude, longitude}} = fire
       const coordinates = [latitude, longitude]
       const key = getCameraKey(fire)
+
+      if (expandedStackRef.current != null) {
+        toggleStack(map, markersRef, stacksRef, expandedStackRef)
+      }
 
       // Debounce map pan and zoom.
       clearTimeout(timerRef.current)
@@ -219,6 +281,14 @@ export default function FireMap(props) {
                 // XXX: Force icon to front.
                 markers[k].icon.remove()
                 markers[k].icon.addTo(map)
+              }
+            })
+
+            Object.values(stacks).forEach(({badge, keys}) => {
+              // XXX: Force badge to front when relevant.
+              badge.remove()
+              if (keys.size > 1) {
+                badge.addTo(map)
               }
             })
 
@@ -271,6 +341,45 @@ function addPolygon(fire, polygons, greatPolygon) {
   polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON))
 }
 
+function collapseStack(map, markers, stacks) {
+  Object.values(markers).forEach((marker) => {
+    const {latitude, longitude} = marker
+    marker.icon.setLatLng([latitude, longitude])
+    marker.icon.addTo(map)
+  })
+
+  Object.values(stacks).forEach((x) => x.keys.size > 1 && x.badge.addTo(map))
+}
+
+function expandStack(map, markers, stacks, stack) {
+  const {L} = window
+  const projection = L.CRS.EPSG3857
+  const zoom = map.getZoom()
+
+  // Fan each marker out in a circle around the latitude-longitude origin.
+  Object.keys(markers).forEach((key) => {
+    const marker = markers[key]
+
+    if (stack.keys.has(key)) {
+      const {bearing, latitude, longitude} = marker
+      const point = projection.latLngToPoint(L.latLng([latitude, longitude]), zoom)
+      const x = point.x + 32 * Math.sin(bearing * Math.PI / 180)
+      const y = point.y - 32 * Math.cos(bearing * Math.PI / 180)
+      const coordinates = projection.pointToLatLng(L.point([x, y]), zoom)
+
+      marker.icon.setLatLng(coordinates)
+    } else {
+      marker.icon.remove()
+    }
+  })
+
+  Object.values(stacks).forEach((x) => x !== stack && x.badge.remove())
+}
+
+function getCoordinatesKey(coordinates) {
+  return coordinates.join(',')
+}
+
 function initializeMap(mapRef, timerRef) {
   if (mapRef.current == null) {
     const {L} = window
@@ -282,4 +391,19 @@ function initializeMap(mapRef, timerRef) {
   }
 
   return mapRef
+}
+
+function toggleStack(map, markersRef, stacksRef, expandedStackRef, stack) {
+  const {current: markers} = markersRef
+  const {current: stacks} = stacksRef
+
+  if (expandedStackRef.current != null) {
+    expandedStackRef.current = null
+    collapseStack(map, markers, stacks)
+    map.off('click')
+  } else {
+    expandedStackRef.current = stack
+    expandStack(map, markers, stacks, stack)
+    map.on({click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef)})
+  }
 }

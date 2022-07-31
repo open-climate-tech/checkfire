@@ -222,3 +222,49 @@
   pointer-events: all;
   width: 688px;
 }
+
+/* -----------------------------------------------------------------------------
+ * Map
+ */
+
+.leaflet-div-icon {
+  background: none;
+  border: none;
+}
+
+.c7e-map--multicamera-badge {
+  height: 20px;
+  left: -5px;
+  position: relative;
+  top: -5px;
+  width: 20px;
+}
+
+.c7e-map--multicamera-badge--content {
+  background-color: #999;
+  border: 1px solid #777;
+  border-radius: 8px;
+  box-sizing: border-box;
+  height: 16px;
+  position: absolute;
+  right: -8px;
+  top: -8px;
+  width: 16px;
+}
+
+.c7e-map--multicamera-badge--content::before {
+  color: #fff;
+  content: attr(data-count);
+  font-size: 11px;
+  font-weight: bold;
+  left: 50%;
+  line-height: 1;
+  position: absolute;
+  text-shadow:
+   -1px -1px 0 #777,
+    1px -1px 0 #777,
+   -1px  1px 0 #777,
+    1px  1px 0 #777;
+ top: 50%;
+  transform: translate(-50%, -50%);
+}
