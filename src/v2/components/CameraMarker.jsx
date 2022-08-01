@@ -40,7 +40,7 @@ export default function CameraMarker(props) {
   }
 
   return 0,
-  <Icon className="c7e-map--marker" icon={icon} style={styles}/>
+  <Icon className="c7e-map--camera-marker" icon={icon} style={styles}/>
 }
 
 /**
@@ -61,5 +61,5 @@ CameraMarker.render = function (props) {
 
   // TODO: Add test to compare rendered string value to element instance.
 
-  return Icon.render({className: 'c7e-map--marker', icon, style: styles})
+  return Icon.render({className: 'c7e-map--camera-marker', icon, style: styles})
 }
