@@ -44,7 +44,7 @@ export default function CameraMarker(props) {
 }
 
 /**
- * Synchronously enders HTML equivalent to a `CameraMarker` React element, which
+ * Synchronously renders HTML equivalent to a `CameraMarker` React element, which
  * is all but necessary when using non-React 3rd-party packages such as Leaflet.
  *
  * @see CameraMarker

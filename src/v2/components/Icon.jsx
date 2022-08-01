@@ -48,7 +48,7 @@ export default function Icon(props) {
 }
 
 /**
- * Synchronously enders HTML equivalent to an `Icon` React element, which is
+ * Synchronously renders HTML equivalent to an `Icon` React element, which is
  * all but necessary when using non-React 3rd-party packages such as Leaflet.
  *
  * @see Icon

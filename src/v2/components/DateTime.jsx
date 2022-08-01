@@ -32,7 +32,7 @@ export default function DateTime(props) {
 }
 
 /**
- * Synchronously enders HTML equivalent to a `DateTime` React element, which is
+ * Synchronously renders HTML equivalent to a `DateTime` React element, which is
  * all but necessary when using non-React 3rd-party packages such as Leaflet.
  *
  * @see DateTime
