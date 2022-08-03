@@ -459,7 +459,7 @@ function initApis(config, app, db) {
 
       const sqlStr = `select detections.*
                         from detections left join alerts on detections.timestamp=alerts.timestamp and detections.cameraname=alerts.cameraname
-                        where alerts.timestamp is null
+                        where alerts.timestamp is null and detections.CroppedID != ''
                         order by detections.sortId desc, detections.timestamp desc limit 20;`;
       const dbRes = await db.query(sqlStr);
       const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
