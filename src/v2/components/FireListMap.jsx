@@ -244,6 +244,8 @@ export default function FireMap(props) {
           zIndexOffset: Props.BADGE_Z_INDEX_OFFSET
         })
 
+      stack.tooltip = `${stack.keys.size} potential fires detected, click to expand`
+      stack.badge.bindTooltip(stack.tooltip)
       stack.badge.on({
         click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef, stack)
       })
@@ -360,7 +362,10 @@ function addPolygon(fire, polygons, greatPolygon) {
   polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON))
 }
 
-function collapseStack(map, markers, stacks) {
+function collapseStack(map, markers, stacks, stack) {
+  // Rebind stack’s tooltip when it’s collapsed.
+  stack.badge.bindTooltip(stack.tooltip)
+
   Object.values(markers).forEach((marker) => {
     const {latitude, longitude} = marker
     marker.icon.setLatLng([latitude, longitude])
@@ -374,6 +379,9 @@ function expandStack(map, markers, stacks, stack) {
   const {L} = window
   const projection = L.CRS.EPSG3857
   const zoom = map.getZoom()
+
+  // Hide stack’s tooltip while it’s expanded.
+  stack.badge.unbindTooltip()
 
   // Fan each marker out in a circle around the latitude-longitude origin.
   Object.keys(markers).forEach((key) => {
@@ -428,12 +436,12 @@ function toggleStack(map, markersRef, stacksRef, expandedStackRef, stack) {
   const {current: stacks} = stacksRef
 
   if (expandedStackRef.current != null) {
+    collapseStack(map, markers, stacks, expandedStackRef.current)
     expandedStackRef.current = null
-    collapseStack(map, markers, stacks)
     map.off('click')
   } else {
-    expandedStackRef.current = stack
     expandStack(map, markers, stacks, stack)
+    expandedStackRef.current = stack
     map.on({click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef)})
   }
 }
