@@ -124,11 +124,23 @@ export default function FireMap(props) {
     // Generate map objects (markers, polygons, ...) once whenever the list of
     // fires changes as opposed to each time the user activates a given fire.
 
-    // Start by clearing all cached markers.
+    // Start by clearing all cached markers...
     Object.keys(markersRef.current).forEach((key) => {
       const marker = markersRef.current[key]
       marker.icon.remove()
       marker.polygons.forEach((x) => x.remove())
+
+      if (marker.intersection != null) {
+        marker.intersection.remove()
+      }
+    })
+
+    // ...and all cached stacks.
+    Object.keys(stacksRef.current).forEach((key) => {
+      const stack = stacksRef.current[key]
+      if (stack.badge != null) {
+        stack.badge.remove()
+      }
     })
 
     const {L} = window
@@ -330,11 +342,6 @@ export default function FireMap(props) {
             })
 
             if (markers[key].intersection != null) {
-              // BUG: Somehow `intersection` is not removed during development
-              // with Webpack Hot Module Replacement. The intersecting polygon
-              // is rendered multiple times, and the only way to clear all such
-              // instances is to reload the page.
-              markers[key].intersection.remove()
               markers[key].intersection.addTo(map)
             }
 
