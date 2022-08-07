@@ -19,6 +19,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react'
 import Duration from '../modules/Duration.mjs'
 
 import CameraMarker from './CameraMarker.jsx'
+import DateTime from './DateTime.jsx'
 import MulticameraBadge from './MulticameraBadge.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
@@ -155,7 +156,7 @@ export default function FireMap(props) {
 
       const coordinates = [latitude, longitude]
       const html = CameraMarker.render({bearing})
-      const cameraMarker = L.divIcon({html})
+      const cameraMarker = L.divIcon({html, tooltipAnchor: [12, 0]})
 
       const greatPolygon = []
       const polygons = []
@@ -176,6 +177,20 @@ export default function FireMap(props) {
         polygons
       }
 
+      markers[key].icon.bindTooltip(renderFireTooltip(fire))
+      markers[key].icon.on({click: () => {
+        handleCameraClick(key)
+      }})
+
+      markers[key].icon.addTo(map)
+
+      if (fire.sourcePolygons.length > 1) {
+        // NOTE: Points passed when creating a polygon shouldn’t have a last
+        // point equal to the first one. It’s better to filter out such points.
+        // https://leafletjs.com/reference.html#polygon
+        const vertices = fire.polygon.slice(0, fire.polygon.length - 1)
+        markers[key].intersection = L.polygon(vertices, Props.INTERSECTING_POLYGON)
+      }
       if (fire.sourcePolygons.length > 1) {
         markers[key].intersection = L.polygon(fire.polygon, Props.INTERSECTING_POLYGON)
       }
@@ -206,8 +221,11 @@ export default function FireMap(props) {
       const coordinatesKey = getCoordinatesKey(coordinates)
       if (stacks[coordinatesKey] == null) {
         stacks[coordinatesKey] = {
+          cameraName: fire.camInfo.cameraName,
+          cityName: fire.camInfo.cityName,
           badge: null,
-          keys: new Set()
+          keys: new Set(),
+          timestamp: Number.POSITIVE_INFINITY
         }
       }
 
@@ -229,6 +247,9 @@ export default function FireMap(props) {
           zIndexOffset: Props.BADGE_Z_INDEX_OFFSET
         })
 
+      stack.timestamp = Math.min(stack.timestamp, fire.timestamp)
+      stack.tooltip = renderStackTooltip(stack)
+      stack.badge.bindTooltip(stack.tooltip)
       stack.badge.on({
         click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef, stack)
       })
@@ -309,7 +330,11 @@ export default function FireMap(props) {
             })
 
             if (markers[key].intersection != null) {
-              markers[key].intersection.bringToFront()
+              // BUG: Somehow `intersection` is not removed during development
+              // with Webpack Hot Module Replacement. The intersecting polygon
+              // is rendered multiple times, and the only way to clear all such
+              // instances is to reload the page.
+              markers[key].intersection.remove()
               markers[key].intersection.addTo(map)
             }
 
@@ -341,7 +366,10 @@ function addPolygon(fire, polygons, greatPolygon) {
   polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON))
 }
 
-function collapseStack(map, markers, stacks) {
+function collapseStack(map, markers, stacks, stack) {
+  // Rebind stack’s tooltip when it’s collapsed.
+  stack.badge.bindTooltip(stack.tooltip)
+
   Object.values(markers).forEach((marker) => {
     const {latitude, longitude} = marker
     marker.icon.setLatLng([latitude, longitude])
@@ -355,6 +383,9 @@ function expandStack(map, markers, stacks, stack) {
   const {L} = window
   const projection = L.CRS.EPSG3857
   const zoom = map.getZoom()
+
+  // Hide stack’s tooltip while it’s expanded.
+  stack.badge.unbindTooltip()
 
   // Fan each marker out in a circle around the latitude-longitude origin.
   Object.keys(markers).forEach((key) => {
@@ -393,17 +424,41 @@ function initializeMap(mapRef, timerRef) {
   return mapRef
 }
 
+function renderFireTooltip(fire) {
+  const {camInfo: {cameraName, cityName}, timestamp} = fire
+  const date = new Date(timestamp * 1000)
+
+  return `\
+<div class="c7e-fire--location">
+  <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
+  <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
+</div>`
+}
+
+function renderStackTooltip(stack) {
+  const {cameraName, cityName, keys: {size}, timestamp} = stack
+  const date = new Date(timestamp * 1000)
+
+  return `\
+<div class="c7e-fire--location">
+  <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
+  <span>${size} ${size !== 1 ? 'fires' : 'fire'} detected since \
+    <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
+  </span>
+</div>`
+}
+
 function toggleStack(map, markersRef, stacksRef, expandedStackRef, stack) {
   const {current: markers} = markersRef
   const {current: stacks} = stacksRef
 
   if (expandedStackRef.current != null) {
+    collapseStack(map, markers, stacks, expandedStackRef.current)
     expandedStackRef.current = null
-    collapseStack(map, markers, stacks)
     map.off('click')
   } else {
-    expandedStackRef.current = stack
     expandStack(map, markers, stacks, stack)
+    expandedStackRef.current = stack
     map.on({click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef)})
   }
 }

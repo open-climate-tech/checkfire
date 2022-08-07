@@ -14,33 +14,23 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+// TODO: Replace with Intl.DateTimeFormat()?
 
-import renderDateTimeString from '../modules/renderDateTimeString.mjs'
+const months = [
+  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+  'September', 'October', 'November', 'December'
+]
 
-/**
- * Provides a simple footer for the main app layout.
- *
- * @returns {React.Element}
- */
-export default function DateTime(props) {
-  const {date} = props
-  return 0,
-  <time dateTime={date.toISOString()} className="c7e-date-time">
-    {renderDateTimeString(date)}
-  </time>
-}
+export default function renderDateTimeString(datetime) {
+  const month = months[datetime.getMonth()]
+  const date = datetime.getDate()
+  const year = datetime.getFullYear()
+  const hours24 = datetime.getHours()
+  const hours12 = hours24 - (hours24 < 13 ? 0 : 12)
+  const hours = `${hours12}`.padStart(2, '0')
+  const xm = hours24 < 13 ? 'AM' : 'PM'
+  const minutes = `${datetime.getMinutes()}`.padStart(2, '0')
+  const seconds = `${datetime.getSeconds()}`.padStart(2, '0')
 
-/**
- * Synchronously renders HTML equivalent to a `DateTime` React element, which is
- * all but necessary when using non-React 3rd-party packages such as Leaflet.
- *
- * @see DateTime
- */
-DateTime.render = function (props) {
-  const {date} = props
-  return `\
-<time datetime="${date.toISOString()}" class="c7e-date-time">
-  ${renderDateTimeString(date)}
-</time>`
+  return `${month} ${date}, ${year} at ${hours}:${minutes}:${seconds} ${xm}`
 }
