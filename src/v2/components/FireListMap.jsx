@@ -136,7 +136,7 @@ export default function FireMap(props) {
     const markers = (markersRef.current = {})
     const stacks = (stacksRef.current = {})
 
-    fires.forEach((fire, i) => {
+    fires.forEach((fire) => {
       const key = getCameraKey(fire)
 
       if (markers[key] != null) {
@@ -177,7 +177,7 @@ export default function FireMap(props) {
         polygons
       }
 
-      markers[key].icon.bindTooltip(renderToooltip(fire, i))
+      markers[key].icon.bindTooltip(renderFireTooltip(fire))
       markers[key].icon.on({click: () => {
         handleCameraClick(key)
       }})
@@ -221,8 +221,11 @@ export default function FireMap(props) {
       const coordinatesKey = getCoordinatesKey(coordinates)
       if (stacks[coordinatesKey] == null) {
         stacks[coordinatesKey] = {
+          cameraName: fire.camInfo.cameraName,
+          cityName: fire.camInfo.cityName,
           badge: null,
-          keys: new Set()
+          keys: new Set(),
+          timestamp: Number.POSITIVE_INFINITY
         }
       }
 
@@ -244,7 +247,8 @@ export default function FireMap(props) {
           zIndexOffset: Props.BADGE_Z_INDEX_OFFSET
         })
 
-      stack.tooltip = `${stack.keys.size} potential fires detected, click to expand`
+      stack.timestamp = Math.min(stack.timestamp, fire.timestamp)
+      stack.tooltip = renderStackTooltip(stack)
       stack.badge.bindTooltip(stack.tooltip)
       stack.badge.on({
         click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef, stack)
@@ -420,14 +424,27 @@ function initializeMap(mapRef, timerRef) {
   return mapRef
 }
 
-function renderToooltip(fire, index) {
+function renderFireTooltip(fire) {
   const {camInfo: {cameraName, cityName}, timestamp} = fire
   const date = new Date(timestamp * 1000)
 
   return `\
 <div class="c7e-fire--location">
-  <strong class="c7e-fire--city-name">(${index + 1}) ${cityName}</strong> · ${cameraName}<br/>
+  <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
   <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
+</div>`
+}
+
+function renderStackTooltip(stack) {
+  const {cameraName, cityName, keys: {size}, timestamp} = stack
+  const date = new Date(timestamp * 1000)
+
+  return `\
+<div class="c7e-fire--location">
+  <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
+  <span>${size} ${size !== 1 ? 'fires' : 'fire'} detected since \
+    <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
+  </span>
 </div>`
 }
 
