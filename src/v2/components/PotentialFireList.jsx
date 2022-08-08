@@ -15,8 +15,8 @@
 // -----------------------------------------------------------------------------
 
 // TODO:
-//   - Implement voting.
 //   - Handle updates to existing fires.
+//   - Handle fires aging out (on a timer?).
 //   - Implement user preferences.
 //   - Implement user region.
 //   - Implement search params.
@@ -137,5 +137,6 @@ export default function PotentialFireList() {
     firesByKey={firesByKeyRef.current}
     indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
     nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
-    onToggleAllFires={handleToggleAllFires}/>
+    onToggleAllFires={handleToggleAllFires}
+    updateFires={updateFires}/>
 }

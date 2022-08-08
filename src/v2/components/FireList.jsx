@@ -20,6 +20,7 @@ import FireListContent from './FireListContent.jsx'
 import FireListControl from './FireListControl.jsx'
 
 import debounce from '../modules/debounce.mjs'
+import query from '../modules/query.mjs'
 
 /**
  * Receives a list of `fires` from a higher-order component and is responsible
@@ -39,7 +40,7 @@ import debounce from '../modules/debounce.mjs'
  */
 export default function FireList(props) {
   const {
-    fires, firesByKey, indexOfOldFires, nOldFires, onToggleAllFires
+    fires, firesByKey, indexOfOldFires, nOldFires, onToggleAllFires, updateFires
   } = props
 
   // The top position at which DOM elements become either visible or occluded
@@ -88,6 +89,27 @@ export default function FireList(props) {
       setScrollToIndex(index)
     }
   }, [nFires, selectedIndex])
+
+  const handleVoteForFire = useCallback((index, vote) => {
+    if (index > -1 && index < nFires) {
+      const fire = fires[index]
+      const {cameraID, timestamp} = fire
+      const isRealFire = vote === 'yes'
+      const isUndo = vote === 'undo'
+      const endpoint = isUndo ? '/api/undoVoteFire' : '/api/voteFire'
+
+      query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
+        if (isUndo) {
+          delete fire.voted
+        } else {
+          fire.voted = isRealFire
+        }
+
+        updateFires(indexOfOldFires > -1)
+      }) // TODO: Implement error handling. Allow errors to go uncaught for now
+         // asy they will be logged to the Console.
+    }
+  }, [fires, nFires, indexOfOldFires, updateFires])
 
   useEffect(() => {
     // Ensure that `selectedIndex` is within the current array’s bounds. If it’s
@@ -153,6 +175,7 @@ export default function FireList(props) {
       indexOfOldFires,
       onScrollToFire: handleScrollToFire,
       onSelectFire: handleSelectFire,
+      onVoteForFire: handleVoteForFire,
       selectedIndex,
       toolbarRef
     }

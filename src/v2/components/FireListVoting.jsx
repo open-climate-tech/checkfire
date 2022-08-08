@@ -16,22 +16,54 @@
 
 import React from 'react'
 
-// import Button from './Button.jsx'
-// import ButtonGroup from './ButtonGroup.jsx'
-// import ButtonOutput from './ButtonOutput.jsx'
+import Button from './Button.jsx'
+import ButtonGroup from './ButtonGroup.jsx'
 
 /**
  * Provides a button group for confirming whether the active detected fire is
  * in fact a fire.
  */
 export default function FireListVoting(props) {
+  const {fires, fires: {length: nFires}, onVoteForFire, selectedIndex} = props
+  const {voted} = fires[selectedIndex] || {}
+  const disabled = nFires < 1
+  const hasVote = voted != null
+  const isRealFire = voted === true
+
   return 0,
   <div className="c7e-fire-list--voting">
-    { // <ButtonGroup>
-      //   <Button className="c7e-button--fire" icon="c7e-icon--fire" label="Confirm"/>
-      //   <ButtonOutput label="0﹪"/>
-      //   <Button aria-label="Not a fire" icon="c7e-icon--not"/>
-      // </ButtonGroup>
-    }
+    <ButtonGroup>
+      { renderAccept(disabled, hasVote, isRealFire, onVoteForFire, selectedIndex) }
+      { renderReject(disabled, hasVote, isRealFire, onVoteForFire, selectedIndex) }
+    </ButtonGroup>
   </div>
+}
+
+// -----------------------------------------------------------------------------
+
+function renderAccept(disabled, hasVote, isRealFire, onVoteForFire, selectedIndex) {
+  // Render “Is a fire” when `hasVote === false` or `isRealFire === true`;
+  // otherwise, if `hasVote === true` and `isRealFire === false`, render “Undo”.
+  const props = {
+    className: hasVote === false || isRealFire === true ? 'c7e-button--fire' : undefined,
+    disabled: disabled || (hasVote === true && isRealFire === true),
+    icon: hasVote === true && isRealFire === false ? 'c7e-icon--undo' : 'c7e-icon--fire',
+    label: hasVote === true && isRealFire === false ? 'Undo' : 'Is a fire',
+    onClick: () => onVoteForFire(selectedIndex, hasVote ? 'undo' : 'yes')
+  }
+
+  return <Button {...props}/>
+}
+
+function renderReject(disabled, hasVote, isRealFire, onVoteForFire, selectedIndex) {
+  // Render “Isn’t a fire” when `hasVote === false` or `isRealFire === false`;
+  // otherwise, if `hasVote === true` and `isRealFire === true`, render “Undo”.
+  const props = {
+    disabled: disabled || (hasVote === true && isRealFire === false),
+    icon: hasVote === true && isRealFire === true ? 'c7e-icon--undo' : 'c7e-icon--not',
+    label: hasVote === true && isRealFire === true ? 'Undo' : 'Isn’t a fire',
+    onClick: () => onVoteForFire(selectedIndex, hasVote ? 'undo' : 'no')
+  }
+
+  return <Button {...props}/>
 }
