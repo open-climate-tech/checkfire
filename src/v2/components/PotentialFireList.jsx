@@ -16,10 +16,7 @@
 
 // TODO:
 //   - Implement voting.
-//   - Handle new incoming fires.
 //   - Handle updates to existing fires.
-//   - Handle fires aging out (on a timer?).
-//   - Implement camera selection for multicamera fires (from list and map).
 //   - Implement user preferences.
 //   - Implement user region.
 //   - Implement search params.
@@ -113,19 +110,24 @@ export default function PotentialFireList() {
   }, [includesAllFires, updateFires])
 
   useEffect(() => {
-    eventSourceRef.current = getEventSource('/fireEvents')
+    if (eventSourceRef.current == null) {
+      eventSourceRef.current = getEventSource('/fireEvents')
+    }
 
     const {current: eventSource} = eventSourceRef
 
+    function handleClosedConnection() {
+      eventSourceRef.current = null
+      tidy()
+    }
+
     function tidy() {
       eventSource.removeEventListener('newPotentialFire', handlePotentialFire)
-      eventSource.removeEventListener('closedConnection', tidy)
-      eventSource.close() // Does nothing if the connection is already closed.
-      eventSourceRef.current = null
+      eventSource.removeEventListener('closedConnection', handleClosedConnection)
     }
 
     eventSource.addEventListener('newPotentialFire', handlePotentialFire)
-    eventSource.addEventListener('closedConnection', tidy)
+    eventSource.addEventListener('closedConnection', handleClosedConnection)
 
     return tidy
   }, [handlePotentialFire])
