@@ -93,21 +93,28 @@ export default function FireList(props) {
   const handleVoteForFire = useCallback((index, vote) => {
     if (index > -1 && index < nFires) {
       const fire = fires[index]
-      const {cameraID, timestamp} = fire
-      const isRealFire = vote === 'yes'
-      const isUndo = vote === 'undo'
-      const endpoint = isUndo ? '/api/undoVoteFire' : '/api/voteFire'
+      const promises = [fire]
+        .concat(Object.keys(fire._anglesByKey).map((k) => firesByKey[k]))
+        .map((f) => {
+          const {cameraID, timestamp} = f
+          const isRealFire = vote === 'yes'
+          const isUndo = vote === 'undo'
+          const endpoint = isUndo ? '/api/undoVoteFire' : '/api/voteFire'
 
-      query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
-        if (isUndo) {
-          delete fire.voted
-        } else {
-          fire.voted = isRealFire
-        }
+          return query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
+            if (isUndo) {
+              delete f.voted
+            } else {
+              f.voted = isRealFire
+            }
 
-        updateFires(indexOfOldFires > -1)
-      }) // TODO: Implement error handling. Allow errors to go uncaught for now
-         // asy they will be logged to the Console.
+            updateFires(indexOfOldFires > -1)
+          })
+        })
+
+      // TODO: Implement error handling. Allow errors to go uncaught for now as
+      // they will be logged to the Console.
+      Promise.all(promises)
     }
   }, [fires, nFires, indexOfOldFires, updateFires])
 
