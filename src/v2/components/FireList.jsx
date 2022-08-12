@@ -35,6 +35,7 @@ import query from '../modules/query.mjs'
  * @param {number} props.nOldFires - The total number of old fires, regardless
  *     of whether they are currently displayed or not.
  * @param {function()} props.onToggleAllFires - Callback to hide/show old fires.
+ * @param {function()} props.updateFires - Callback to trigger (re)render.
  *
  * @returns {React.Element}
  */
@@ -95,26 +96,41 @@ export default function FireList(props) {
       const fire = fires[index]
       const promises = [fire]
         .concat(Object.keys(fire._anglesByKey).map((k) => firesByKey[k]))
-        .map((f) => {
-          const {cameraID, timestamp} = f
-          const isRealFire = vote === 'yes'
+        .reduce((a, f) => {
+          const {cameraID, sortId, timestamp} = f
+
+          // Vote only for `fire` and overlapping angles older than `fire`.
+          if (sortId > fire.sortId) {
+            return a
+          }
+
+          const hasVote = f.voted != null
           const isUndo = vote === 'undo'
+
+          // Don’t try to undo nonexistant votes.
+          if (isUndo && !hasVote) {
+            return a
+          }
+
+          const isRealFire = vote === 'yes'
           const endpoint = isUndo ? '/api/undoVoteFire' : '/api/voteFire'
 
-          return query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
-            if (isUndo) {
-              delete f.voted
-            } else {
-              f.voted = isRealFire
-            }
+          const p =
+            query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
+              if (isUndo) {
+                delete f.voted
+              } else {
+                f.voted = isRealFire
+              }
+            })
 
-            updateFires(indexOfOldFires > -1)
-          })
-        })
+          a.push(p)
+          return a
+        }, [])
 
       // TODO: Implement error handling. Allow errors to go uncaught for now as
       // they will be logged to the Console.
-      Promise.all(promises)
+      Promise.all(promises).then(() => updateFires(indexOfOldFires > -1))
     }
   }, [fires, nFires, indexOfOldFires, updateFires])
 
