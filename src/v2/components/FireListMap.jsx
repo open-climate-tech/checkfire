@@ -94,6 +94,7 @@ export default function FireMap(props) {
   // and list of fires (otherwise the cached markers will use stale instances of
   // these in the closure created by the React render cycle).
   const expandedStackRef = useRef(null)
+  const fireRef = useRef()
   const firesRef = useRef()
   const mapRef = useRef()
   const markersRef = useRef({})
@@ -278,73 +279,75 @@ export default function FireMap(props) {
       const {current: markers} = markersRef
       const {current: stacks} = stacksRef
       const {camInfo: {latitude, longitude}} = fire
-      const coordinates = [latitude, longitude]
       const key = getCameraKey(fire)
 
       if (expandedStackRef.current != null) {
         toggleStack(map, markersRef, stacksRef, expandedStackRef)
       }
 
-      // Debounce map pan and zoom.
-      clearTimeout(timerRef.current)
+      Object.values(markers).forEach((x) => {
+        if (x !== markers[key]) {
+          x.polygons.forEach((p) => p.remove())
+          if (x.intersection != null ) {
+            x.intersection.remove()
+          }
+        }
+      })
 
-      if (markers[key] != null) {
+      // XXX: Force icon to front.
+      markers[key].icon.remove()
+      markers[key].icon.addTo(map)
+
+      Object.keys(fire._anglesByKey).forEach((k) => {
+        if (markers[k] != null) {
+          // XXX: Force icon to front.
+          markers[k].icon.remove()
+          markers[k].icon.addTo(map)
+        }
+      })
+
+      Object.values(stacks).forEach(({badge, keys}) => {
+        // XXX: Force badge to front when relevant.
+        badge.remove()
+        if (keys.size > 1) {
+          badge.addTo(map)
+        }
+      })
+
+      markers[key].polygons.forEach((p) => {
+        p.addTo(map)
+
+        // Search polygon `p` for coordinates at the same latitude and
+        // longitude as the camera itself.
+        const isPrimary = p.getLatLngs()[0].some(({lat, lng}) =>
+          lat === latitude && lng === longitude)
+
+        if (isPrimary) {
+          p.setStyle(Props.PRIMARY_POLYGON)
+          p.bringToFront()
+        } else {
+          p.setStyle(Props.POLYGON)
+        }
+      })
+
+      if (markers[key].intersection != null) {
+        markers[key].intersection.addTo(map)
+      }
+
+      // Only animate map if the selected fire has changed.
+      if (fireRef.current !== fire) {
+        fireRef.current = fire
+
+        // Debounce map pan and zoom.
+        clearTimeout(timerRef.current)
+
         // Zoom out to give the user some context.
         map.setZoom(8, Props.SET_VIEW)
 
         timerRef.current = setTimeout(() => {
-          Object.values(markers).forEach((x) => {
-            if (x !== markers[key]) {
-              x.polygons.forEach((p) => p.remove())
-              if (x.intersection != null ) {
-                x.intersection.remove()
-              }
-            }
-          })
-
-          map.panTo(coordinates, Props.SET_VIEW)
+          map.panTo([latitude, longitude], Props.SET_VIEW)
 
           timerRef.current = setTimeout(() => {
-            // XXX: Force icon to front.
-            markers[key].icon.remove()
-            markers[key].icon.addTo(map)
-
-            Object.keys(fire._anglesByKey).forEach((k) => {
-              if (markers[k] != null) {
-                // XXX: Force icon to front.
-                markers[k].icon.remove()
-                markers[k].icon.addTo(map)
-              }
-            })
-
-            Object.values(stacks).forEach(({badge, keys}) => {
-              // XXX: Force badge to front when relevant.
-              badge.remove()
-              if (keys.size > 1) {
-                badge.addTo(map)
-              }
-            })
-
-            markers[key].polygons.forEach((p) => {
-              // Search polygon `p` for coordinates at the same latitude and
-              // longitude as the camera itself.
-              const isPrimary = p.getLatLngs()[0].some(({lat, lng}) =>
-                lat === coordinates[0] && lng === coordinates[1])
-
-              if (isPrimary) {
-                p.setStyle(Props.PRIMARY_POLYGON)
-                p.bringToFront()
-              } else {
-                p.setStyle(Props.POLYGON)
-              }
-
-              p.addTo(map)
-            })
-
-            if (markers[key].intersection != null) {
-              markers[key].intersection.addTo(map)
-            }
-
             timerRef.current = setTimeout(() => {
               map.fitBounds(markers[key].greatPolygon.getBounds(), Props.SET_VIEW)
             }, Duration.SECOND)

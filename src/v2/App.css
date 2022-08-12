@@ -57,6 +57,10 @@
   padding: 5px;
 }
 
+.c7e-button-output {
+  cursor: auto;
+}
+
 .c7e-button.c7e-button--disabled {
   color: rgba(13, 87, 175, 0.4);
   cursor: default;
@@ -65,6 +69,7 @@
 
 .c7e-button-output.c7e-button--disabled {
   color: rgba(68, 68, 68, 0.4);
+  cursor: default;
   fill: rgba(68, 68, 68, 0.4);
 }
 
@@ -94,6 +99,11 @@
 .c7e-button--fire {
   color: #B81414;
   fill: #C51616;
+}
+
+.c7e-button.c7e-button--disabled.c7e-button--fire {
+  color: rgba(184, 20, 20, 0.4);
+  fill: rgba(197, 22, 22, 0.4);
 }
 
 .c7e-button--label {
