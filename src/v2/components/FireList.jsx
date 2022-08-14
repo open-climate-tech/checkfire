@@ -35,6 +35,7 @@ import query from '../modules/query.mjs'
  * @param {number} props.nOldFires - The total number of old fires, regardless
  *     of whether they are currently displayed or not.
  * @param {function()} props.onToggleAllFires - Callback to hide/show old fires.
+ * @param {function()} props.updateFires - Callback to trigger (re)render.
  *
  * @returns {React.Element}
  */
@@ -90,26 +91,61 @@ export default function FireList(props) {
     }
   }, [nFires, selectedIndex])
 
+  /**
+   * Sends `vote` requests for the fire detection event at `index` and each of
+   * its _older_ overlapping angles (if any).
+   *
+   * @param {number} index - The position of a `fire` in the `fires` list.
+   * @param {('yes'|'no'|'undo')} vote - The vote to cast.
+   */
   const handleVoteForFire = useCallback((index, vote) => {
     if (index > -1 && index < nFires) {
       const fire = fires[index]
-      const {cameraID, timestamp} = fire
-      const isRealFire = vote === 'yes'
-      const isUndo = vote === 'undo'
-      const endpoint = isUndo ? '/api/undoVoteFire' : '/api/voteFire'
+      const promises = [fire]
+        .concat(Object.keys(fire._anglesByKey).map((k) => firesByKey[k]))
+        .reduce((a, f) => {
+          const {cameraID, sortId, timestamp, voted} = f
+          const hasVote = voted != null
+          const isSameVote = vote === voted
+          const isUndo = vote === 'undo'
 
-      query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
-        if (isUndo) {
-          delete fire.voted
-        } else {
-          fire.voted = isRealFire
-        }
+          // - Vote only for `fire` and overlapping angles older than `fire`.
+          // - Don’t cast the same vote twice.
+          // - Don’t undo nonexistent votes.
+          if (sortId > fire.sortId || isSameVote || (isUndo && !hasVote)) {
+            return a
+          }
 
-        updateFires(indexOfOldFires > -1)
-      }) // TODO: Implement error handling. Allow errors to go uncaught for now
-         // asy they will be logged to the Console.
+          // Undo existing vote in order to overwrite it.
+          let endpoint = '/api/undoVoteFire'
+          const undo = hasVote && !isUndo
+            ? query.post(endpoint, {cameraID, timestamp}).then(() => delete f.voted)
+            : Promise.resolve()
+
+          const isRealFire = isUndo ? undefined : vote === 'yes'
+          if (!isUndo) {
+            endpoint = '/api/voteFire'
+          }
+
+          const promise = undo.then(() => {
+            return query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
+              if (isUndo) {
+                delete f.voted
+              } else {
+                f.voted = isRealFire
+              }
+            })
+          })
+
+          a.push(promise)
+          return a
+        }, [])
+
+      // TODO: Implement error handling. Allow errors to go uncaught for now as
+      // they will be logged to the Console.
+      Promise.all(promises).finally(() => updateFires(indexOfOldFires > -1))
     }
-  }, [fires, nFires, indexOfOldFires, updateFires])
+  }, [fires, firesByKey, nFires, indexOfOldFires, updateFires])
 
   useEffect(() => {
     // Ensure that `selectedIndex` is within the current array’s bounds. If it’s
