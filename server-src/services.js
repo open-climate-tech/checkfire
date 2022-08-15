@@ -31,8 +31,8 @@ const logger = oct_utils.getLogger('services');
 
 /**
  * Initialize all the dyanmic services for this server and then call done()
- * @param {Express} app 
- * @param {function} done 
+ * @param {Express} app
+ * @param {function} done
  */
 async function initServices(app, done) {
   const config = await oct_utils.getConfig(gcp_storage);
@@ -42,7 +42,7 @@ async function initServices(app, done) {
   await pubsub.initPubSub(config, updateFromDetect);
   // detectMgr.initMgr(config);
 
-  const redirects = ['/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected', '/login', '/register', '/v2/wildfirecheck'];
+  const redirects = ['/authenticated', '/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected', '/login', '/register', '/v2/wildfirecheck'];
   redirects.forEach(redirectUrl => {
     app.get(redirectUrl, (req,res) => {res.redirect('/wildfirecheck/?redirect=' + redirectUrl);});
   });

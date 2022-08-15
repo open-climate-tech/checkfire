@@ -16,32 +16,29 @@
 
 import React from 'react'
 
-import Icon from './Icon.jsx'
-
 import concatClassNames from '../modules/concatClassNames.mjs'
 
 /**
  * @param {Object} props
  * @param {string} props.className - A list of CSS class names.
- * @param {string=} props.icon - Optional icon ID to include with the button.
- * @param {string=} props.label - Optional label to include with the button.
+ * @param {string=} props.label - Optional label for the input field.
+ * @param {string=} props.placeholder - Optional placeholder for the input field
+ *     also used as accessible label if `label` isn’t specified.
  *
  * @returns {React.Element}
  */
-export default function Button(props) {
-  const {className, disabled, icon, label, ...otherProps} = props
+export default function TextInput(props) {
+  const {className, disabled, label, placeholder, ...otherProps} = props
   const classNames =
-    concatClassNames(className, 'c7e-button', disabled && 'c7e-button--disabled')
+    concatClassNames(className, 'c7e-text-input', disabled && 'c7e-text-input--disabled')
 
   return 0,
-  <button disabled={disabled} className={classNames} {...otherProps}>
-    <div className="c7e-button--content">
-      { icon &&
-        <Icon className="c7e-button--icon" icon={icon}/>
-      }
-      { label &&
-        <span className="c7e-button--label">{label}</span>
-      }
-    </div>
-  </button>
+  <label>
+    { label
+      ? <span className="c7e-text-input--label">{label}</span>
+      : placeholder &&
+        <span className="c7e-text-input--label" style={{position: 'absolute', left: -99999}}>{placeholder}</span>
+    }
+    <input type="text" placeholder={placeholder} disabled={disabled} className={classNames} {...otherProps}/>
+  </label>
 }

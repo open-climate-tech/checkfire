@@ -288,6 +288,20 @@ function findClosest(allValues, desired, direction) {
   return await db.query(authQuery);
 }
 
+/**
+ * Transforms `endpoint` into a development or production URL as appropriate.
+ *
+ * @param {string} endpoint - The path for a desired resource.
+ *
+ * @returns {string} A URL for the desired resource, tranformed for development
+ *     if necessary.
+ */
+function getClientUrl(endpoint) {
+  return process.env.NODE_ENV === 'development'
+    ? `http://localhost:${process.env.REACT_APP_FE_PORT}${endpoint}`
+    : endpoint
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
@@ -300,3 +314,4 @@ exports.augmentVotes = augmentVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
 exports.findClosest = findClosest;
 exports.getUserAuth = getUserAuth;
+exports.getClientUrl = getClientUrl;

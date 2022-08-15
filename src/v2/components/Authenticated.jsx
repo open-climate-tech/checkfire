@@ -14,16 +14,14 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-/**
- * Transforms `endpoint` into a development or production URL as appropriate.
- *
- * @param {string} endpoint - The path for a desired resource.
- *
- * @returns {string} A URL for the desired resource, tranformed for development
- *     if necessary.
- */
-export default function getUrl(endpoint) {
-  return process.env.NODE_ENV === 'development'
-    ? `http://localhost:${process.env.REACT_APP_BE_PORT}${endpoint}`
-    : endpoint
+import {useEffect} from 'react'
+
+export default function Authenticated() {
+  useEffect(() => {
+    const callback = window.opener.c7e.authnCallback
+    delete window.opener.c7e.authnCallback
+    callback()
+  })
+
+  return ''
 }

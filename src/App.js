@@ -39,6 +39,7 @@ import Register from './Register';
 import Prototypes from './Prototypes';
 
 import V2 from './v2/App.jsx'
+import Authenticated from './v2/components/Authenticated.jsx'
 
 import {getServerUrl, Legalese, serverGet} from './OctReactUtils';
 
@@ -134,6 +135,7 @@ class App extends Component {
           </Route>
           <Switch>
             <Route path="/v2/wildfirecheck" exact component={V2} />
+            <Route path="/authenticated" exact component={Authenticated} />
             <Route path="/prototypes" exact component={Prototypes} />
             <Route path="/login" exact render={props =>
                     <Login />} />

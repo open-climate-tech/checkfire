@@ -15,15 +15,25 @@
 // -----------------------------------------------------------------------------
 
 /**
- * Transforms `endpoint` into a development or production URL as appropriate.
+ * @param {Object} props
+ * @param {string} props.children - The content to display in the overlay.
+ * @param {funciton=} props.onClick - Optional callback to be invoked when the
+ *     non-content area of the overlay is clicked.
  *
- * @param {string} endpoint - The path for a desired resource.
- *
- * @returns {string} A URL for the desired resource, tranformed for development
- *     if necessary.
+ * @returns {React.Element}
  */
-export default function getUrl(endpoint) {
-  return process.env.NODE_ENV === 'development'
-    ? `http://localhost:${process.env.REACT_APP_BE_PORT}${endpoint}`
-    : endpoint
+export default function Overlay(props) {
+  const {children, onClick} = props
+
+  return 0,
+  <div className="c7e-overlay" onClick={onClick}>
+    <div className="c7e-overlay--background"/>
+    <div className="c7e-overlay--content" onClick={trap}>{children}</div>
+  </div>
+}
+
+// -----------------------------------------------------------------------------
+
+function trap(event) {
+  event.stopPropagation()
 }

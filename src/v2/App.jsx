@@ -14,14 +14,27 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect} from 'react'
+import React, {useCallback, useEffect, useState} from 'react'
 
 import AppFooter from './components/AppFooter.jsx'
+import Authentication from './components/Authentication.jsx'
 import PotentialFireList from './components/PotentialFireList.jsx'
 
 import './App.css'
 
 export default function App() {
+  const [authnTitle, setAuthnTitle] = useState()
+  const [handleAuthenticated, setHandleAuthenticated] = useState(null)
+  const [shouldShowAuthn, setShouldShowAuthn] = useState(false)
+
+  const handleToggleAuthn = useCallback((title = null, fn = null, hide = false) => {
+    // XXX: Functions aren’t state. They return state. So wrap and return `fn`.
+    // See: https://reactjs.org/docs/hooks-reference.html#functional-updates
+    setHandleAuthenticated(() => fn)
+    setAuthnTitle(title != null ? title : undefined)
+    setShouldShowAuthn(hide === true ? false : !shouldShowAuthn)
+  }, [shouldShowAuthn])
+
   // XXX: Reset scroll position on page load. Otherwise, the window may be
   // scrolled a couple hundred pixels down (not sure why).
   useEffect(() => {
@@ -32,11 +45,14 @@ export default function App() {
         ? requestAnimationFrame(() => window.scrollTo(0, 0))
         : setTimeout(check)
     })()
-  })
+  }, [])
 
   return 0,
   <div className="c7e-root">
-    <PotentialFireList/>
+    { shouldShowAuthn &&
+      <Authentication onAuthenticated={handleAuthenticated} onCancel={handleToggleAuthn} title={authnTitle}/>
+    }
+    <PotentialFireList onToggleAuthn={handleToggleAuthn}/>
     <AppFooter/>
   </div>
 }

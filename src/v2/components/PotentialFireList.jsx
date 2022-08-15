@@ -42,7 +42,7 @@ const TIMESTAMP_LIMIT = 2 * Duration.HOUR
  *
  * @returns {React.Element}
  */
-export default function PotentialFireList() {
+export default function PotentialFireList(props) {
   // Fires newer than `TIMESTAMP_LIMIT` (or all fires if `includesAllFires` is
   // `true`) displayed to the user for review.
   const [fires, setFires] = useState([])
@@ -138,5 +138,6 @@ export default function PotentialFireList() {
     indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
     nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
     onToggleAllFires={handleToggleAllFires}
-    updateFires={updateFires}/>
+    updateFires={updateFires}
+    {...props}/>
 }
