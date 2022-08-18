@@ -42,7 +42,7 @@
     "start": "node server-main.js",
     "dev": "npm run dev-server & ; npm run dev-client",
     "dev-client": "REACT_APP_BE_PORT=3141 react-scripts start",
-    "dev-server": "NODE_ENV=development REACT_APP_FE_PORT=3000 node server-main.js",
+    "dev-server": "NODE_ENV=development node server-main.js",
     "build": "react-scripts build",
     "// Use `npm test` for cicd pipelines": 0,
     "test": "export CI=true ; npm run test-client-components ; npm run test-client-modules ; npm run test-server",

@@ -61,14 +61,16 @@ export default function Authentication(props) {
   }, [onAuthenticated])
 
   const handleGoogle = useCallback(() => {
-    let oauthUrl
+    let oauthUrl = '/api/oauthUrl'
+    let params = '?path=/authenticated'
+
     if (process.env.NODE_ENV === 'development') {
-      oauthUrl = getUrl(`/api/oauthDevUrl?email=secret@example.com&path=%2Fauthenticated`)
-    } else {
-      oauthUrl = getUrl(`/api/oauthUrl?path=%2Fauthenticated`)
+      const {host, protocol} = window.location
+      oauthUrl = '/api/oauthDevUrl'
+      params = `${params}&host=${host}&protocol=${protocol}`
     }
 
-    const w = window.open(oauthUrl, 'c7e.authentication')
+    const w = window.open(getUrl(`${oauthUrl}${params}`), 'c7e.authentication')
     window.c7e = window.c7e || {}
     window.c7e.authnCallback = () => {
       onAuthenticated()
