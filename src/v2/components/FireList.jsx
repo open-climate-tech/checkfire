@@ -20,7 +20,7 @@ import FireListContent from './FireListContent.jsx'
 import FireListControl from './FireListControl.jsx'
 
 import debounce from '../modules/debounce.mjs'
-import query from '../modules/query.mjs'
+import vote from '../modules/vote.mjs'
 
 /**
  * Receives a list of `fires` from a higher-order component and is responsible
@@ -41,7 +41,8 @@ import query from '../modules/query.mjs'
  */
 export default function FireList(props) {
   const {
-    fires, firesByKey, indexOfOldFires, nOldFires, onToggleAllFires, updateFires
+    fires, firesByKey, indexOfOldFires, nOldFires, onToggleAllFires,
+    onToggleAuthn, updateFires
   } = props
 
   // The top position at which DOM elements become either visible or occluded
@@ -92,60 +93,40 @@ export default function FireList(props) {
   }, [nFires, selectedIndex])
 
   /**
-   * Sends `vote` requests for the fire detection event at `index` and each of
-   * its _older_ overlapping angles (if any).
+   * Sends `decision` requests for the fire detection event at `index` and each
+   * of its _older_ overlapping angles (if any).
    *
    * @param {number} index - The position of a `fire` in the `fires` list.
-   * @param {('yes'|'no'|'undo')} vote - The vote to cast.
+   * @param {('yes'|'no'|'undo')} decision - The vote to cast.
    */
-  const handleVoteForFire = useCallback((index, vote) => {
+  const handleVoteForFire = useCallback((index, decision) => {
     if (index > -1 && index < nFires) {
-      const fire = fires[index]
-      const promises = [fire]
-        .concat(Object.keys(fire._anglesByKey).map((k) => firesByKey[k]))
-        .reduce((a, f) => {
-          const {cameraID, sortId, timestamp, voted} = f
-          const hasVote = voted != null
-          const isSameVote = vote === voted
-          const isUndo = vote === 'undo'
+      function call() {
+        const fire = fires[index]
+        const keys = Object.keys(fire._anglesByKey)
+        const list = [fire].concat(keys.map((k) => firesByKey[k]))
+        const requests = vote(decision, fire.sortId, list)
 
-          // - Vote only for `fire` and overlapping angles older than `fire`.
-          // - Don’t cast the same vote twice.
-          // - Don’t undo nonexistent votes.
-          if (sortId > fire.sortId || isSameVote || (isUndo && !hasVote)) {
-            return a
-          }
+        return Promise.all(requests)
+      }
 
-          // Undo existing vote in order to overwrite it.
-          let endpoint = '/api/undoVoteFire'
-          const undo = hasVote && !isUndo
-            ? query.post(endpoint, {cameraID, timestamp}).then(() => delete f.voted)
-            : Promise.resolve()
+      function callback() {
+        updateFires(indexOfOldFires > -1)
+      }
 
-          const isRealFire = isUndo ? undefined : vote === 'yes'
-          if (!isUndo) {
-            endpoint = '/api/voteFire'
-          }
-
-          const promise = undo.then(() => {
-            return query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
-              if (isUndo) {
-                delete f.voted
-              } else {
-                f.voted = isRealFire
-              }
-            })
-          })
-
-          a.push(promise)
-          return a
-        }, [])
-
-      // TODO: Implement error handling. Allow errors to go uncaught for now as
-      // they will be logged to the Console.
-      Promise.all(promises).finally(() => updateFires(indexOfOldFires > -1))
+      // TODO: Complete error handling. Allow some errors to go uncaught for now
+      // as they will be logged to the Console.
+      call().then(callback).catch((error) => {
+        if (error.status === 401) {
+          // Unauthorized. Ask the user to sign in.
+          const fn = () => (call().finally(callback), onToggleAuthn(null, null, true))
+          onToggleAuthn('Sign in to vote', fn)
+        } else {
+          throw error
+        }
+      })
     }
-  }, [fires, firesByKey, nFires, indexOfOldFires, updateFires])
+  }, [fires, firesByKey, nFires, indexOfOldFires, onToggleAuthn, updateFires])
 
   useEffect(() => {
     // Ensure that `selectedIndex` is within the current array’s bounds. If it’s
@@ -211,6 +192,7 @@ export default function FireList(props) {
       indexOfOldFires,
       onScrollToFire: handleScrollToFire,
       onSelectFire: handleSelectFire,
+      onToggleAuthn,
       onVoteForFire: handleVoteForFire,
       selectedIndex,
       toolbarRef

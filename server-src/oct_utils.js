@@ -288,6 +288,20 @@ function findClosest(allValues, desired, direction) {
   return await db.query(authQuery);
 }
 
+/**
+ * Transforms `path` into a development or production URL as appropriate.
+ *
+ * @param {('http:'|'https:')} protocol - The client’s request protocol.
+ * @param {string} host - The hostname[:port] for a desired resource.
+ * @param {string} path - The endpoint for a desired resource.
+ *
+ * @returns {string} A URL for the desired resource, tranformed for development
+ *     if necessary.
+ */
+function getClientUrl(protocol, host, path) {
+  return process.env.NODE_ENV === 'development' ? `${protocol}//${host}${path}` : path
+}
+
 exports.retryWrap = retryWrap;
 exports.getLogger = getLogger;
 exports.getConfig = getConfig;
@@ -300,3 +314,4 @@ exports.augmentVotes = augmentVotes;
 exports.dbAlertToUiObj = dbAlertToUiObj;
 exports.findClosest = findClosest;
 exports.getUserAuth = getUserAuth;
+exports.getClientUrl = getClientUrl;

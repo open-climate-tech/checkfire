@@ -253,12 +253,14 @@ function initApis(config, app, db) {
   });
 
   if (process.env.NODE_ENV === 'development') {
-    // For easier testing, this endpoint creates a valid JWT without Oauth
-    app.get('/api/devlogin', async (req, res) => {
-      logger.info('GET /devlogin: %s', JSON.stringify(req.query));
-
+    // For easier testing, this endpoint simulates an OAuth flow by creating a valid JWT and redirecting
+    app.get('/api/oauthDevUrl', (req, res) => {
+      logger.info('GET /api/oauthDevUrl %s', JSON.stringify(req.query));
       genJwtCookie(res, getUserId('dev', req.query.email));
-      return res.status(200).send('success').end();
+      // send client browser to desired URL specified in state by leveraging react redirect in client JS
+      const {query: {host, path, protocol}} = req
+      const url = oct_utils.getClientUrl(protocol, host, path);
+      res.redirect(url);
     });
   }
 

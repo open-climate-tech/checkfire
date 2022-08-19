@@ -40,7 +40,84 @@
 }
 
 /* -----------------------------------------------------------------------------
- * Buttons
+ * Authentication
+ */
+
+.c7e-authentication {
+  background-color: #FFF;
+  border-radius: 8px;
+  box-shadow: 0 8px 8px rgb(0, 0, 0, 0.2);
+  padding: 20px 16px;
+  width: 320px;
+}
+
+.c7e-authentication--button {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0;
+  width: 100%;
+}
+
+.c7e-authentication--cancel {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+}
+
+.c7e-authentication--divider {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  position: relative;
+  width: 100%;
+}
+
+.c7e-authentication--divider::before {
+  content: "";
+  border-top: 1px solid #E0E9FA;
+  position: absolute;
+  width: 100%;
+  top: 50%;
+  z-index: 0;
+}
+
+.c7e-authentication--divider-label {
+  background: #F6F9FE;
+  border: 1px solid #E0E9FA;
+  border-radius: 18px;
+  color: #0D57AF;
+  cursor: default;
+  display: block;
+  fill: #0D57AF;
+  font-size: 14px;
+  font-weight: 500;
+  height: 34px;
+  line-height: 30px;
+  text-align: center;
+  width: 34px;
+  z-index: 1;
+}
+
+.c7e-authentication--message {
+  background: #F6E4E5;
+  border: 1px solid #F5C2C7;
+  border-radius: 12px;
+  color: #B81414;
+  cursor: pointer;
+  display: block;
+  margin: 16px 0 8px;
+  padding: 8px 12px;
+}
+
+.c7e-authentication--title {
+  font-size: 19px;
+  font-weight: 500;
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+/* -----------------------------------------------------------------------------
+ * Button
  */
 
 .c7e-button,
@@ -94,6 +171,10 @@
   border-bottom-right-radius: 18px;
   border-top-right-radius: 18px;
   margin-right: 0;
+}
+
+.c7e-button--content {
+  display: inline-flex;
 }
 
 .c7e-button--fire {
@@ -263,7 +344,7 @@
 }
 
 .c7e-map--multicamera-badge--content::before {
-  color: #fff;
+  color: #FFF;
   content: attr(data-count);
   font-size: 11px;
   font-weight: bold;
@@ -277,4 +358,49 @@
     1px  1px 0 #777;
  top: 50%;
   transform: translate(-50%, -50%);
+}
+
+/* -----------------------------------------------------------------------------
+ * Overlay
+ */
+
+.c7e-overlay {
+  bottom: 0;
+  left: 0;
+  pointer-events: all;
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 10000;
+}
+
+.c7e-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 100%;
+  width: 100%;
+}
+
+.c7e-overlay--content {
+  left: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+
+/* -----------------------------------------------------------------------------
+ * Text Input
+ */
+
+.c7e-text-input {
+  background: #FFF;
+  border: 1px solid #E0E9FA;
+  border-radius: 12px;
+  color: #0D57AF;
+  display: inline-flex;
+  fill: #0D57AF;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 24px;
+  padding: 5px 12px;
 }

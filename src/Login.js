@@ -20,7 +20,7 @@
 import './Login.css';
 import React, {useState} from "react";
 import {useLocation, Link} from 'react-router-dom';
-import {getServerUrl, serverGet, serverPost} from './OctReactUtils';
+import {getServerUrl, serverPost} from './OctReactUtils';
 
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
 import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
@@ -49,11 +49,8 @@ export default function Login(props) {
     const fwdPath2 = fwdPath || '/';
     console.log('loginGoogle fwd ', fwdPath2);
     if (process.env.NODE_ENV === 'development') {
-      const serverUrl = getServerUrl('/api/devlogin?email=secret@example.com');
-      const resp = await serverGet(serverUrl);
-      const serverRes = await resp.text();
-      console.log('get res', serverRes);
-      window.location.href = fwdPath2;
+      const {host, protocol} = window.location
+      window.location.href = getServerUrl('/api/oauthDevUrl?email=secret@example.com&host=' + host + '&path=' + fwdPath2 + '&protocol=' + protocol);
     } else {
       window.location.href = getServerUrl('/api/oauthUrl?path=' + fwdPath2);
     }
