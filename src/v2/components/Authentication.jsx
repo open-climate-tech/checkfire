@@ -42,7 +42,6 @@ export default function Authentication(props) {
   const [message, setMessage] = useState('')
 
   const handleCredentials = useCallback((event) => {
-    console.log('event')
     event.preventDefault()
     query
       .post('/api/loginPassword', {username, password})
@@ -99,8 +98,8 @@ export default function Authentication(props) {
       </div>
       <form className="c7e-authentication--credentials" onSubmit={handleCredentials}>
         { message && <div className="c7e-authentication--message">{message}</div> }
-        <TextInput id="username" autocomplete="username" placeholder="Username" onChange={handleChange}/>
-        <TextInput type="password" id="current-password" autocomplete="current-password" placeholder="Password" onChange={handleChange}/>
+        <TextInput name="username" id="username" autoComplete="username" placeholder="Username" onChange={handleChange}/>
+        <TextInput type="password" name="password" id="current-password" autoComplete="current-password" placeholder="Password" onChange={handleChange}/>
         <Button type="submit" className="c7e-authentication--button" label="Sign in" onClick={handleCredentials}/>
       </form>
     </div>
