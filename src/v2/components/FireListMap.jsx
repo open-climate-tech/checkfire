@@ -84,7 +84,10 @@ const Props = {
  * @returns {React.Element}
  */
 export default function FireMap(props) {
-  const {fires, firesByKey, onScrollToFire, selectedIndex} = props
+  const {
+    fires, firesByKey, isAuthenticated, onScrollToFire,
+    onToggleAuthn, selectedIndex
+  } = props
 
   const [scrollingTo, setScrollingTo] = useState(-1)
 
@@ -362,7 +365,9 @@ export default function FireMap(props) {
 
   return 0,
   <div className="c7e-fire-list--map" id="map">
-    <FireListMapControl container={controlRef.current} map={mapRef.current}/>
+    <FireListMapControl
+      container={controlRef.current} map={mapRef.current}
+      isAuthenticated={isAuthenticated} onToggleAuthn={onToggleAuthn}/>
   </div>
 }
 

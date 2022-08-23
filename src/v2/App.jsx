@@ -20,24 +20,47 @@ import AppFooter from './components/AppFooter.jsx'
 import Authentication from './components/Authentication.jsx'
 import PotentialFireList from './components/PotentialFireList.jsx'
 
+import query from './modules/query.mjs'
+
 import './App.css'
 
 export default function App() {
   const [authnTitle, setAuthnTitle] = useState()
   const [handleAuthenticated, setHandleAuthenticated] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [shouldShowAuthn, setShouldShowAuthn] = useState(false)
 
+  const updateAuthentication = useCallback(() => {
+    query
+      .get('/api/checkAuth')
+      .then(() => setIsAuthenticated(true))
+      .catch(({status}) => {
+        if (status === 401) {
+          setIsAuthenticated(false)
+        }
+      })
+  }, [])
+
   const handleToggleAuthn = useCallback((title = null, fn = null, hide = false) => {
-    // XXX: Functions aren’t state. They return state. So wrap and return `fn`.
+    // XXX: Functions aren’t state. They return state. Wrap and return callback.
     // See: https://reactjs.org/docs/hooks-reference.html#functional-updates
-    setHandleAuthenticated(() => fn)
+    setHandleAuthenticated(() => () => {
+      if (typeof fn === 'function') {
+        fn()
+      }
+
+      updateAuthentication()
+    })
+
     setAuthnTitle(title != null ? title : undefined)
     setShouldShowAuthn(hide === true ? false : !shouldShowAuthn)
-  }, [shouldShowAuthn])
+  }, [shouldShowAuthn, updateAuthentication])
 
-  // XXX: Reset scroll position on page load. Otherwise, the window may be
-  // scrolled a couple hundred pixels down (not sure why).
   useEffect(() => {
+    updateAuthentication()
+
+    // XXX: Reset scroll position on page load. Otherwise, the window may be
+    // scrolled a couple hundred pixels down (not sure why).
     ;(function check() {
       /complete/.test(document.readyState)
         // XXX: Set scroll position asynchronously; otherwise, as observed,
@@ -45,14 +68,14 @@ export default function App() {
         ? requestAnimationFrame(() => window.scrollTo(0, 0))
         : setTimeout(check)
     })()
-  }, [])
+  }, [updateAuthentication])
 
   return 0,
   <div className="c7e-root">
     { shouldShowAuthn &&
       <Authentication onAuthenticated={handleAuthenticated} onCancel={handleToggleAuthn} title={authnTitle}/>
     }
-    <PotentialFireList onToggleAuthn={handleToggleAuthn}/>
+    <PotentialFireList isAuthenticated={isAuthenticated} onToggleAuthn={handleToggleAuthn}/>
     <AppFooter/>
   </div>
 }

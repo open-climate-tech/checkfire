@@ -41,6 +41,14 @@ export default function Authentication(props) {
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
 
+  const handleChange = useCallback(({target: {name, value}}) => {
+    switch (name) {
+      case 'username': return setUsername(value)
+      case 'password': return setPassword(value)
+      default:;
+    }
+  }, [])
+
   const handleCredentials = useCallback((event) => {
     event.preventDefault()
     query
@@ -77,14 +85,6 @@ export default function Authentication(props) {
     }
   }, [onAuthenticated])
 
-  const handleChange = useCallback(({target: {name, value}}) => {
-    switch (name) {
-      case 'username': return setUsername(value)
-      case 'password': return setPassword(value)
-      default:;
-    }
-  }, [])
-
   return 0,
   <Overlay onClick={onCancel}>
     <div className="c7e-authentication">
@@ -107,5 +107,4 @@ export default function Authentication(props) {
 
   // TODO:
   //   - Implement registration.
-  //   - Implement sign out.
 }
