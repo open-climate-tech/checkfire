@@ -20,6 +20,7 @@ import Duration from '../modules/Duration.mjs'
 
 import CameraMarker from './CameraMarker.jsx'
 import DateTime from './DateTime.jsx'
+import FireListMapControl from './FireListMapControl.jsx'
 import MulticameraBadge from './MulticameraBadge.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
@@ -41,7 +42,8 @@ const Props = {
   MAP: {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18,
-    zoomAnimationThreshold: 18
+    zoomAnimationThreshold: 18,
+    zoomControl: false
   },
   MARKER_Z_INDEX_OFFSET: 250,
   POLYGON: {
@@ -93,6 +95,7 @@ export default function FireMap(props) {
   // register an event listener with cached markers, we need a stable callback
   // and list of fires (otherwise the cached markers will use stale instances of
   // these in the closure created by the React render cycle).
+  const controlRef = useRef()
   const expandedStackRef = useRef(null)
   const fireRef = useRef()
   const firesRef = useRef()
@@ -145,7 +148,7 @@ export default function FireMap(props) {
     })
 
     const {L} = window
-    const {current: map} = initializeMap(mapRef, timerRef)
+    const {current: map} = initializeMap(mapRef, controlRef)
     const markers = (markersRef.current = {})
     const stacks = (stacksRef.current = {})
 
@@ -275,7 +278,7 @@ export default function FireMap(props) {
     const fire = fires[selectedIndex]
 
     if (fire != null && scrollingTo === -1) {
-      const {current: map} = initializeMap(mapRef, timerRef)
+      const {current: map} = initializeMap(mapRef, controlRef)
       const {current: markers} = markersRef
       const {current: stacks} = stacksRef
       const {camInfo: {latitude, longitude}} = fire
@@ -357,7 +360,10 @@ export default function FireMap(props) {
     }
   }, [fires, scrollingTo, selectedIndex])
 
-  return <div className="c7e-fire-list--map" id="map"/>
+  return 0,
+  <div className="c7e-fire-list--map" id="map">
+    <FireListMapControl container={controlRef.current} map={mapRef.current}/>
+  </div>
 }
 
 // -----------------------------------------------------------------------------
@@ -421,14 +427,19 @@ function getCoordinatesKey(coordinates) {
   return coordinates.join(',')
 }
 
-function initializeMap(mapRef, timerRef) {
+function initializeMap(mapRef, controlRef) {
   if (mapRef.current == null) {
     const {L} = window
+    const control = L.control({position: 'topleft'})
+    const controlDiv = document.createElement('div')
 
-    mapRef.current = L.map('map').setView(Props.CENTER, 8)
+    mapRef.current = L.map('map', Props.MAP).setView(Props.CENTER, 8)
     mapRef.current.fitBounds(Props.BOUNDS, Props.SET_VIEW)
 
-    L.tileLayer(Props.URL_TEMPLATE, Props.MAP).addTo(mapRef.current)
+    control.onAdd = () => (controlRef.current = controlDiv)
+    control.addTo(mapRef.current)
+
+    L.tileLayer(Props.URL_TEMPLATE).addTo(mapRef.current)
   }
 
   return mapRef
