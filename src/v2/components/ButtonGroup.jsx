@@ -16,6 +16,8 @@
 
 import React from 'react'
 
+import concatClassNames from '../modules/concatClassNames.mjs'
+
 /**
  * Provides a styled container for two or more buttons.
  *
@@ -25,10 +27,11 @@ import React from 'react'
  * @returns {React.Element}
  */
 export default function ButtonGroup(props) {
-  const {children} = props
+  const {children, className} = props
+  const classNames = concatClassNames('c7e-button-group', className)
 
   return 0,
-  <div className="c7e-button-group">
+  <div className={classNames}>
     {children}
   </div>
 }

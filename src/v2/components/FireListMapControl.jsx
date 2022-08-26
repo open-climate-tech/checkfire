@@ -43,15 +43,15 @@ export default function FireListMapControl(props) {
 
     return 0,
     <div className="c7e-map--control">
-      <ButtonGroup>
-        <IconButton icon='c7e-icon--zoom-in' label="Zoom in" title="Zoom in" onClick={() => map.zoomIn()}/>
-        <IconButton icon='c7e-icon--zoom-out' label="Zoom out" title="Zoom out" onClick={() => map.zoomOut()}/>
-      </ButtonGroup>
-
       { isAuthenticated
         ? <IconButton icon='c7e-icon--sign-out' label="Sign out" title="Sign out" onClick={signOut}/>
         : <IconButton icon='c7e-icon--sign-in' label="Sign in" title="Sign in" onClick={signIn}/>
       }
+
+      <ButtonGroup className="c7e-map--control--zoom">
+        <IconButton icon='c7e-icon--zoom-in' label="Zoom in" title="Zoom in" onClick={() => map.zoomIn()}/>
+        <IconButton icon='c7e-icon--zoom-out' label="Zoom out" title="Zoom out" onClick={() => map.zoomOut()}/>
+      </ButtonGroup>
     </div>
   }, [container, isAuthenticated, map, signIn, signOut])
 

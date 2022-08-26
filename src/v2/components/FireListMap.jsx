@@ -435,7 +435,7 @@ function getCoordinatesKey(coordinates) {
 function initializeMap(mapRef, controlRef) {
   if (mapRef.current == null) {
     const {L} = window
-    const control = L.control({position: 'topleft'})
+    const control = L.control({position: 'topright'})
     const controlDiv = document.createElement('div')
 
     mapRef.current = L.map('map', Props.MAP).setView(Props.CENTER, 8)
