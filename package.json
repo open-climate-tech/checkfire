@@ -63,6 +63,14 @@
         "rules": {
           "no-sequences": "off"
         }
+      },
+      {
+        "files": [
+          "src/v2/*"
+        ],
+        "rules": {
+          "no-console": "warn"
+        }
       }
     ]
   },

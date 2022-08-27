@@ -16,22 +16,25 @@
 
 import React from 'react'
 
+import Icon from './Icon.jsx'
+
 import concatClassNames from '../modules/concatClassNames.mjs'
 
 /**
- * Provides a styled container for two or more buttons.
- *
  * @param {Object} props
- * @param {Array<Button>} props.children
+ * @param {string} props.className - A list of CSS class names.
+ * @param {string} props.icon - Icon ID to include with the button.
+ * @param {string} props.label - Acessible text to include with the button.
  *
  * @returns {React.Element}
  */
-export default function ButtonGroup(props) {
-  const {children, className} = props
-  const classNames = concatClassNames('c7e-button-group', className)
+export default function IconButton(props) {
+  const {className, disabled, icon, label, ...otherProps} = props
+  const classNames =
+    concatClassNames(className, 'c7e-icon-button', disabled && 'c7e-icon-button--disabled')
 
   return 0,
-  <div className={classNames}>
-    {children}
-  </div>
+  <button aria-label={label} disabled={disabled} className={classNames} {...otherProps}>
+    <Icon className="c7e-icon-button--icon" icon={icon}/>
+  </button>
 }
