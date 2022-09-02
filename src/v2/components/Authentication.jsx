@@ -37,24 +37,31 @@ import query from '../modules/query.mjs'
 export default function Authentication(props) {
   const {onAuthenticated, onCancel, title = 'Sign in'} = props
 
+  const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
+  const [mode, setMode] = useState('authentication')
 
   const handleChange = useCallback(({target: {name, value}}) => {
     switch (name) {
-      case 'username': return setUsername(value)
+      case 'email': return setUsername(value)
       case 'password': return setPassword(value)
-      default:;
+      case 'username': return setUsername(value)
+      default: throw new Error(`Unexpected input: ${name}`)
     }
   }, [])
 
   const handleCredentials = useCallback((event) => {
     event.preventDefault()
-    query
+    setMessage('')
+
+    setTimeout(() => query
       .post('/api/loginPassword', {username, password})
       .then(onAuthenticated)
-      .catch(() => setMessage('Incorrect username or password'))
+      .catch(() => {
+        setMessage('Incorrect username or password')
+      }), 250) // Give user time to perceive submission and error state changes.
   }, [onAuthenticated, password, username])
 
   const handleFacebook = useCallback(() => {
@@ -85,6 +92,34 @@ export default function Authentication(props) {
     }
   }, [onAuthenticated])
 
+  const handleRegistration = useCallback((event) => {
+    event.preventDefault()
+    setMessage('')
+
+    setTimeout(() => query
+      .post('/api/register', {email, username, password})
+      .then(onAuthenticated)
+      .catch((error) => {
+        if (error.status === 409) {
+          setMessage('Username already exists')
+        } else {
+          setMessage('Oops… something went wrong, please try again')
+        }
+      }), 250) // Give user time to perceive submission and error state changes.
+  }, [email, onAuthenticated, password, username])
+
+  const handleMode = useCallback((nextMode) => {
+    if (mode !== nextMode) {
+      setEmail('')
+      setUsername('')
+      setPassword('')
+      setMessage('')
+      setMode(nextMode)
+    }
+  }, [mode])
+
+  const disabled = password === '' || username === ''
+
   return 0,
   <Overlay onClick={onCancel}>
     <div className="c7e-authentication">
@@ -96,12 +131,27 @@ export default function Authentication(props) {
       <div className="c7e-authentication--divider">
         <div className="c7e-authentication--divider-label">or</div>
       </div>
-      <form className="c7e-authentication--credentials" onSubmit={handleCredentials}>
-        { message && <div className="c7e-authentication--message">{message}</div> }
-        <TextInput name="username" id="username" autoComplete="username" placeholder="Username" onChange={handleChange}/>
-        <TextInput type="password" name="password" id="current-password" autoComplete="current-password" placeholder="Password" onChange={handleChange}/>
-        <Button type="submit" className="c7e-authentication--button" label="Sign in" onClick={handleCredentials}/>
-      </form>
+      <div className="c7e-authentication--tabs">
+        <div className={`c7e-authentication--tab${mode === 'authentication' ? ' c7e-selected' : ''}`} onClick={() => handleMode('authentication')}>Sign in</div>
+        <div className={`c7e-authentication--tab${mode === 'registration' ? ' c7e-selected' : ''}`} onClick={() => handleMode('registration')}>Sign up</div>
+      </div>
+      { mode === 'authentication' &&
+        <form className="c7e-authentication--credentials" onSubmit={handleCredentials}>
+          { message && <div className="c7e-authentication--message">{message}</div> }
+          <TextInput name="username" id="username" autoComplete="username" placeholder="Username" onChange={handleChange}/>
+          <TextInput type="password" name="password" id="current-password" autoComplete="current-password" placeholder="Password" onChange={handleChange}/>
+          <Button type="submit" disabled={disabled} className="c7e-authentication--button" label="Sign in" onClick={handleCredentials}/>
+        </form>
+      }
+      { mode === 'registration' &&
+        <form className="c7e-authentication--credentials" onSubmit={handleRegistration}>
+          { message && <div className="c7e-authentication--message">{message}</div> }
+          <TextInput name="username" id="username" autoComplete="username" placeholder="Username" onChange={handleChange}/>
+          <TextInput type="password" name="password" id="new-password" autoComplete="new-password" placeholder="Password" onChange={handleChange}/>
+          <TextInput type="email" name="email" id="email" autoComplete="email" placeholder="Email address for account recovery" onChange={handleChange}/>
+          <Button type="submit" disabled={disabled} className="c7e-authentication--button" label="Sign up" onClick={handleRegistration}/>
+        </form>
+      }
     </div>
   </Overlay>
 

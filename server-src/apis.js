@@ -233,7 +233,8 @@ function initApis(config, app, db) {
       // check for existing account for given user
       const authQueryRes = await oct_utils.getUserAuth(db, req.body.username, 'local');
       if (authQueryRes.length !== 0) {
-        return res.status(403).send('Forbidden').end();
+        logger.error('POST Register err', new Error(`username exists: ${req.body.username}`));
+        return res.status(409).send('Conflict').end();
       }
       // create new user+salt+password entry in DB
       const salt = crypto.randomBytes(16);
@@ -248,7 +249,7 @@ function initApis(config, app, db) {
       });
     } catch (err) {
       logger.error('POST Register err', err);
-      res.status(403).send('Forbidden').end();
+      res.status(500).send('Internal Server Error').end();
     }
   });
 
