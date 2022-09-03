@@ -29,9 +29,16 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function IconButton(props) {
-  const {className, disabled, icon, label, ...otherProps} = props
+  const {className, disabled, href, icon, label, ...otherProps} = props
   const classNames =
     concatClassNames(className, 'c7e-icon-button', disabled && 'c7e-icon-button--disabled')
+
+  if (href != null) {
+    return 0,
+    <a href={href} aria-label={label} className={classNames} {...otherProps}>
+      <Icon className="c7e-icon-button--icon" icon={icon}/>
+    </a>
+  }
 
   return 0,
   <button aria-label={label} disabled={disabled} className={classNames} {...otherProps}>
