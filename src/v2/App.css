@@ -285,6 +285,11 @@
   margin: 12px 0 0;
 }
 
+.c7e-fire--location {
+  display: flex;
+  justify-content: space-between;
+}
+
 .c7e-fire--caption p {
   margin: 0;
 }

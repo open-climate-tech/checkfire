@@ -18,6 +18,7 @@ import React, {useEffect, useRef, useState} from 'react'
 
 import DateTime from './DateTime.jsx'
 import DateTimeDistance from './DateTimeDistance.jsx'
+import IconButton from './IconButton.jsx'
 
 import concatClassNames from '../modules/concatClassNames.mjs'
 
@@ -48,7 +49,7 @@ import concatClassNames from '../modules/concatClassNames.mjs'
 export default function Fire(props) {
   const {
     fire: {
-      croppedUrl, timestamp,
+      annotatedUrl, croppedUrl, timestamp,
       camInfo: {
         cameraDir, cameraName, camerakUrl, cityName, network, networkUrl
       }
@@ -162,8 +163,11 @@ export default function Fire(props) {
 
     <div className="c7e-fire--caption">
       <p className="c7e-fire--location">
-        <strong className="c7e-fire--city-name">{cityName}</strong>
-        <span className="c7e-fire--date-time"> · <DateTimeDistance date={date}/> · <DateTime date={date}/></span>
+        <span className="c7e-dateline">
+          <strong className="c7e-fire--city-name">{cityName}</strong>
+          <span className="c7e-fire--date-time"> · <DateTimeDistance date={date}/> · <DateTime date={date}/></span>
+        </span>
+        <IconButton className="c7e-fire--full-image" icon="c7e-icon--full-image" title="Open full image" href={annotatedUrl} target="_blank" rel="noopener noreferrer"/>
       </p>
       <p className="c7e-fire--attribution">
         <a href={networkUrl} target="_blank" rel="noopener noreferrer">{network}</a>{' '}›{' '}
