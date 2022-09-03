@@ -109,6 +109,52 @@
   padding: 8px 12px;
 }
 
+.c7e-authentication--tabs {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  position: relative;
+  width: 100%;
+}
+
+.c7e-authentication--tabs::before {
+  content: "";
+  border-top: 1px solid #E0E9FA;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  z-index: 0;
+}
+
+.c7e-authentication--tab {
+  background: #F6F9FE;
+  border: 1px solid #E0E9FA;
+  color: #0D57AF;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: -1px;
+  min-width: 96px;
+  padding: 6px 12px;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.c7e-authentication--tab.c7e-selected {
+  background: #FFF;
+  border-bottom: 1px solid #FFF;
+  color: #333;
+  cursor: default;
+}
+
+.c7e-authentication--tab:first-child {
+  border-top-left-radius: 12px;
+}
+
+.c7e-authentication--tab:last-child {
+  border-top-right-radius: 12px;
+}
+
 .c7e-authentication--title {
   font-size: 19px;
   font-weight: 500;
