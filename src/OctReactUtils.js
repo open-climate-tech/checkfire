@@ -172,6 +172,9 @@ export function FirePreview(props) {
               Wscore: {props.potFire.weatherScore}
             </div>
           }
+          {props.showProto && props.potFire.isProto > 1 &&
+            <div className="w3-pale-green">Proto: {props.potFire.isProto}</div>
+          }
         </h5>
         {sideBySide ? (<div>
           <div className="w3-col m8">
