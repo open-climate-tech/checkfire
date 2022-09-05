@@ -45,7 +45,7 @@ export default function Authentication(props) {
 
   const handleChange = useCallback(({target: {name, value}}) => {
     switch (name) {
-      case 'email': return setUsername(value)
+      case 'email': return setEmail(value)
       case 'password': return setPassword(value)
       case 'username': return setUsername(value)
       default: throw new Error(`Unexpected input: ${name}`)
