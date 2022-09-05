@@ -95,26 +95,26 @@ async function initDB(config, useSocket=false) {
   }
 
   /**
-   * Insert of update existing row in table given primary key/value (queryKey/queryValue)
+   * Insert of update existing row in table given primary keys/values (queryKeys/queryValues)
    * @param {string} tableName
-   * @param {Array<string>} dataKeys
-   * @param {Array<>} dataValues
-   * @param {string} queryKey
-   * @param {*} queryValue
+   * @param {Array<string>} dataKeys - column names of data to store
+   * @param {Array<>} dataValues - array matching dataKeys with values to write
+   * @param {Array<string>} queryKeys - column names to check if there's already existing row
+   * @param {Array<>} queryValues - array matching queryKeys with values to check and write
    */
-  db.insertOrUpdate = async function insertOrUpdate(tableName, dataKeys, dataValues, queryKey, queryValue) {
-    // TODO: wrap this in a tx
-    const sqlQuery = `select * from ${tableName} where ${queryKey} = '${queryValue}'`;
+  db.insertOrUpdate = async function insertOrUpdate(tableName, dataKeys, dataValues, queryKeys, queryValues) {
+    // TODO: wrap this in a txinsertOrUpdate
+    const queryKeyVals = queryKeys.map((queryKey, index) => `${queryKey} = '${queryValues[index]}'`);
+    const sqlQuery = `select * from ${tableName} where ${queryKeyVals.join(' and ')}`;
     const queryRes = await db.query(sqlQuery);
     if (queryRes && queryRes[0]) {
       // update
       const dataKeyVals = dataKeys.map((dataKey, index) => `${dataKey} = '${dataValues[index]}'`);
-      const sqlCmd = `update ${tableName} set ${dataKeyVals.join(', ')} where ${queryKey} = '${queryValue}'`;
-      console.log('sqlC', sqlCmd);
+      const sqlCmd = `update ${tableName} set ${dataKeyVals.join(', ')} where ${queryKeyVals.join(' and ')}`;
       return await db.query(sqlCmd);
     } else {
       // insert
-      return db.insert(tableName, dataKeys.concat(queryKey), dataValues.concat(queryValue));
+      return await db.insert(tableName, dataKeys.concat(queryKeys), dataValues.concat(queryValues));
     }
   }
 

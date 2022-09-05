@@ -289,16 +289,9 @@ function initApis(config, app, db) {
       const matchingDetections = await db.query(detectionsQuery);
       assert(matchingDetections.length > 0);
 
-      const existingVotesByUser = await oct_utils.getUserVotes(db, req.body.cameraID, req.body.timestamp, decoded.email);
-      // console.log('voteFire existingVotesByUser %s', JSON.stringify(existingVotesByUser));
-      if (existingVotesByUser && (existingVotesByUser.length > 0)) {
-        logger.warn('Multiple votes not supported %s', existingVotesByUser);
-        res.status(400).send('Bad Request').end();
-        return;
-      }
-      const sqlStr = `insert into votes (cameraname,timestamp,isrealfire,userid) values
-                      ('${req.body.cameraID}',${req.body.timestamp},${req.body.isRealFire ? 1 : 0},'${decoded.email}')`;
-      await db.query(sqlStr);
+      const queryKeys = ['cameraname', 'timestamp', 'userid'];
+      const queryValues = [req.body.cameraID, req.body.timestamp, decoded.email];
+      await db.insertOrUpdate('votes', ['isrealfire'], [req.body.isRealFire ? 1 : 0], queryKeys, queryValues);
       res.status(200).send('success').end();
     });
   });
@@ -371,7 +364,7 @@ function initApis(config, app, db) {
 
       const regionKeys = ['toplat', 'leftlong', 'bottomlat', 'rightlong'];
       const regionVals = [req.body.topLat, req.body.leftLong, req.body.bottomLat, req.body.rightLong];
-      await db.insertOrUpdate('user_preferences', regionKeys, regionVals, 'userid', decoded.email);
+      await db.insertOrUpdate('user_preferences', regionKeys, regionVals, ['userid'], [decoded.email]);
       res.status(200).send('success').end();
     });
   });
@@ -384,7 +377,7 @@ function initApis(config, app, db) {
       assert(typeof(req.body.webNotify) === 'boolean');
       assert((req.body.webNotify === true) || (req.body.webNotify === false));
 
-      await db.insertOrUpdate('user_preferences', ['webnotify'], [req.body.webNotify ? 1 : 0], 'userid', decoded.email);
+      await db.insertOrUpdate('user_preferences', ['webnotify'], [req.body.webNotify ? 1 : 0], ['userid'], [decoded.email]);
       res.status(200).send('success').end();
     });
   });
