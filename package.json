@@ -66,10 +66,12 @@
       },
       {
         "files": [
-          "src/v2/*"
+          "src/v2/**/*.js",
+          "src/v2/**/*.jsx",
+          "src/v2/**/*.mjs"
         ],
         "rules": {
-          "no-console": "warn"
+          "no-console": "error"
         }
       }
     ]
