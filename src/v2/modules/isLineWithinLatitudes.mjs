@@ -27,7 +27,7 @@
  * @returns {boolean} `true` if `line` has a point within `north` and `south`
  *     latitudes; otherwise, `false`.
  */
-export default function hasPointWithinLatitudes(line, north, south, longitude) {
+export default function isLineWithinLatitudes(line, north, south, longitude) {
   const [[lat1, long1], [lat2, long2]] = line
   const deltaVertical = long2 - long1
 
@@ -38,7 +38,7 @@ export default function hasPointWithinLatitudes(line, north, south, longitude) {
 
   // Parameterized value on line segment where 0 represents `[lat1, long1]` and
   // 1 represents `[lat2, long2]`.
-  const point = (longitude - long2) / deltaVertical
+  const point = (longitude - long1) / deltaVertical
 
   if (point >= 0 && point <= 1) {
     // `longitude` is between the two endpoints. Check if intersection point is

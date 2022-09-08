@@ -27,7 +27,7 @@
  * @returns {boolean} `true` if `line` has a point within `west` and `east`
  *     longitudes; otherwise, `false`.
  */
-export default function hasPointWithinLongitudes(line, east, west, latitude) {
+export default function isLineWithinLongitudes(line, east, west, latitude) {
   const [[lat1, long1], [lat2, long2]] = line
   const deltaHorizontal = lat2 - lat1
 

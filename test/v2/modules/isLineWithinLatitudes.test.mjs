@@ -20,17 +20,17 @@ import isLineWithinLatitudes from '../../../src/v2/modules/isLineWithinLatitudes
 
 describe('isLineWithinLatitudes()', () => {
   it("should return true", () => {
-    const line = [[32.9, -117.2], [33.2, -116.7]]
+    const line = [[32.9, -117.2], [33.1, -116.7]]
     const north = 33
     const south = 32.7
-    const longitude = -116.6
+    const longitude = -117.1
 
     const actual = isLineWithinLatitudes(line, north, south, longitude)
     expect(actual).to.be.true
   })
 
   it("should return false", () => {
-    const line = [[32.9, -117.2], [33.2, -116.7]]
+    const line = [[33.1, -116.6], [32.6, -116.5]]
     const north = 33
     const south = 32.7
     const longitude = -117.1
