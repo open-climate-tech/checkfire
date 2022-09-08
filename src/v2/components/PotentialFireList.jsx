@@ -18,7 +18,6 @@
 //   - Handle updates to existing fires.
 //   - Handle fires aging out (on a timer?).
 //   - Implement user preferences.
-//   - Implement user region.
 //   - Implement search params.
 //   - Implement notifications.
 //   - Implement camera ID pinning.
@@ -31,10 +30,14 @@ import Duration from '../modules/Duration.mjs'
 import getCameraKey from '../modules/getCameraKey.mjs'
 import getEventSource from '../modules/getEventSource.mjs'
 import hasAngleOfFire from '../modules/hasAngleOfFire.mjs'
+import isPolygonWithinRegion from '../modules/isPolygonWithinRegion.mjs'
+import parseRegion from '../modules/parseRegion.mjs'
 
 import FireList from './FireList.jsx'
 
 const TIMESTAMP_LIMIT = 2 * Duration.HOUR
+
+const {error: report} = console
 
 /**
  * Responsible for querying the detected fire list, monitoring new fire events,
@@ -48,6 +51,7 @@ export default function PotentialFireList(props) {
   const [fires, setFires] = useState([])
   const [includesAllFires, setIncludesAllFires] = useState(false)
   const [indexOfOldFires, setIndexOfOldFires] = useState(-1)
+  const [region, setRegion] = useState(null)
 
   const allFiresRef = useRef([])
   const eventSourceRef = useRef()
@@ -73,7 +77,11 @@ export default function PotentialFireList(props) {
 
   const handlePotentialFire = useCallback((event) => {
     const fire = JSON.parse(event.data)
-    const {croppedUrl, version} = fire
+    const {croppedUrl, polygon, version} = fire
+
+    if (region != null && !isPolygonWithinRegion(polygon, region)) {
+      return false
+    }
 
     if (!croppedUrl || croppedUrl.startsWith('c:/')) {
       return
@@ -96,7 +104,7 @@ export default function PotentialFireList(props) {
         // Fire is already indexed, but its video has been updated.
         firesByKey[key].croppedUrl = croppedUrl
         // TODO: Update video source, reload video.
-        console.error('Not implemented: updateFires()')
+        ['console'].error('Not implemented: updateFires()')
       }
     } else {
       allFires.forEach((x) => hasAngleOfFire(x, fire))
@@ -107,7 +115,21 @@ export default function PotentialFireList(props) {
 
       updateFires(includesAllFires)
     }
-  }, [includesAllFires, updateFires])
+  }, [includesAllFires, region, updateFires])
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const regionParam = searchParams.get('latLong')
+
+    if (regionParam != null) {
+      try {
+        setRegion(parseRegion(regionParam))
+      } catch (error) {
+        report(error)
+        setRegion(null)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (eventSourceRef.current == null) {
@@ -138,6 +160,7 @@ export default function PotentialFireList(props) {
     indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
     nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
     onToggleAllFires={handleToggleAllFires}
+    region={region}
     updateFires={updateFires}
     {...props}/>
 }

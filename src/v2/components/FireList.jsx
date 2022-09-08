@@ -42,7 +42,7 @@ import vote from '../modules/vote.mjs'
 export default function FireList(props) {
   const {
     fires, firesByKey, indexOfOldFires, isAuthenticated, nOldFires,
-    onToggleAllFires, onToggleAuthn, updateFires
+    onToggleAllFires, onToggleAuthn, region, updateFires
   } = props
 
   // The top position at which DOM elements become either visible or occluded
@@ -195,6 +195,7 @@ export default function FireList(props) {
       onSelectFire: handleSelectFire,
       onToggleAuthn,
       onVoteForFire: handleVoteForFire,
+      region,
       selectedIndex,
       toolbarRef
     }

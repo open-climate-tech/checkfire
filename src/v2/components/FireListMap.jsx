@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 
 import Duration from '../modules/Duration.mjs'
 
@@ -26,6 +26,8 @@ import MulticameraBadge from './MulticameraBadge.jsx'
 import getCameraKey from '../modules/getCameraKey.mjs'
 import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs'
 import hasCameraKey from '../modules/hasCameraKey.mjs'
+
+const {error: report} = console
 
 const Props = {
   BADGE_Z_INDEX_OFFSET: 500,
@@ -85,11 +87,17 @@ const Props = {
  */
 export default function FireMap(props) {
   const {
-    fires, firesByKey, isAuthenticated, onScrollToFire,
-    onToggleAuthn, selectedIndex
+    fires, firesByKey, isAuthenticated, onScrollToFire, onToggleAuthn,
+    region, selectedIndex
   } = props
 
   const [scrollingTo, setScrollingTo] = useState(-1)
+
+  const bounds = useMemo(() => {
+    return region != null
+      ? [[region.west, region.north], [region.east, region.south]]
+      : Props.BOUNDS
+  }, [region])
 
   // NOTE: Use references extensively here because React and Leaflet use
   // different models for maintaining state and interacting with the DOM. For
@@ -151,7 +159,7 @@ export default function FireMap(props) {
     })
 
     const {L} = window
-    const {current: map} = initializeMap(mapRef, controlRef)
+    const {current: map} = initializeMap(mapRef, controlRef, bounds)
     const markers = (markersRef.current = {})
     const stacks = (stacksRef.current = {})
 
@@ -159,7 +167,7 @@ export default function FireMap(props) {
       const key = getCameraKey(fire)
 
       if (markers[key] != null) {
-        console.error(`Marker '${key}' already exists`)
+        report(`Marker '${key}' already exists`)
         return
       }
 
@@ -273,7 +281,7 @@ export default function FireMap(props) {
         click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef, stack)
       })
     })
-  }, [fires, firesByKey, handleCameraClick])
+  }, [bounds, fires, firesByKey, handleCameraClick])
 
   useEffect(() => {
     // `selectedIndex` will change rapidly when fires are loading, once for each
@@ -281,7 +289,7 @@ export default function FireMap(props) {
     const fire = fires[selectedIndex]
 
     if (fire != null && scrollingTo === -1) {
-      const {current: map} = initializeMap(mapRef, controlRef)
+      const {current: map} = initializeMap(mapRef, controlRef, bounds)
       const {current: markers} = markersRef
       const {current: stacks} = stacksRef
       const {camInfo: {latitude, longitude}} = fire
@@ -361,7 +369,7 @@ export default function FireMap(props) {
         }, Duration.SECOND / 4)
       }
     }
-  }, [fires, scrollingTo, selectedIndex])
+  }, [bounds, fires, scrollingTo, selectedIndex])
 
   return 0,
   <div className="c7e-fire-list--map" id="map">
