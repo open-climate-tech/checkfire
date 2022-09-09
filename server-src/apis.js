@@ -484,6 +484,18 @@ function initApis(config, app, db) {
   });
 
   /**
+   * Return list of monitored "production" cameras
+   */
+  app.get('/api/monitoredCameras', async (req, res) => {
+    logger.info('GET monitoredCameras');
+    const prodTypesCheck = config.prodTypes.split(',').map(x => `type='${x}'`).join(' or ');
+    const sqlStr = `select latitude, longitude from cameras where locationid in
+                     (select locationid from sources where dormant = 0 and (${prodTypesCheck}))`;
+    const dbRes = await db.query(sqlStr);
+    res.status(200).send(dbRes).end();
+  });
+
+  /**
    * Get URL for image from given camera at given time.
    * This code could work directly from the client, except browser CORS restrictions prevent fetching image archives
    */
