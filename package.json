@@ -71,7 +71,7 @@
           "src/v2/**/*.mjs"
         ],
         "rules": {
-          "no-console": "error"
+          "no-console": "warn"
         }
       }
     ]
