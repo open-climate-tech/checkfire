@@ -44,7 +44,15 @@ async function initServices(app, done) {
 
   const redirects = ['/authenticated', '/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected', '/login', '/register', '/v2/wildfirecheck'];
   redirects.forEach(redirectUrl => {
-    app.get(redirectUrl, (req,res) => {res.redirect('/wildfirecheck/?redirect=' + redirectUrl);});
+    app.get(redirectUrl, (req,res) => {
+      let params = [];
+      Object.keys(req.query).forEach(key => {
+        params.push(`${key}=${req.query[key]}`)
+      });
+      const paramsStr = params.length ? `?${params.join('&')}` : '';
+      const newUrl = `/wildfirecheck/?redirect=${redirectUrl}${encodeURIComponent(paramsStr)}`;
+      res.redirect(newUrl);
+    });
   });
   done();
 }
