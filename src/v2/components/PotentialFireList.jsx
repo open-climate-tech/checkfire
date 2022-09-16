@@ -24,6 +24,7 @@
 //   - Implement adaptive/mobile version.
 
 import React, {useCallback, useEffect, useRef, useState} from 'react'
+import Notification from 'react-web-notification'
 
 import Duration from '../modules/Duration.mjs'
 
@@ -34,6 +35,14 @@ import isPolygonWithinRegion from '../modules/isPolygonWithinRegion.mjs'
 import parseRegion from '../modules/parseRegion.mjs'
 
 import FireList from './FireList.jsx'
+
+const ShouldNotify = {
+  MIN_INTERVAL_SECONDS: 30,
+  MAX_RECENT_NOTIFICATIONS: 2,
+  MAX_RECENT_SECONDS: 5 * 60,
+  // XXX: Used to instantiate empty Notification to track window activity.
+  NO_NOTIFICATION: {}
+}
 
 const TIMESTAMP_LIMIT = 2 * Duration.HOUR
 
@@ -52,6 +61,8 @@ export default function PotentialFireList(props) {
   const [includesAllFires, setIncludesAllFires] = useState(false)
   const [indexOfOldFires, setIndexOfOldFires] = useState(-1)
   const [region, setRegion] = useState(null)
+  const [shouldNotify, setShouldNotify] = useState(false)
+  const [notification, setNotification] = useState(ShouldNotify.NO_NOTIFICATION)
 
   const allFiresRef = useRef([])
   const eventSourceRef = useRef()
@@ -69,6 +80,56 @@ export default function PotentialFireList(props) {
     setIndexOfOldFires(index)
   }, [])
 
+  const handleNotification = useCallback(() => {
+    if (!shouldNotify) {
+      return setNotification(ShouldNotify.NO_NOTIFICATION)
+    }
+
+    const {current: allFires} = allFiresRef
+    const fire = allFires[0]
+    const {
+      camInfo: {cameraName, cameraDir = 'UNKNOWN'},
+      isRealTime, notified = false, timestamp
+    } = fire
+
+    if (notified || !isRealTime) {
+      return report('Failed precondition: `fire` should be real-time and shouldn’t be notified')
+    }
+
+    // -------------------------------------------------------------------------
+    // Prevent notifications from appearing too frequently.
+
+    const notifiedFires = allFires.filter((x) => x.isRealTime && x.notified)
+    const mru = notifiedFires.length > 0 ? notifiedFires[0].timestamp : 0
+
+    // At least MIN_INTERVAL_SECONDS between notifications.
+    if (timestamp - mru <= ShouldNotify.MIN_INTERVAL_SECONDS) {
+      return setNotification(ShouldNotify.NO_NOTIFICATION)
+    }
+
+    const timestampLimit = timestamp - ShouldNotify.MAX_RECENT_SECONDS
+    const recentlyNotifiedFires = notifiedFires.filter((x) => x.timestamp > timestampLimit)
+
+    // At most MAX_RECENT_NOTIFICATIONS every MAX_RECENT_SECONDS.
+    if (recentlyNotifiedFires.length >= ShouldNotify.MAX_RECENT_NOTIFICATIONS) {
+      return setNotification(ShouldNotify.NO_NOTIFICATION)
+    }
+
+    // -------------------------------------------------------------------------
+
+    fire.notified = true
+
+    setNotification({
+      title: 'Potential fire',
+      options: {
+        body: `Camera ${cameraName} facing ${cameraDir}`,
+        icon: '/wildfirecheck/checkfire192.png',
+        lang: 'en',
+        tag: `${timestamp}`
+      }
+    })
+  }, [shouldNotify])
+
   const handleToggleAllFires = useCallback(() => {
     const shouldIncludeAllFires = !includesAllFires
     setIncludesAllFires(shouldIncludeAllFires)
@@ -77,7 +138,7 @@ export default function PotentialFireList(props) {
 
   const handlePotentialFire = useCallback((event) => {
     const fire = JSON.parse(event.data)
-    const {croppedUrl, polygon, version} = fire
+    const {cameraID, croppedUrl, polygon, timestamp, version} = fire
 
     if (region != null && !isPolygonWithinRegion(polygon, region)) {
       return false
@@ -113,13 +174,27 @@ export default function PotentialFireList(props) {
       allFires.unshift(fire)
       allFires.sort((a, b) => b.sortId - a.sortId)
 
+      const first = allFires[0]
+      if (first != null) {
+        if (first.isRealTime && first.timestamp === timestamp && first.cameraID === cameraID) {
+          handleNotification()
+        }
+      }
+
       updateFires(includesAllFires)
     }
-  }, [includesAllFires, region, updateFires])
+  }, [handleNotification, includesAllFires, region, updateFires])
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search)
+    const notifyParam = searchParams.get('notify')
     const regionParam = searchParams.get('latLong')
+
+    if (notifyParam != null) {
+      if (/true|false/.test(notifyParam)) {
+        setShouldNotify(notifyParam === 'true')
+      }
+    }
 
     if (regionParam != null) {
       try {
@@ -154,13 +229,17 @@ export default function PotentialFireList(props) {
     return tidy
   }, [handlePotentialFire])
 
-  return <FireList
-    fires={fires}
-    firesByKey={firesByKeyRef.current}
-    indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
-    nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
-    onToggleAllFires={handleToggleAllFires}
-    region={region}
-    updateFires={updateFires}
-    {...props}/>
+  return 0,
+  <>
+    <Notification disableActiveWindow title="" {...notification}/>
+    <FireList
+      fires={fires}
+      firesByKey={firesByKeyRef.current}
+      indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
+      nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
+      onToggleAllFires={handleToggleAllFires}
+      region={region}
+      updateFires={updateFires}
+      {...props}/>
+  </>
 }
