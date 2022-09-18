@@ -253,7 +253,7 @@ export default function PotentialFireList(props) {
 
   return 0,
   <>
-    <Notification disableActiveWindow title="" {...notification}/>
+    <Notification disableActiveWindow={true} title="" {...notification}/>
     <FireList
       fires={fires}
       firesByKey={firesByKeyRef.current}
