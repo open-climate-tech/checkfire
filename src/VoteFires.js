@@ -103,7 +103,7 @@ class VoteFires extends Component {
         showProto: preferences.showProto,
       });
       // check existing potentialFires to see if they are within limits
-      if (userRegion.topLat && this.state.potentialFires && this.state.potentialFires.length) {
+      if (userRegion && userRegion.topLat && this.state.potentialFires && this.state.potentialFires.length) {
         const selectedFires = this.state.potentialFires.filter(potFire => this.isFireInRegion(potFire, userRegion));
         if (selectedFires.length !== this.state.potentialFires.length) {
           this.updateFiresAndCounts(selectedFires);

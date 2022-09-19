@@ -223,6 +223,10 @@ export default function PotentialFireList(props) {
         }
       }
 
+      if (nextState.region && nextState.region.north === 0 && nextState.region.south === 0 && nextState.region.east === 0 && nextState.region.west === 0) {
+        nextState.region = null;
+      }
+
       setRegion(nextState.region)
       setShouldNotify(nextState.shouldNotify)
     })
