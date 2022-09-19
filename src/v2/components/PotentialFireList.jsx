@@ -155,7 +155,7 @@ export default function PotentialFireList(props) {
       return window.location.reload()
     }
 
-    const {current: allFires} = allFiresRefx
+    const {current: allFires} = allFiresRef
     const {current: firesByKey} = firesByKeyRef
     const key = getCameraKey(fire)
 
