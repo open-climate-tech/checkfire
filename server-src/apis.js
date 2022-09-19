@@ -322,19 +322,6 @@ function initApis(config, app, db) {
   });
 
   /**
-   * Still here to support older web clients
-   * TODO: delete
-   * Return the geographical region on interest (if any) saved by the user
-   */
-  app.get('/api/getRegion', async (req, res) => {
-    apiWrapper(req, res, config, 'GET getRegion', async decoded => {
-      const preferences = await oct_utils.getUserPreferences(db, decoded.email);
-      console.log('getRegion existing %s', JSON.stringify(preferences.region));
-      res.status(200).send(preferences.region).end();
-    });
-  });
-
-  /**
    * Return user preferences saved by the user
    * 1. the geographical region on interest (if any)
    * 2. webNotify
