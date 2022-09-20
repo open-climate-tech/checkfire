@@ -133,6 +133,9 @@ async function getUserPreferences(db, userID) {
       bottomLat: rawPrefs.bottomLat || rawPrefs.bottomlat || 0,
       rightLong: rawPrefs.rightLong || rawPrefs.rightlong || 0,
     }
+    if (region.topLat === 0 && region.leftLong === 0 && region.bottomLat === 0 && region.rightLong === 0) {
+      region = null;
+    }
   }
   return {
     region: region,
