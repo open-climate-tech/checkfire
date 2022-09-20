@@ -479,7 +479,11 @@ function initApis(config, app, db) {
     const sqlStr = `select latitude, longitude from cameras where locationid in
                      (select locationid from sources where dormant = 0 and (${prodTypesCheck}))`;
     const dbRes = await db.query(sqlStr);
-    res.status(200).send(dbRes).end();
+    const monitoredCameras = dbRes.map(entry => ({
+      latitude: entry['latitude'] || entry['Latitude'],
+      longitude: entry['longitude'] || entry['Longitude'],
+    }));
+    res.status(200).send(monitoredCameras).end();
   });
 
   /**
