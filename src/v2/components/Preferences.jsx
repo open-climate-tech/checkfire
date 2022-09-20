@@ -91,7 +91,8 @@ export default function Preferences(props) {
 
             const radius = calculateRadius(map, points[0].getLatLng())
             ref.markers = points.map((x) => {
-              const marker = L.circleMarker(x.getLatLng(), {...Props.CAMERA_RADIUS, radius}).addTo(map)
+              const opacities = calculateRadiusOpacities(x, points)
+              const marker = L.circleMarker(x.getLatLng(), {...Props.CAMERA_RADIUS, ...opacities, radius}).addTo(map)
               x.remove().addTo(map)
               return marker
             })
@@ -161,6 +162,28 @@ function calculateRadius(map, origin) {
     + Math.abs(west.x - x)
 
   return Math.round(distance / 4)
+}
+
+const DEGREES_RADIUS_SQ =
+  Math.pow((DegreesOffet.EAST + DegreesOffet.NORTH) / 2, 2)
+
+function calculateRadiusOpacities(point, points) {
+  const {lat, lng} = point.getLatLng()
+  const {length: nNearbyPoints} = points.filter((x) => {
+    const {lat: xlat, lng: xlng} = x.getLatLng()
+    const deltaLatSq = Math.pow(xlat - lat, 2)
+    const deltaLngSq = Math.pow(xlng - lng, 2)
+
+    return deltaLatSq + deltaLngSq < DEGREES_RADIUS_SQ
+  })
+
+  const opacityRatio = Math.min(4 / nNearbyPoints, 1)
+  const opacities = {
+    fillOpacity: Props.CAMERA_RADIUS.fillOpacity * opacityRatio,
+    opacity: Props.CAMERA_RADIUS.opacity * opacityRatio
+  }
+
+  return opacities
 }
 
 function getInifiniteBounds() {
