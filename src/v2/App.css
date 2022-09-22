@@ -513,6 +513,22 @@
   transform: translate(-50%, -50%);
 }
 
+/* -----------------------------------------------------------------------------
+ * Preferences
+ */
+
+.c7e-preferences {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.c7e-preferences--map {
+  height: 100%;
+  width: 100%;
+}
 
 /* -----------------------------------------------------------------------------
  * Text Input
