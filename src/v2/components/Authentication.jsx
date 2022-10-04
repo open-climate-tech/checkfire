@@ -23,6 +23,8 @@ import TextInput from './TextInput.jsx'
 import getUrl from '../modules/getUrl.mjs'
 import query from '../modules/query.mjs'
 
+const {error: report} = console
+
 /**
  * @param {Object} props
  * @param {string} props.className - A list of CSS class names.
@@ -104,6 +106,7 @@ export default function Authentication(props) {
           setMessage('Username already exists')
         } else {
           setMessage('Oops… something went wrong, please try again')
+          report(error)
         }
       }), 250) // Give user time to perceive submission and error state changes.
   }, [email, onAuthenticated, password, username])
@@ -122,14 +125,14 @@ export default function Authentication(props) {
 
   return 0,
   <Overlay onClick={onCancel}>
-    <div className="c7e-authentication">
-      <h2 className="c7e-authentication--title">{title}</h2>
+    <div className="c7e-dialog">
+      <h2 className="c7e-dialog--title">{title}</h2>
       <div className="c7e-authentication--oauth">
-        <Button className="c7e-authentication--button" icon="c7e-logomark--google-g" label="Sign in with Google" onClick={handleGoogle}/>
-        <Button className="c7e-authentication--button" icon="c7e-logomark--facebook-f" label="Sign in with Facebook" onClick={handleFacebook}/>
+        <Button className="c7e-dialog--button--fill" icon="c7e-logomark--google-g" label="Sign in with Google" onClick={handleGoogle}/>
+        <Button className="c7e-dialog--button--fill" icon="c7e-logomark--facebook-f" label="Sign in with Facebook" onClick={handleFacebook}/>
       </div>
-      <div className="c7e-authentication--divider">
-        <div className="c7e-authentication--divider-label">or</div>
+      <div className="c7e-dialog--divider">
+        <div className="c7e-dialog--divider-label">or</div>
       </div>
       <div className="c7e-authentication--tabs">
         <div className={`c7e-authentication--tab${mode === 'authentication' ? ' c7e-selected' : ''}`} onClick={() => handleMode('authentication')}>Sign in</div>
@@ -137,19 +140,19 @@ export default function Authentication(props) {
       </div>
       { mode === 'authentication' &&
         <form className="c7e-authentication--credentials" onSubmit={handleCredentials}>
-          { message && <div className="c7e-authentication--message">{message}</div> }
+          { message && <div className="c7e-dialog--message">{message}</div> }
           <TextInput name="username" id="username" autoComplete="username" placeholder="Username" onChange={handleChange}/>
           <TextInput type="password" name="password" id="current-password" autoComplete="current-password" placeholder="Password" onChange={handleChange}/>
-          <Button type="submit" disabled={disabled} className="c7e-authentication--button" label="Sign in" onClick={handleCredentials}/>
+          <Button type="submit" disabled={disabled} className="c7e-dialog--button--fill" label="Sign in" onClick={handleCredentials}/>
         </form>
       }
       { mode === 'registration' &&
         <form className="c7e-authentication--credentials" onSubmit={handleRegistration}>
-          { message && <div className="c7e-authentication--message">{message}</div> }
+          { message && <div className="c7e-dialog--message">{message}</div> }
           <TextInput name="username" id="username" autoComplete="username" placeholder="Username" onChange={handleChange}/>
           <TextInput type="password" name="password" id="new-password" autoComplete="new-password" placeholder="Password" onChange={handleChange}/>
           <TextInput type="email" name="email" id="email" autoComplete="email" placeholder="Email address for account recovery" onChange={handleChange}/>
-          <Button type="submit" disabled={disabled} className="c7e-authentication--button" label="Sign up" onClick={handleRegistration}/>
+          <Button type="submit" disabled={disabled} className="c7e-dialog--button--fill" label="Sign up" onClick={handleRegistration}/>
         </form>
       }
     </div>

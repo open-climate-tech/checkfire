@@ -33,8 +33,7 @@ export default function Button(props) {
   const classNames =
     concatClassNames(className, 'c7e-button', disabled && 'c7e-button--disabled')
 
-  return 0,
-  <button disabled={disabled} className={classNames} {...otherProps}>
+  const content =
     <div className="c7e-button--content">
       { icon &&
         <Icon className="c7e-button--icon" icon={icon}/>
@@ -43,5 +42,7 @@ export default function Button(props) {
         <span className="c7e-button--label">{label}</span>
       }
     </div>
-  </button>
+
+  const containerProps = {disabled, className: classNames, ...otherProps}
+  return React.createElement(props.href ? 'a' : 'button', containerProps, content)
 }

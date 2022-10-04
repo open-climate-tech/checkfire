@@ -28,10 +28,9 @@ import Duration from '../modules/Duration.mjs'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
 import getEventSource from '../modules/getEventSource.mjs'
+import getPreferences from '../modules/getPreferences.mjs'
 import hasAngleOfFire from '../modules/hasAngleOfFire.mjs'
 import isPolygonWithinRegion from '../modules/isPolygonWithinRegion.mjs'
-import parseRegion from '../modules/parseRegion.mjs'
-import query from '../modules/query.mjs'
 
 import FireList from './FireList.jsx'
 
@@ -185,50 +184,9 @@ export default function PotentialFireList(props) {
   }, [handleNotification, includesAllFires, region, updateFires])
 
   useEffect(() => {
-    // NOTE: We expect /api/getPreferences to 401 so we set `prefs` if the
-    // request is successful, but ignore it otherwise.
-    let prefs
-    query.get('/api/getPreferences').then((r) => (prefs = r.data)).finally(() => {
-      const searchParams = new URLSearchParams(window.location.search)
-      const notifyParam = searchParams.get('notify')
-      const regionParam = searchParams.get('latLong')
-      const nextState = {region: null, shouldNotify: null}
-
-      if (regionParam != null) {
-        try {
-          nextState.region = parseRegion(regionParam)
-        } catch (error) {
-          report(error)
-        }
-      }
-
-      if (notifyParam != null) {
-        if (/true|false/.test(notifyParam)) {
-          nextState.shouldNotify = notifyParam === 'true'
-        }
-      }
-
-      if (prefs != null) {
-        if (nextState.region == null) {
-          nextState.region = {
-            north: prefs.region.topLat,
-            south: prefs.region.bottomLat,
-            west: prefs.region.leftLong,
-            east: prefs.region.rightLong
-          }
-        }
-
-        if (nextState.shouldNotify == null) {
-          nextState.shouldNotify = prefs.webNotify
-        }
-      }
-
-      if (nextState.region && nextState.region.north === 0 && nextState.region.south === 0 && nextState.region.east === 0 && nextState.region.west === 0) {
-        nextState.region = null;
-      }
-
-      setRegion(nextState.region)
-      setShouldNotify(nextState.shouldNotify)
+    getPreferences().then(({region, shouldNotify}) => {
+      setRegion(region)
+      setShouldNotify(shouldNotify)
     })
   }, [])
 

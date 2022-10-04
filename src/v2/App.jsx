@@ -15,10 +15,12 @@
 // -----------------------------------------------------------------------------
 
 import React, {useCallback, useEffect, useState} from 'react'
+import {BrowserRouter as Router, Route} from 'react-router-dom'
 
 import AppFooter from './components/AppFooter.jsx'
 import Authentication from './components/Authentication.jsx'
 import PotentialFireList from './components/PotentialFireList.jsx'
+import Preferences from './components/Preferences.jsx'
 
 import query from './modules/query.mjs'
 
@@ -70,12 +72,27 @@ export default function App() {
     })()
   }, [updateAuthentication])
 
+  const authnProps = {
+    isAuthenticated: isAuthenticated,
+    onToggleAuthn: handleToggleAuthn
+  }
+
   return 0,
   <div className="c7e-root">
     { shouldShowAuthn &&
       <Authentication onAuthenticated={handleAuthenticated} onCancel={handleToggleAuthn} title={authnTitle}/>
     }
-    <PotentialFireList isAuthenticated={isAuthenticated} onToggleAuthn={handleToggleAuthn}/>
+    <PotentialFireList {...authnProps}/>
     <AppFooter/>
+
+    <Router>
+      <Route path="/v2/wildfirecheck/preferences" exact render={() => renderPrefs(authnProps)}/>
+    </Router>
   </div>
+}
+
+// -----------------------------------------------------------------------------
+
+function renderPrefs(props) {
+  return <Preferences {...props}/>
 }
