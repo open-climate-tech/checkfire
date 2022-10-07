@@ -17,6 +17,9 @@
 import React, {useMemo} from 'react'
 import ReactDOM from 'react-dom'
 
+import trapEvent from '../modules/trapEvent.mjs'
+import trapEvents from '../modules/trapEvents.mjs'
+
 import ButtonGroup from './ButtonGroup.jsx'
 import IconButton from './IconButton.jsx'
 import ZoomControl from './ZoomControl.jsx'
@@ -30,22 +33,16 @@ export default function PreferencesControl(props) {
     }
 
     const openPrefs = (event) => {
-      trap(event)
+      trapEvent(event)
       window.location.replace('/v2/wildfirecheck/preferences')
     }
 
-    const traps = {
-      draggable: true,
-      onContextMenu: trap,
-      onDragStart: trap,
-      onDoubleClick: trap,
-      onMouseDown: trap,
-      onTouchStart: trap
-    }
+    const types = 'onContextMenu onDragStart onDoubleClick onMouseDown onTouchStart'
+    const traps = trapEvents(types, {draggable: true})
 
     return 0,
     <div className="c7e-map--control">
-      <ButtonGroup className="c7e-map--control--zoom">
+      <ButtonGroup className="c7e-map--control--preferences">
         <IconButton icon='c7e-icon--preferences' label="Preferences" title="Preferences" onClick={openPrefs} {...traps}/>
       </ButtonGroup>
 
@@ -56,11 +53,4 @@ export default function PreferencesControl(props) {
   return container != null
     ? ReactDOM.createPortal(jsx, container)
     : jsx
-}
-
-// -----------------------------------------------------------------------------
-
-function trap(event) {
-  event.preventDefault()
-  event.stopPropagation()
 }

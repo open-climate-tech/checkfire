@@ -14,22 +14,21 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import trapEvent from '../modules/trapEvent.mjs'
+import trapEvent from './trapEvent.mjs'
 
 /**
- * @param {Object} props
- * @param {string} props.children - The content to display in the overlay.
- * @param {funciton=} props.onClick - Optional callback to be invoked when the
- *     non-content area of the overlay is clicked.
+ * Given a list of event types, returns a keyed collection of event handlers
+ * that will stop the specified types of events from otherwise being handled.
  *
- * @returns {React.Element}
+ * @param {string} types - A space-separated list of React event names (e.g.,
+ *     `'onClick onDoubleClick'`).
+ *
+ * @param {Object=} handlers - An optional keyed collection to which the
+ *     event-trapping handlers should be addded.
+ *
+ * @returns {Object} A keyed collection of callback functions that handle
+ *     the events named by `types`.
  */
-export default function Overlay(props) {
-  const {children, onClick} = props
-
-  return 0,
-  <div className="c7e-overlay" onClick={onClick}>
-    <div className="c7e-overlay--background"/>
-    <div className="c7e-overlay--content" onClick={trapEvent}>{children}</div>
-  </div>
+export default function tarpeEvents(types, handlers = {}) {
+  return types.split(/\s+/).forEach((type) => (handlers[type] = trapEvent))
 }

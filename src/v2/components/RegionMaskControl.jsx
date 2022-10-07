@@ -22,11 +22,9 @@ import trapEvents from '../modules/trapEvents.mjs'
 
 import ButtonGroup from './ButtonGroup.jsx'
 import IconButton from './IconButton.jsx'
+import ZoomControl from './ZoomControl.jsx'
 
-/**
- * @returns {React.Element}
- */
-export default function ZoomControl(props) {
+export default function RegionMaskControl(props) {
   const {container, map} = props
 
   const jsx = useMemo(() => {
@@ -34,16 +32,9 @@ export default function ZoomControl(props) {
       return null
     }
 
-    const zoomIn = (event) => {
+    const openPrefs = (event) => {
       trapEvent(event)
-      map.zoomIn()
-      map.getContainer().focus()
-    }
-
-    const zoomOut = (event) => {
-      trapEvent(event)
-      map.zoomOut()
-      map.getContainer().focus()
+      window.location.replace('/v2/wildfirecheck/preferences')
     }
 
     const types = 'onContextMenu onDragStart onDoubleClick onMouseDown onTouchStart'
@@ -51,10 +42,11 @@ export default function ZoomControl(props) {
 
     return 0,
     <div className="c7e-map--control">
-      <ButtonGroup className="c7e-map--control--zoom">
-        <IconButton icon='c7e-icon--zoom-in' label="Zoom in" title="Zoom in" onClick={zoomIn} {...traps}/>
-        <IconButton icon='c7e-icon--zoom-out' label="Zoom out" title="Zoom out" onClick={zoomOut} {...traps}/>
+      <ButtonGroup className="c7e-map--control--preferences">
+        <IconButton icon='c7e-icon--select-all' label="Select all" title="Select all" onClick={openPrefs} {...traps}/>
       </ButtonGroup>
+
+      <ZoomControl map={map}/>
     </div>
   }, [map])
 

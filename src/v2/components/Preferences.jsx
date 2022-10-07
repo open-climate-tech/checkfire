@@ -25,7 +25,7 @@ import query from '../modules/query.mjs'
 import AuthnControl from './AuthnControl.jsx'
 import PreferencesPanel from './PreferencesPanel.jsx'
 import RegionMask from './RegionMask.jsx'
-import ZoomControl from './ZoomControl.jsx'
+import RegionMaskControl from './RegionMaskControl.jsx'
 
 const {error: report} = console
 
@@ -100,6 +100,14 @@ export default function Preferences(props) {
     setLink(nextHref)
   }, [ref])
 
+  const handleSelectRegion = useCallback(() => {
+    const {cameras, map} = ref
+    ref.bounds = calculateBounds(map, cameras)
+    setBounds(ref.bounds)
+    map.fitBounds(ref.bounds, Props.SET_VIEW)
+    updateLink(prefs)
+  }, [prefs, ref, updateLink])
+
   const handleRegionUpdate = useCallback((westX, northY, eastX, southY) => {
     const {map} = ref
     const {lat: south, lng: west} = mapPixelsToAngles(map, westX, southY)
@@ -158,7 +166,7 @@ export default function Preferences(props) {
       let nextBounds
 
       if (cameras.value != null) {
-        const {data} = cameras.value
+        const {data} = ref.cameras = cameras.value
 
         if (ref.points != null) {
           ref.points.forEach((x) => x.remove())
@@ -270,7 +278,7 @@ export default function Preferences(props) {
     <AuthnControl
       container={ref.authnControlDiv} map={ref.map}
       isAuthenticated={isAuthenticated} onToggleAuthn={onToggleAuthn}/>
-    <ZoomControl container={ref.zoomControlDiv} map={ref.map}/>
+    <RegionMaskControl container={ref.zoomControlDiv} map={ref.map} onSelectRegion={handleSelectRegion}/>
     <RegionMask bounds={bounds} container={ref.regionMaskDiv} live={ref} map={ref.map} onResize={handleRegionUpdate}/>
   </div>
 }
