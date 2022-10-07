@@ -19,6 +19,10 @@
  * Checkfire (c7e)
  */
 
+strong {
+  font-weight: 500;
+}
+
 .c7e-root {
   margin: 0;
   text-align: initial; /* TODO: Remove when no longer necessary. */
@@ -39,75 +43,16 @@
   right: 0;
 }
 
+.c7e-fill-width {
+  display: block;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100%;
+}
+
 /* -----------------------------------------------------------------------------
  * Authentication
  */
-
-.c7e-authentication {
-  background-color: #FFF;
-  border-radius: 8px;
-  box-shadow: 0 8px 8px rgb(0, 0, 0, 0.2);
-  padding: 20px 16px;
-  width: 320px;
-}
-
-.c7e-authentication--button {
-  display: flex;
-  justify-content: center;
-  margin: 8px 0;
-  width: 100%;
-}
-
-.c7e-authentication--cancel {
-  position: absolute;
-  right: 16px;
-  top: 16px;
-}
-
-.c7e-authentication--divider {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-  position: relative;
-  width: 100%;
-}
-
-.c7e-authentication--divider::before {
-  content: "";
-  border-top: 1px solid #E0E9FA;
-  position: absolute;
-  width: 100%;
-  top: 50%;
-  z-index: 0;
-}
-
-.c7e-authentication--divider-label {
-  background: #F6F9FE;
-  border: 1px solid #E0E9FA;
-  border-radius: 18px;
-  color: #0D57AF;
-  cursor: default;
-  display: block;
-  fill: #0D57AF;
-  font-size: 14px;
-  font-weight: 500;
-  height: 34px;
-  line-height: 30px;
-  text-align: center;
-  width: 34px;
-  z-index: 1;
-}
-
-.c7e-authentication--message {
-  background: #F6E4E5;
-  border: 1px solid #F5C2C7;
-  border-radius: 12px;
-  color: #B81414;
-  cursor: pointer;
-  display: block;
-  margin: 16px 0 8px;
-  padding: 8px 12px;
-}
 
 .c7e-authentication--tabs {
   display: flex;
@@ -155,13 +100,6 @@
   border-top-right-radius: 12px;
 }
 
-.c7e-authentication--title {
-  font-size: 19px;
-  font-weight: 500;
-  margin: 0 0 16px;
-  text-align: center;
-}
-
 /* -----------------------------------------------------------------------------
  * Button
  */
@@ -171,10 +109,8 @@
   background: #F6F9FE;
   border: 1px solid #E0E9FA;
   border-radius: 12px;
-  color: #0D57AF;
   cursor: pointer;
   display: inline-flex;
-  fill: #0D57AF;
   font-weight: 500;
   line-height: 24px;
   padding: 5px;
@@ -184,16 +120,10 @@
   cursor: auto;
 }
 
-.c7e-button.c7e-button--disabled {
-  color: rgba(13, 87, 175, 0.4);
-  cursor: default;
-  fill: rgba(13, 87, 175, 0.4);
-}
-
-.c7e-button-output.c7e-button--disabled {
-  color: rgba(68, 68, 68, 0.4);
-  cursor: default;
-  fill: rgba(68, 68, 68, 0.4);
+.c7e-button.c7e-button--disabled,
+.c7e-button-output.c7e-button--disabled,
+.c7e-button.c7e-button--disabled.c7e-button--fire {
+  opacity: 0.5;
 }
 
 .c7e-button-group {
@@ -220,10 +150,12 @@
 }
 
 .c7e-button--content {
+  color: #0D57AF;
   display: inline-flex;
+  fill: #0D57AF;
 }
 
-.c7e-button--fire {
+.c7e-button--fire > .c7e-button--content {
   color: #B81414;
   fill: #C51616;
 }
@@ -254,6 +186,121 @@
   fill: #444;
   padding: 0;
 }
+
+/* -----------------------------------------------------------------------------
+ * Dialog
+ */
+
+ .c7e-dialog {
+   background-color: #FFF;
+   border-radius: 8px;
+   box-shadow: 0 8px 8px rgb(0, 0, 0, 0.2);
+   font-size: 15px;
+   padding: 20px 16px;
+   text-align: left;
+   width: 288px;
+   z-index: 1000;
+ }
+
+ .c7e-dialog.c7e-dialog--is-folded {
+   height: 40px;
+   padding: 8px;
+   width: 40px;
+ }
+
+ .c7e-dialog.c7e-dialog--is-folded > .c7e-dialog--title {
+   color: #444;
+   font-size: 15px;
+   line-height: 24px;
+   margin: 0;
+ }
+
+ .c7e-dialog--button {
+   display: inline-flex;
+   justify-content: center;
+   margin: 8px 0 0 8px;
+ }
+
+ .c7e-dialog--button:first-child {
+   margin-left: 0;
+ }
+
+ .c7e-dialog--button.c7e-fill-width {
+   margin: 8px 0;
+ }
+
+ .c7e-dialog--button--fill {
+   display: flex;
+   justify-content: center;
+   margin: 8px 0;
+   width: 100%;
+ }
+
+ .c7e-dialog--button-row {
+   display: flex;
+   justify-content: space-between;
+   margin: 24px 0 0 0;
+   position: relative;
+   width: 100%;
+ }
+
+ .c7e-dialog--divider {
+   display: flex;
+   justify-content: center;
+   margin: 20px 0;
+   position: relative;
+   width: 100%;
+ }
+
+ .c7e-dialog--divider::before {
+   content: "";
+   border-top: 1px solid #E0E9FA;
+   position: absolute;
+   width: 100%;
+   top: 50%;
+   z-index: 0;
+ }
+
+ .c7e-dialog--fold {
+   position: absolute;
+   left: 8px;
+   top: 8px;
+ }
+
+ .c7e-dialog--divider-label {
+   background: #F6F9FE;
+   border: 1px solid #E0E9FA;
+   border-radius: 18px;
+   color: #0D57AF;
+   cursor: default;
+   display: block;
+   fill: #0D57AF;
+   font-size: 14px;
+   font-weight: 500;
+   height: 34px;
+   line-height: 30px;
+   text-align: center;
+   width: 34px;
+   z-index: 1;
+ }
+
+ .c7e-dialog--message {
+   background: #F6E4E5;
+   border: 1px solid #F5C2C7;
+   border-radius: 12px;
+   color: #B81414;
+   cursor: pointer;
+   display: block;
+   margin: 16px 0 8px;
+   padding: 8px 12px;
+ }
+
+ .c7e-dialog--title {
+   font-size: 19px;
+   font-weight: 500;
+   margin: 0 0 16px;
+   text-align: center;
+ }
 
 /* -----------------------------------------------------------------------------
  * Fire
@@ -398,6 +445,7 @@
 .c7e-map--control {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
 .c7e-map--control > .c7e-icon-button {
@@ -441,12 +489,6 @@
 .c7e-map--control > .c7e-button-group > .c7e-icon-button:last-child {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
-}
-
-.c7e-map--control--zoom {
-  position: absolute;
-  bottom: 35px;
-  right: 0;
 }
 
 .c7e-map--multicamera-badge {
@@ -521,13 +563,397 @@
   bottom: 0;
   left: 0;
   position: absolute;
-  top: 0;
   right: 0;
+  top: 0;
 }
 
 .c7e-preferences--map {
   height: 100%;
   width: 100%;
+}
+
+.c7e-preferences--map > .leaflet-control-container > .leaflet-top.leaflet-left,
+.c7e-preferences--map > .leaflet-control-container > .leaflet-top.leaflet-left > .leaflet-control {
+  height: 100%;
+  margin: 0;
+  width: 100%;
+  z-index: 500;
+}
+
+.c7e-preferences-panel {
+  left: 10px;
+  position: absolute;
+  top: 10px;
+}
+
+.c7e-preferences-panel--region-mask-instructions {
+  display: flex;
+  font-size: 12px;
+}
+
+.c7e-preferences-panel--region-mask-instructions > div:last-child {
+  margin-left: 12px;
+}
+
+.c7e-preferences-panel--region-mask-instructions > div > p:first-child {
+  margin-top: 0;
+}
+
+.c7e-preferences-panel--region-mask-instructions > div > p:last-child {
+  margin-bottom: 0;
+}
+
+/* -----------------------------------------------------------------------------
+ * Region Mask
+ */
+
+.c7e-region-mask {
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.c7e-region-mask--north,
+.c7e-region-mask--northeast,
+.c7e-region-mask--east,
+.c7e-region-mask--southeast,
+.c7e-region-mask--south,
+.c7e-region-mask--southwest,
+.c7e-region-mask--west,
+.c7e-region-mask--northwest {
+  background-color: rgba(0, 0, 0, 0.2);
+  bottom: 0;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.c7e-region-mask--northeast,
+.c7e-region-mask--southeast,
+.c7e-region-mask--southwest,
+.c7e-region-mask--northwest {
+  z-index: 10;
+}
+
+.c7e-region-mask--north {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  bottom: 67%;
+  left: 33%;
+  right: 33%;
+}
+
+.c7e-region-mask--north::before {
+  background-color: rgba(255, 255, 255, 0.5);
+  bottom: -2px;
+  content: "";
+  cursor: ns-resize;
+  height: 1px;
+  left: 0;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+.c7e-region-mask--north::after {
+  background-color: #0D57AF;
+  bottom: -6px;
+  content: "";
+  cursor: ns-resize;
+  height: 6px;
+  left: 50%;
+  position: absolute;
+  transform: translateX(-50%);
+  width: 12px;
+  z-index: 2;
+}
+
+.c7e-region-mask--north > [data-handle] {
+  bottom: -12px;
+  cursor: ns-resize;
+  height: 24px;
+  position: absolute;
+  width: 100%;
+  z-index: 3;
+}
+
+.c7e-region-mask--northeast {
+  bottom: 67%;
+  left: 67%;
+}
+
+.c7e-region-mask--northeast::before {
+  background-color: #0D57AF;
+  bottom: -11px;
+  content: "";
+  cursor: nesw-resize;
+  height: 12px;
+  left: -5px;
+  position: absolute;
+  width: 6px;
+  z-index: 1;
+}
+
+.c7e-region-mask--northeast::after {
+  background-color: #0D57AF;
+  bottom: -5px;
+  content: "";
+  cursor: nesw-resize;
+  height: 6px;
+  left: -11px;
+  position: absolute;
+  width: 12px;
+  z-index: 2;
+}
+
+.c7e-region-mask--northeast > [data-handle] {
+  bottom: -12px;
+  cursor: nesw-resize;
+  height: 24px;
+  left: -12px;
+  position: absolute;
+  width: 24px;
+  z-index: 3;
+}
+
+.c7e-region-mask--east {
+  border-left: 1px solid rgba(0, 0, 0, 0.5);
+  bottom: 33%;
+  left: 67%;
+  top: 33%;
+}
+
+.c7e-region-mask--east::before {
+  background-color: rgba(255, 255, 255, 0.5);
+  content: "";
+  cursor: ew-resize;
+  height: 100%;
+  left: -2px;
+  position: absolute;
+  width: 1px;
+  z-index: 1;
+}
+
+.c7e-region-mask--east::after {
+  background-color: #0D57AF;
+  content: "";
+  cursor: ew-resize;
+  height: 12px;
+  left: -6px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  z-index: 2;
+}
+
+.c7e-region-mask--east > [data-handle] {
+  cursor: ew-resize;
+  height: 100%;
+  left: -12px;
+  position: absolute;
+  width: 24px;
+  z-index: 3;
+}
+
+.c7e-region-mask--southeast {
+  left: 67%;
+  top: 67%;
+}
+
+.c7e-region-mask--southeast::before {
+  background-color: #0D57AF;
+  content: "";
+  cursor: nwse-resize;
+  height: 12px;
+  left: -5px;
+  position: absolute;
+  top: -11px;
+  width: 6px;
+  z-index: 1;
+}
+
+.c7e-region-mask--southeast::after {
+  background-color: #0D57AF;
+  content: "";
+  cursor: nwse-resize;
+  height: 6px;
+  left: -11px;
+  position: absolute;
+  top: -5px;
+  width: 12px;
+  z-index: 2;
+}
+
+.c7e-region-mask--southeast > [data-handle] {
+  cursor: nwse-resize;
+  height: 24px;
+  left: -12px;
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  z-index: 3;
+}
+
+.c7e-region-mask--south {
+  border-top: 1px solid rgba(0, 0, 0, 0.5);
+  left: 33%;
+  right: 33%;
+  top: 67%;
+}
+
+.c7e-region-mask--south::before {
+  background-color: rgba(255, 255, 255, 0.5);
+  content: "";
+  cursor: ns-resize;
+  height: 1px;
+  left: 0;
+  position: absolute;
+  top: -2px;
+  width: 100%;
+  z-index: 1;
+}
+
+.c7e-region-mask--south::after {
+  background-color: #0D57AF;
+  content: "";
+  cursor: ns-resize;
+  height: 6px;
+  left: 50%;
+  position: absolute;
+  top: -6px;
+  transform: translateX(-50%);
+  width: 12px;
+  z-index: 2;
+}
+
+.c7e-region-mask--south > [data-handle] {
+  cursor: ns-resize;
+  height: 24px;
+  position: absolute;
+  top: -12px;
+  width: 100%;
+  z-index: 3;
+}
+
+.c7e-region-mask--southwest {
+  right: 67%;
+  top: 67%;
+}
+
+.c7e-region-mask--southwest::before {
+  background-color: #0D57AF;
+  content: "";
+  cursor: nesw-resize;
+  height: 12px;
+  position: absolute;
+  right: -5px;
+  top: -11px;
+  width: 6px;
+  z-index: 1;
+}
+
+.c7e-region-mask--southwest::after {
+  background-color: #0D57AF;
+  content: "";
+  cursor: nesw-resize;
+  height: 6px;
+  position: absolute;
+  right: -11px;
+  top: -5px;
+  width: 12px;
+  z-index: 2;
+}
+
+.c7e-region-mask--southwest > [data-handle] {
+  cursor: nesw-resize;
+  height: 24px;
+  right: -12px;
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  z-index: 3;
+}
+
+.c7e-region-mask--west {
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  bottom: 33%;
+  right: 67%;
+  top: 33%;
+}
+
+.c7e-region-mask--west::before {
+  background-color: rgba(255, 255, 255, 0.5);
+  content: "";
+  cursor: ew-resize;
+  height: 100%;
+  position: absolute;
+  right: -2px;
+  width: 1px;
+  z-index: 1;
+}
+
+.c7e-region-mask--west::after {
+  background-color: #0D57AF;
+  content: "";
+  cursor: ew-resize;
+  height: 12px;
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  z-index: 2;
+}
+
+.c7e-region-mask--west > [data-handle] {
+  cursor: ew-resize;
+  height: 100%;
+  position: absolute;
+  right: -12px;
+  width: 24px;
+  z-index: 3;
+}
+
+.c7e-region-mask--northwest {
+  bottom: 67%;
+  right: 67%;
+}
+
+.c7e-region-mask--northwest::before {
+  background-color: #0D57AF;
+  bottom: -11px;
+  content: "";
+  cursor: nwse-resize;
+  height: 12px;
+  position: absolute;
+  right: -5px;
+  width: 6px;
+  z-index: 1;
+}
+
+.c7e-region-mask--northwest::after {
+  background-color: #0D57AF;
+  bottom: -5px;
+  content: "";
+  cursor: nwse-resize;
+  height: 6px;
+  position: absolute;
+  right: -11px;
+  width: 12px;
+  z-index: 2;
+}
+
+.c7e-region-mask--northwest > [data-handle] {
+  bottom: -12px;
+  cursor: nwse-resize;
+  height: 24px;
+  right: -12px;
+  position: absolute;
+  width: 12px;
+  z-index: 3;
 }
 
 /* -----------------------------------------------------------------------------

@@ -14,46 +14,61 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useCallback, useMemo} from 'react'
+import React, {useMemo} from 'react'
 import ReactDOM from 'react-dom'
 
 import ButtonGroup from './ButtonGroup.jsx'
 import IconButton from './IconButton.jsx'
 
-import query from '../modules/query.mjs'
-
 /**
  * @returns {React.Element}
  */
-export default function FireListMapControl(props) {
-  const {container, isAuthenticated, map, onToggleAuthn} = props
-
-  const signIn = useCallback(() => {
-    onToggleAuthn('Sign in', () => onToggleAuthn(null, null, true))
-  }, [onToggleAuthn])
-
-  const signOut = useCallback(() => {
-    query.get('/api/logout').then(() => window.location.reload())
-  }, [])
+export default function ZoomControl(props) {
+  const {container, map} = props
 
   const jsx = useMemo(() => {
-    if (container == null || map == null) {
+    if (map == null) {
       return null
+    }
+
+    const zoomIn = (event) => {
+      trap(event)
+      map.zoomIn()
+      map.getContainer().focus()
+    }
+
+    const zoomOut = (event) => {
+      trap(event)
+      map.zoomOut()
+      map.getContainer().focus()
+    }
+
+    const traps = {
+      draggable: true,
+      onContextMenu: trap,
+      onDragStart: trap,
+      onDoubleClick: trap,
+      onMouseDown: trap,
+      onTouchStart: trap
     }
 
     return 0,
     <div className="c7e-map--control">
-      { isAuthenticated
-        ? <IconButton icon='c7e-icon--sign-out' label="Sign out" title="Sign out" onClick={signOut}/>
-        : <IconButton icon='c7e-icon--sign-in' label="Sign in" title="Sign in" onClick={signIn}/>
-      }
-
       <ButtonGroup className="c7e-map--control--zoom">
-        <IconButton icon='c7e-icon--zoom-in' label="Zoom in" title="Zoom in" onClick={() => map.zoomIn()}/>
-        <IconButton icon='c7e-icon--zoom-out' label="Zoom out" title="Zoom out" onClick={() => map.zoomOut()}/>
+        <IconButton icon='c7e-icon--zoom-in' label="Zoom in" title="Zoom in" onClick={zoomIn} {...traps}/>
+        <IconButton icon='c7e-icon--zoom-out' label="Zoom out" title="Zoom out" onClick={zoomOut} {...traps}/>
       </ButtonGroup>
     </div>
-  }, [container, isAuthenticated, map, signIn, signOut])
+  }, [map])
 
-  return jsx && ReactDOM.createPortal(jsx, container)
+  return container != null
+    ? ReactDOM.createPortal(jsx, container)
+    : jsx
+}
+
+// -----------------------------------------------------------------------------
+
+function trap(event) {
+  event.preventDefault()
+  event.stopPropagation()
 }

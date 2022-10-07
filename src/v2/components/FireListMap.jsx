@@ -18,10 +18,11 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
 
 import Duration from '../modules/Duration.mjs'
 
+import AuthnControl from './AuthnControl.jsx'
 import CameraMarker from './CameraMarker.jsx'
 import DateTime from './DateTime.jsx'
-import FireListMapControl from './FireListMapControl.jsx'
 import MulticameraBadge from './MulticameraBadge.jsx'
+import PreferencesControl from './PreferencesControl.jsx'
 
 import getCameraKey from '../modules/getCameraKey.mjs'
 import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs'
@@ -106,7 +107,7 @@ export default function FireMap(props) {
   // register an event listener with cached markers, we need a stable callback
   // and list of fires (otherwise the cached markers will use stale instances of
   // these in the closure created by the React render cycle).
-  const controlRef = useRef()
+  const controlRef = useRef({})
   const expandedStackRef = useRef(null)
   const fireRef = useRef()
   const firesRef = useRef()
@@ -159,7 +160,7 @@ export default function FireMap(props) {
     })
 
     const {L} = window
-    const {current: map} = initializeMap(mapRef, controlRef, bounds)
+    const {current: map} = initializeMap(mapRef, controlRef)
     const markers = (markersRef.current = {})
     const stacks = (stacksRef.current = {})
 
@@ -218,6 +219,7 @@ export default function FireMap(props) {
         const vertices = fire.polygon.slice(0, fire.polygon.length - 1)
         markers[key].intersection = L.polygon(vertices, Props.INTERSECTING_POLYGON)
       }
+
       if (fire.sourcePolygons.length > 1) {
         markers[key].intersection = L.polygon(fire.polygon, Props.INTERSECTING_POLYGON)
       }
@@ -289,7 +291,7 @@ export default function FireMap(props) {
     const fire = fires[selectedIndex]
 
     if (fire != null && scrollingTo === -1) {
-      const {current: map} = initializeMap(mapRef, controlRef, bounds)
+      const {current: map} = initializeMap(mapRef, controlRef)
       const {current: markers} = markersRef
       const {current: stacks} = stacksRef
       const {camInfo: {latitude, longitude}} = fire
@@ -373,9 +375,10 @@ export default function FireMap(props) {
 
   return 0,
   <div className="c7e-fire-list--map" id="map">
-    <FireListMapControl
-      container={controlRef.current} map={mapRef.current}
+    <AuthnControl
+      container={controlRef.current.authn} map={mapRef.current}
       isAuthenticated={isAuthenticated} onToggleAuthn={onToggleAuthn}/>
+    <PreferencesControl container={controlRef.current.zoom} map={mapRef.current}/>
   </div>
 }
 
@@ -443,15 +446,19 @@ function getCoordinatesKey(coordinates) {
 function initializeMap(mapRef, controlRef) {
   if (mapRef.current == null) {
     const {L} = window
-    const control = L.control({position: 'topright'})
-    const controlDiv = document.createElement('div')
+    const map = mapRef.current = L.map('map', Props.MAP).setView(Props.CENTER, 8)
 
-    mapRef.current = L.map('map', Props.MAP).setView(Props.CENTER, 8)
-    mapRef.current.fitBounds(Props.BOUNDS, Props.SET_VIEW)
+    const authnControl = L.control({position: 'topright'})
+    const authnControlDiv = document.createElement('div')
+    authnControl.onAdd = () => (controlRef.current.authn = authnControlDiv)
+    authnControl.addTo(mapRef.current)
 
-    control.onAdd = () => (controlRef.current = controlDiv)
-    control.addTo(mapRef.current)
+    const zoomControl = L.control({position: 'bottomright'})
+    const zoomControlDiv = document.createElement('div')
+    zoomControl.onAdd = () => (controlRef.current.zoom = zoomControlDiv)
+    zoomControl.addTo(mapRef.current)
 
+    map.fitBounds(Props.BOUNDS, Props.SET_VIEW)
     L.tileLayer(Props.URL_TEMPLATE).addTo(mapRef.current)
   }
 

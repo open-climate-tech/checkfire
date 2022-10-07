@@ -14,15 +14,25 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useEffect, useRef} from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 
+import getPreferences from '../modules/getPreferences.mjs'
 import Duration from '../modules/Duration.mjs'
+import mapAnglesToPixels from '../modules/mapAnglesToPixels.mjs'
+import mapPixelsToAngles from '../modules/mapPixelsToAngles.mjs'
 import query from '../modules/query.mjs'
 
+import AuthnControl from './AuthnControl.jsx'
+import PreferencesPanel from './PreferencesPanel.jsx'
+import RegionMask from './RegionMask.jsx'
+import ZoomControl from './ZoomControl.jsx'
+
+const {error: report} = console
+
 const Props = {
-  // Begin with the map centered Santa Barabara, CA. As soon as the API returns
-  // a list of camera positions, reposition the map to accommodate the bounds
-  // occupied by the cameras.
+  // Begin with the map centered on Santa Barabara, CA. As soon as the API
+  // returns a list of camera positions or a user-preferred region, reposition
+  // the map to accommodate the new bounds.
   CENTER: [34.3987, -119.8199],
   CAMERA: {
     color: '#c00',
@@ -42,7 +52,7 @@ const Props = {
   },
   MAP: {
     zoomAnimationThreshold: 18,
-    zoomControl: true
+    zoomControl: false
   },
   TILE_LAYER: {
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -68,47 +78,200 @@ const DegreesOffet = {
  * @returns {React.Element}
  */
 export default function Preferences(props) {
-  const stateRef = useRef({})
+  const {isAuthenticated, onToggleAuthn} = props
+
+  const [bounds, setBounds] = useState()
+  const [link, setLink] = useState(getDefaultHref())
+  const [message, setMessage] = useState('')
+  const [prefs, setPrefs] = useState({})
+
+  const {current: ref} = useRef({})
+
+  const handleCancel = useCallback(() => {
+    window.location.replace(getDefaultHref())
+  }, [])
+
+  const updateLink = useCallback((prefs) => {
+    const [[south, west], [north, east]] = ref.bounds
+    const latLong = [south, north, west, east].map((x) => x.toFixed(3)).join(',')
+    const notify = !!prefs.shouldNotify
+    const nextHref = `${getDefaultHref()}?latLong=${latLong}&notify=${notify}`
+
+    setLink(nextHref)
+  }, [ref])
+
+  const handleRegionUpdate = useCallback((westX, northY, eastX, southY) => {
+    const {map} = ref
+    const {lat: south, lng: west} = mapPixelsToAngles(map, westX, southY)
+    const {lat: north, lng: east} = mapPixelsToAngles(map, eastX, northY)
+
+    ref.bounds = [[south, west], [north, east]]
+    ref.pixels = {westX, northY, eastX, southY}
+
+    updateLink(prefs)
+  }, [prefs, ref, updateLink])
+
+  const handleSave = useCallback(() => {
+    function call() {
+      const [[south, west], [north, east]] = ref.bounds
+      const region = {topLat: north, leftLong: west, bottomLat: south, rightLong: east}
+      const webNotify = {webNotify: prefs.shouldNotify}
+
+      const requests = [
+        query.post('/api/setRegion', region),
+        query.post('/api/setWebNotify', webNotify)
+      ]
+
+      return Promise.all(requests)
+    }
+
+    function callback() {
+      handleCancel()
+    }
+
+    // TODO: Complete error handling. Allow some errors to go uncaught for now
+    // as they will be logged to the Console.
+    call().then(callback).catch((error) => {
+      if (error.status === 401) {
+        // Unauthorized. Ask the user to sign in.
+        const fn = () => (call().finally(callback), onToggleAuthn(null, null, true))
+        onToggleAuthn('Sign in to save preferences', fn)
+      } else {
+        setMessage('Oops… something went wrong, please try again')
+        report(error)
+      }
+    })
+  }, [handleCancel, onToggleAuthn, prefs.shouldNotify, ref])
+
+  const handleUpdate = useCallback((data) => {
+    const nextPrefs = {...prefs, ...data}
+    setPrefs(nextPrefs)
+    updateLink(nextPrefs)
+  }, [prefs, updateLink])
 
   useEffect(() => {
     const {L} = window
-    const ref = initializeMap(stateRef.current)
-    const {map} = ref
+    const map = initializeMap(ref)
 
-    query.get('/api/monitoredCameras').then(({data}) => {
-      if (ref.points != null) {
-        ref.points.forEach((x) => x.remove())
+    const promises = [query.get('/api/monitoredCameras'), getPreferences()]
+    Promise.allSettled(promises).then(([cameras, prefs]) => {
+      let nextBounds
+
+      if (cameras.value != null) {
+        const {data} = cameras.value
+
+        if (ref.points != null) {
+          ref.points.forEach((x) => x.remove())
+        }
+
+        ref.points = data.map(({latitude: lat, longitude: lng}) => {
+          return L.circleMarker([lat, lng], Props.CAMERA).addTo(map)
+        })
+
+        nextBounds = calculateBounds(map, data)
       }
 
-      map.on({
-        zoom: () => {
-          const {markers, points} = ref
+      if (prefs.value != null) {
+        setPrefs(prefs.value)
 
-          if (points != null && points.length > 0) {
-            if (markers != null) {
-              markers.forEach((x) => x.remove())
-            }
-
-            const radius = calculateRadius(map, points[0].getLatLng())
-            ref.markers = points.map((x) => {
-              const opacities = calculateRadiusOpacities(x, points)
-              const marker = L.circleMarker(x.getLatLng(), {...Props.CAMERA_RADIUS, ...opacities, radius}).addTo(map)
-              x.remove().addTo(map)
-              return marker
-            })
-          }
+        if (prefs.value.region != null) {
+          const {region: {east, north, south, west}} = prefs.value
+          nextBounds = [[south, west], [north, east]]
         }
-      })
+      }
 
-      ref.points = data.map(({latitude: lat, longitude: lng}) => L.circleMarker([lat, lng], Props.CAMERA).addTo(map))
-      setTimeout(() => map.fitBounds(calculateBounds(map, data), Props.SET_VIEW), 250)
+      if (nextBounds == null) {
+        if (prefs.reason != null) {
+          prefs.reason.message = `Failed to determine preferred region: ${prefs.reason.message}`
+          throw prefs.reason
+        }
+
+        if (cameras.reason != null) {
+          cameras.reason.message = `Failed to determine default region: ${cameras.reason.message}`
+          throw cameras.reason
+        }
+      }
+
+      setBounds(nextBounds)
+      setTimeout(() => map.fitBounds(nextBounds, Props.SET_VIEW), 250)
     })
-    return () => map.off('zoom')
- }, [])
+  }, [ref])
+
+  useEffect(() => {
+    const {L} = window
+    const map = initializeMap(ref)
+
+
+    const handlers = {
+      moveend: () => {
+        // Stash the latest bounds after the user stops moving the map.
+        const {westX = 0, northY = 0, eastX = 0, southY = 0} = ref.pixels || {}
+        handleRegionUpdate(westX, northY, eastX, southY)
+      },
+      zoomend: () => {
+        const {markers, points} = ref
+
+        if (points != null && points.length > 0) {
+          if (markers != null) {
+            markers.forEach((x) => x.remove())
+          }
+
+          const radius = calculateRadius(map, points[0].getLatLng())
+
+          ref.markers = points.map((x) => {
+            const opacities = calculateRadiusOpacities(x, points)
+            const props = {...Props.CAMERA_RADIUS, ...opacities, radius}
+            const marker = L.circleMarker(x.getLatLng(), props).addTo(map)
+
+            x.remove().addTo(map)
+
+            return marker
+          })
+        }
+
+        if (bounds != null) {
+          if (ref.pixels == null) {
+            // Initialize coordinates on first zoom triggered by `fitBounds()`.
+            const [[south, west], [north, east]] = bounds
+            const {x: eastX, y: northY} = mapAnglesToPixels(map, north, east)
+            const {x: westX, y: southY} = mapAnglesToPixels(map, south, west)
+
+            ref.bounds = [[south, west], [north, east]]
+            ref.pixels = {westX, northY, eastX, southY}
+          }
+
+          // Stash the latest bounds after the map stops zooming.
+          const {westX = 0, northY = 0, eastX = 0, southY = 0} = ref.pixels || {}
+          handleRegionUpdate(westX, northY, eastX, southY)
+        }
+      }
+    }
+
+    map.on(handlers)
+    return () => map.off(handlers)
+  }, [bounds, handleRegionUpdate, ref])
+
+  const panelProps = {
+    isAuthenticated,
+    link: link,
+    map: ref.map,
+    message: message,
+    onCancel: handleCancel,
+    onSave: handleSave,
+    onToggleAuthn,
+    onUpdate: handleUpdate,
+    prefs: prefs
+  }
 
   return 0,
   <div className="c7e-preferences">
     <div className="c7e-preferences--map" id="preferences-map"/>
+    <PreferencesPanel {...panelProps}/>
+    <AuthnControl
+      container={ref.authnControlDiv} map={ref.map}
+      isAuthenticated={isAuthenticated} onToggleAuthn={onToggleAuthn}/>
+    <ZoomControl container={ref.zoomControlDiv} map={ref.map}/>
+    <RegionMask bounds={bounds} container={ref.regionMaskDiv} live={ref} map={ref.map} onResize={handleRegionUpdate}/>
   </div>
 }
 
@@ -186,6 +349,14 @@ function calculateRadiusOpacities(point, points) {
   return opacities
 }
 
+function getDefaultHref() {
+  const {href, pathname} = window.location
+  const nextPathname = pathname.split('/').filter((x) => x !== 'preferences').join('/')
+  const nextHref = href.replace(pathname, nextPathname)
+
+  return nextHref
+}
+
 function getInifiniteBounds() {
   return [[Infinity, Infinity], [-Infinity, -Infinity]]
 }
@@ -193,10 +364,26 @@ function getInifiniteBounds() {
 function initializeMap(ref) {
   if (ref.map == null) {
     const {L} = window
-    ref.map = L.map('preferences-map', Props.MAP).setView(Props.CENTER, 6)
-    L.control.scale().addTo(ref.map)
-    L.tileLayer(Props.URL_TEMPLATE, Props.TILE_LAYER).addTo(ref.map)
+    const map = ref.map = L.map('preferences-map', Props.MAP).setView(Props.CENTER, 6)
+
+    const regionMask = L.control({position: 'topleft'})
+    const regionMaskDiv = document.createElement('div')
+    regionMask.onAdd = () => (ref.regionMaskDiv = regionMaskDiv)
+    regionMask.addTo(map)
+
+    const authnControl = L.control({position: 'topright'})
+    const authnControlDiv = document.createElement('div')
+    authnControl.onAdd = () => (ref.authnControlDiv = authnControlDiv)
+    authnControl.addTo(map)
+
+    const zoomControl = L.control({position: 'bottomright'})
+    const zoomControlDiv = document.createElement('div')
+    zoomControl.onAdd = () => (ref.zoomControlDiv = zoomControlDiv)
+    zoomControl.addTo(map)
+
+    L.control.scale().addTo(map)
+    L.tileLayer(Props.URL_TEMPLATE, Props.TILE_LAYER).addTo(map)
   }
 
-  return ref
+  return ref.map
 }
