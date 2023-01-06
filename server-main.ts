@@ -18,6 +18,7 @@
 'use strict';
 // UI backend server
 
+import { Request, Response, NextFunction } from 'express';
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -31,14 +32,14 @@ const logger = oct_utils.getLogger('main');
 const app = express();
 
 // Setup express middle-ware to log requests and allow CORS for dev environments
-app.use(function (req, res, next) {
+app.use(function (req: Request, res: Response, next: NextFunction) {
   const headers = Object.assign({}, req.headers);
   headers.url = req.originalUrl || req.url;
   logger.info('request Headers: %s', JSON.stringify(headers));
   if (process.env.NODE_ENV === 'development') {
     // Permissive CORS to allow for testing with server on differnt port
     if (req.header('origin')) {
-      res.setHeader("Access-Control-Allow-Origin", req.header('origin'));
+      res.setHeader("Access-Control-Allow-Origin", req.header('origin') || '');
     }
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Access-Control-Allow-Headers","origin, content-type, accept");
@@ -52,7 +53,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Redirect http to https
-app.use(function(req, res, next) {
+app.use(function(req: Request, res: Response, next: NextFunction) {
   if(req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === "http") {
     return res.redirect(['https://', req.get('Host'), req.url].join(''));
   }
