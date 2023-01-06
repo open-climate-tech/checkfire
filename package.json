@@ -39,11 +39,11 @@
     "winston": "^3.3.4"
   },
   "scripts": {
-    "start": "node server-main.js",
+    "start": "node dist/server-main.js",
     "dev": "npm run dev-server & ; npm run dev-client",
     "dev-client": "REACT_APP_BE_PORT=3141 react-scripts start",
     "dev-server": "NODE_ENV=development node server-main.js",
-    "build": "react-scripts build",
+    "build": "tsc && react-scripts build",
     "// Use `npm test` for cicd pipelines": 0,
     "test": "export CI=true ; npm run test-client-components ; npm run test-client-modules ; npm run test-server",
     "// Use `npm run test-all` for local development": 0,
@@ -89,7 +89,10 @@
     ]
   },
   "devDependencies": {
+    "@types/express": "^4.17.15",
+    "@types/node": "^18.11.18",
     "chai-http": "^4.3.0",
-    "mocha": "^9.2.1"
+    "mocha": "^9.2.1",
+    "typescript": "^4.9.4"
   }
 }

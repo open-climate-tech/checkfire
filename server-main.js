@@ -60,11 +60,13 @@ app.use(function(req, res, next) {
 });
 
 // static webpage for /
-app.use('/', express.static(path.join(__dirname, 'webroot')));
+const projRootDir = path.dirname(__dirname);
+
+app.use('/', express.static(path.join(projRootDir, 'webroot')));
 // react app for /wildfirecheck
-app.use('/wildfirecheck', express.static(path.join(__dirname, 'build')));
-app.use('/static', express.static(path.join(__dirname, 'build/static')));
-app.use('/img', express.static(path.join(__dirname, 'build/img')));
+app.use('/wildfirecheck', express.static(path.join(projRootDir, 'build')));
+app.use('/static', express.static(path.join(projRootDir, 'build/static')));
+app.use('/img', express.static(path.join(projRootDir, 'build/img')));
 
 // initialize dyanmic services
 services.initServices(app, () => {
