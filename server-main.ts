@@ -29,6 +29,7 @@ const services = require('./server-src/services')
 
 const logger = oct_utils.getLogger('main');
 
+require('source-map-support').install();
 const app = express();
 
 // Setup express middle-ware to log requests and allow CORS for dev environments
