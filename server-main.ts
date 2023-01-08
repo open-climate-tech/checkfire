@@ -22,7 +22,7 @@ import { Request, Response, NextFunction } from 'express';
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const helmet = require('helmet');
+import helmet from 'helmet';
 const path = require('path');
 const oct_utils = require('./server-src/oct_utils');
 const services = require('./server-src/services')
@@ -49,6 +49,36 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
 });
 
 app.use(helmet());
+// setup CSP
+const trusted = [
+  "'self'",
+];
+if (process.env.NODE_ENV === 'development') {
+  trusted.push('http://localhost:*');
+}
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: trusted,
+    scriptSrc: [
+      'https://www.googletagmanager.com',
+      '*.googletagmanager.com',
+      'unpkg.com',
+    ].concat(trusted),
+    styleSrc: [
+      "'unsafe-inline'",
+      '*.w3schools.com',
+      'cdnjs.cloudflare.com',
+      'unpkg.com',
+    ].concat(trusted),
+    imgSrc: [
+      'www.googletagmanager.com',
+      'storage.googleapis.com',
+    ].concat(trusted),
+  },
+}));
+// allow non-CORS sites
+app.use(helmet.crossOriginEmbedderPolicy({policy: "credentialless"}));
+
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
