@@ -60,6 +60,7 @@ app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: trusted,
     scriptSrc: [
+      "'unsafe-inline'",
       'https://www.googletagmanager.com',
       '*.googletagmanager.com',
       'unpkg.com',
@@ -71,8 +72,16 @@ app.use(helmet.contentSecurityPolicy({
       'unpkg.com',
     ].concat(trusted),
     imgSrc: [
+      'data:',
       'www.googletagmanager.com',
       'storage.googleapis.com',
+      '*.openstreetmap.org',
+    ].concat(trusted),
+    mediaSrc: [
+      'storage.googleapis.com',
+    ].concat(trusted),
+    connectSrc: [
+      'www.google-analytics.com',
     ].concat(trusted),
   },
 }));
