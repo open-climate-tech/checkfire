@@ -15,7 +15,6 @@
 // -----------------------------------------------------------------------------
 
 import React, {useCallback, useEffect, useState} from 'react'
-import {BrowserRouter as Router, Route} from 'react-router-dom'
 
 import AppFooter from './components/AppFooter.jsx'
 import Authentication from './components/Authentication.jsx'
@@ -26,7 +25,7 @@ import query from './modules/query.mjs'
 
 import './App.css'
 
-export default function App() {
+export default function App(props) {
   const [authnTitle, setAuthnTitle] = useState()
   const [handleAuthenticated, setHandleAuthenticated] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -85,14 +84,6 @@ export default function App() {
     <PotentialFireList {...authnProps}/>
     <AppFooter/>
 
-    <Router>
-      <Route path="/v2/wildfirecheck/preferences" exact render={() => renderPrefs(authnProps)}/>
-    </Router>
+    {props.prefs && (<Preferences {...props} />)}
   </div>
-}
-
-// -----------------------------------------------------------------------------
-
-function renderPrefs(props) {
-  return <Preferences {...props}/>
 }

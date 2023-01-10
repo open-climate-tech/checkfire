@@ -18,29 +18,17 @@
 // Prototype pages still under development
 
 import React, { Component } from "react";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-} from "react-router-dom";
-import PotentialFires from './PotentialFires';
-import ConfirmedFires from './ConfirmedFires';
+import {Link} from "react-router-dom";
 
 class Prototypes extends Component {
   render() {
     return (
-      <Router>
+      <div>
         <h1>
           Prototypes
         </h1>
-        <Link to='/potential'><li>Original Potential Fires</li></Link>
         <Link to='/confirmed'><li>Confirmed Fires</li></Link>
-        <Switch>
-          <Route path="/potential" exact component={PotentialFires} />
-          <Route path="/confirmed" exact component={ConfirmedFires} />
-        </Switch>
-      </Router>
+      </div>
     );
   }
 }

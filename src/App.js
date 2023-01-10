@@ -17,13 +17,13 @@
 
 // React frontend
 
-import React, { Component } from "react";
+import React, {useEffect, useState} from "react";
 import {
   BrowserRouter as Router,
-  Switch,
+  Routes,
   Route,
   Link,
-  Redirect,
+  useNavigate,
   useLocation
 } from "react-router-dom";
 import './App.css';
@@ -59,6 +59,8 @@ const LEGACY_PATHS = [
 ]
 
 function FirePagesHeader(props) {
+  const navigate = useNavigate();
+
   async function logout() {
     const serverUrl = getServerUrl('/api/logout');
     const logoutResp = await serverGet(serverUrl);
@@ -70,6 +72,14 @@ function FirePagesHeader(props) {
   }
   const myLoc = useLocation();
   const myPath = myLoc.pathname;
+
+  async function login() {
+    navigate({
+      pathname: '/login',
+      search: `?fwdPath=${myPath}`,
+    });
+  }
+
   return (<div>
     <div className="w3-bar w3-wide w3-padding w3-card">
       <div className="w3-col s3 w3-button w3-block">
@@ -87,81 +97,93 @@ function FirePagesHeader(props) {
             Sign off
           </button>
         :
-        <Link to={{ pathname: '/login', query: {fwdPath: myPath} }}>Sign in</Link>
+          <button className={"w3-black w3-round-large"} onClick={() => login()}>
+            Sign in
+          </button>
       }
       </div>
     </div>
   </div>);
 }
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      validCookie: false
-    };
-  }
+function RedirectTo(props) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (props.path && props.path.length) {
+      console.log('redirecting to ', props.path);
+      navigate(props.path);
+      props.setRedirectPath('');
+    }
+  }, [navigate, props, props.path]);
+  return null;
+}
 
-  async checkCookie() {
+export default function App(props) {
+  const [validCookie, setValidCookie] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('');
+
+  const checkCookie = async function() {
     const serverUrl = getServerUrl('/api/checkAuth');
     const authResp = await serverGet(serverUrl);
     const authText = await authResp.text();
     console.log('checkAuth resp', authText);
-    this.setState({
-      validCookie: authText === 'success',
-    });
+    setValidCookie(authText === 'success');
   }
 
-  componentDidMount() {
-    this.checkCookie();
+  useEffect(() => {
+    checkCookie();
+  }, []);
+
+  useEffect(() => {
     const queryParams = qs.parse(window.location.search, {ignoreQueryPrefix: true});
-    // console.log('qp', queryParams);
+    // console.log('app UE qp', queryParams);
     if (queryParams.redirect && (queryParams.redirect[0] === '/')) {
       console.log('redirecting to ', queryParams.redirect);
-      this.setState({redirect: queryParams.redirect});
-      return;
+      setRedirectPath(queryParams.redirect);
     }
-  }
+  }, []);
 
-  render() {
-    return (
-      <div className="App">
-        <Router>
-          {
-            (this.state.redirect && <Redirect to={this.state.redirect} />)
-          }
-          <Route path={LEGACY_PATHS} exact>
-            <FirePagesHeader validCookie={this.state.validCookie} />
-          </Route>
-          <Switch>
-            <Route path="/v2/wildfirecheck" exact component={V2} />
-            <Route path="/v2/wildfirecheck/preferences" exact component={V2} />
-            <Route path="/authenticated" exact component={Authenticated} />
-            <Route path="/prototypes" exact component={Prototypes} />
-            <Route path="/login" exact render={props =>
-                    <Login />} />
-            <Route path="/register" exact render={props =>
-                    <Register />} />
-            <Route path="/confirmed" exact render={props =>
-                    <ConfirmedFires {...props} />} />
-            <Route path="/selected" exact render={props =>
-                    <SelectedFires {...props} />} />
-            <Route path="/detected" exact render={props =>
-                    <DetectedFires {...props} />} />
-            <Route path="/preferences" exact render={props =>
-                    <Preferences {...props} validCookie={this.state.validCookie} />} />
-            <Route path="/labelImage" exact render={props =>
-                    <LabelImage {...props} validCookie={this.state.validCookie} />} />
-            <Route path={["/", "/wildfirecheck"]} render={props =>
-                    <VoteFires {...props} validCookie={this.state.validCookie} />} />
-          </Switch>
-          <Route path={LEGACY_PATHS} exact>
-            <Legalese/>
-          </Route>
-        </Router>
-      </div>
-    );
-  }
+  return (
+    <div className="App">
+      <Router>
+        {redirectPath && <RedirectTo path={redirectPath} setRedirectPath={setRedirectPath} />}
+        <Routes>
+          {LEGACY_PATHS.map(p =>
+            (<Route path={p} exact key={p} element={<FirePagesHeader validCookie={validCookie} />} />)
+          )}
+          <Route path="/v2/*" exact element={<span/>} />
+        </Routes>
+        <Routes>
+          <Route path="/v2/wildfirecheck" exact element={<V2 />} />
+          <Route path="/v2/wildfirecheck/preferences" exact element={<V2 prefs={true}/>} />
+          <Route path="/authenticated" exact element={<Authenticated />} />
+          <Route path="/prototypes" exact element={<Prototypes />} />
+          <Route path="/login" exact element={
+                  <Login />} />
+          <Route path="/register" exact element={
+                  <Register />} />
+          <Route path="/confirmed" exact element={
+                  <ConfirmedFires {...props} />} />
+          <Route path="/selected" exact element={
+                  <SelectedFires {...props} />} />
+          <Route path="/detected" exact element={
+                  <DetectedFires {...props} />} />
+          <Route path="/preferences" exact element={
+                  <Preferences {...props} validCookie={validCookie} />} />
+          <Route path="/labelImage" exact element={
+                  <LabelImage {...props} validCookie={validCookie} />} />
+          <Route path="/" element={
+                  <VoteFires {...props} validCookie={validCookie} />} />
+          <Route path="/wildfirecheck" element={
+                  <VoteFires {...props} validCookie={validCookie} />} />
+        </Routes>
+        <Routes>
+          {LEGACY_PATHS.map(p =>
+            (<Route path={p} exact key={p} element={<Legalese />} />)
+          )}
+          <Route path="/v2/*" exact element={<span/>} />
+        </Routes>
+      </Router>
+    </div>
+  );
 }
-
-export default App;

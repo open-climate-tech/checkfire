@@ -55,7 +55,7 @@ function handleData(data) {
     }
   }
 
-  if (data != null) {
+  if (data != null && data.region != null) {
     if (prefs.region == null) {
       prefs.region = {
         north: data.region.topLat,

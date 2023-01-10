@@ -19,7 +19,7 @@
 
 import './Login.css';
 import React, {useState} from "react";
-import {useLocation, Link} from 'react-router-dom';
+import {useSearchParams, Link} from 'react-router-dom';
 import {getServerUrl, serverPost} from './OctReactUtils';
 
 import googleSigninImg from './btn_google_signin_dark_normal_web.png';
@@ -31,8 +31,8 @@ export default function Login(props) {
   const [password, setPassword] = useState("");
   const [errMessage, setErrMessage] = useState("");
 
-  const location = useLocation();
-  const fwdPath = (location.query && location.query.fwdPath) || '/';
+  const [searchParams] = useSearchParams();
+  const fwdPath = searchParams.get('fwdPath') || '/';
   console.log('Login fwdPath', fwdPath);
 
   async function loginPassword(event) {
