@@ -22,17 +22,17 @@ const oct_utils = require('./oct_utils');
 
 const logger = oct_utils.getLogger('gcp_storage');
 
-const {Storage} = require('@google-cloud/storage');
+import {Storage}  from '@google-cloud/storage';
 const storage = new Storage();
 
 const GS_URL_REGEXP = /^gs:\/\/([a-z0-9_.-]+)\/(.+)$/;
 
 /**
  * Parse the given string path into bucket and name if it is GCS path
- * @param {string} path 
+ * @param {string} path
  * @return {object} with bucket and name properties
  */
-function parsePath(path) {
+function parsePath(path: string) {
   const parsed = GS_URL_REGEXP.exec(path);
   if (parsed && Array.isArray(parsed)) {
     let name = parsed[2];
@@ -48,20 +48,16 @@ function parsePath(path) {
 
 /**
  * Read given GCS file and return contents as a string
- * @param {string} bucketName 
- * @param {string} srcFilename 
+ * @param {string} bucketName
+ * @param {string} srcFilename
  * @return {string} file contents
  */
-async function getData(bucketName, srcFilename) {
+async function getData(bucketName: string, srcFilename: string) {
   let response = await storage
     .bucket(bucketName)
     .file(srcFilename)
     .download();
-  if (response.err) {
-    logger.error('error', response.err);
-  } else {
-    return response.toString();
-  }
+  return response.toString();
 }
 
 exports.getData = getData;

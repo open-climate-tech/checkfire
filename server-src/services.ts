@@ -18,6 +18,8 @@
 'use strict';
 // Dyanmic services for UI backend server
 
+import {Application, Request, Response} from "express";
+
 const db_mgr = require('./db_mgr');
 const apis = require('./apis');
 const sse = require('./sse');
@@ -34,7 +36,7 @@ const logger = oct_utils.getLogger('services');
  * @param {Express} app
  * @param {function} done
  */
-async function initServices(app, done) {
+async function initServices(app: Application, done: () => void) {
   const config = await oct_utils.getConfig(gcp_storage);
   const db = await db_mgr.initDB(config);
   apis.initApis(config, app, db);
@@ -44,8 +46,8 @@ async function initServices(app, done) {
 
   const redirects = ['/authenticated', '/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected', '/login', '/register', '/v2/wildfirecheck', '/v2/wildfirecheck/preferences'];
   redirects.forEach(redirectUrl => {
-    app.get(redirectUrl, (req,res) => {
-      let params = [];
+    app.get(redirectUrl, (req: Request, res: Response) => {
+      let params: string[] = [];
       Object.keys(req.query).forEach(key => {
         params.push(`${key}=${req.query[key]}`)
       });

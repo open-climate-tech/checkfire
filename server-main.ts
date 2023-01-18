@@ -18,12 +18,12 @@
 'use strict';
 // UI backend server
 
-import { Request, Response, NextFunction } from 'express';
-const express = require('express');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
+import express, { Request, Response, NextFunction } from 'express';
+import bodyParser from 'body-parser';
 import helmet from 'helmet';
-const path = require('path');
+import path from 'path';
+
+const cookieParser = require('cookie-parser');
 const oct_utils = require('./server-src/oct_utils');
 const services = require('./server-src/services')
 
