@@ -31,33 +31,33 @@ const logger = oct_utils.getLogger('db_mgr');
  * @param {object} config
  * @return {object} db
  */
-export async function initDB(config, useSocket=false) {
-  let db = {};
-  if (config.db_file) {
-    // SQLite
-    db.dbType = 'sqlite';
-    db.sqlite = new sqlite3.Database(config.db_file, sqlite3.OPEN_READWRITE, (err) => {
-      if (err) {
-        logger.error(err.message);
-      }
-      logger.info('Using sqlite %s', config.db_file);
-    });
-  } else if (config.psqlHost) {
-    // Postgres
-    db.dbType = 'psql';
-    // initialize a pool
-    db.pool = new Pool({
-      host: useSocket ? config.psqlSocket : config.psqlHost,
-      database: config.psqlDb,
-      user: config.psqlUser,
-      password: config.psqlPasswd
-    });
-    db.pool.on('error', (err, client) => {
-      logger.error('Pool error', err);
-    });
-  } else {
-    // missing DB
-    db.dbType = 'nop';
+export class DbMgr {
+  constructor(config, useSocket=false) {
+    this.dbType = 'nop'; // missing DB
+
+    if (config.db_file) {
+      // SQLite
+      this.dbType = 'sqlite';
+      this.sqlite = new sqlite3.Database(config.db_file, sqlite3.OPEN_READWRITE, (err) => {
+        if (err) {
+          logger.error(err.message);
+        }
+        logger.info('Using sqlite %s', config.db_file);
+      });
+    } else if (config.psqlHost) {
+      // Postgres
+      this.dbType = 'psql';
+      // initialize a pool
+      this.pool = new Pool({
+        host: useSocket ? config.psqlSocket : config.psqlHost,
+        database: config.psqlDb,
+        user: config.psqlUser,
+        password: config.psqlPasswd
+      });
+      this.pool.on('error', (err, client) => {
+        logger.error('Pool error', err);
+      });
+    }
   }
 
   /**
@@ -65,12 +65,12 @@ export async function initDB(config, useSocket=false) {
    * @param {string} queryStr
    * @return {Array} array of query results
    */
-  db.query = async function dbQuery(queryStr) {
-    if (db.dbType === 'sqlite') {
-      let dbAllP = util.promisify(db.sqlite.all).bind(db.sqlite);
+  async query(queryStr) {
+    if (this.dbType === 'sqlite') {
+      let dbAllP = util.promisify(this.sqlite.all).bind(this.sqlite);
       return await dbAllP(queryStr);
-    } else if (db.dbType === 'psql') {
-      const res = await db.pool.query(queryStr);
+    } else if (this.dbType === 'psql') {
+      const res = await this.pool.query(queryStr);
       return res.rows;
     } else {
       return null;
@@ -83,14 +83,14 @@ export async function initDB(config, useSocket=false) {
    * @param {Array<string>} keys - table column names
    * @param {Array<string>} values - column values
    */
-  db.insert = async function dbInsert(tableName, keys, values) {
+  async insert(tableName, keys, values) {
     let sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
     // console.log('sqlC', sqlCmd);
-    if (db.dbType === 'sqlite') {
-      let dbRunP = util.promisify(db.sqlite.run).bind(db.sqlite);
+    if (this.dbType === 'sqlite') {
+      let dbRunP = util.promisify(this.sqlite.run).bind(this.sqlite);
       return await dbRunP(sqlCmd);
-    } else if (db.dbType === 'psql') {
-      return await db.pool.query(sqlCmd);
+    } else if (this.dbType === 'psql') {
+      return await this.pool.query(sqlCmd);
     }
   }
 
@@ -102,19 +102,19 @@ export async function initDB(config, useSocket=false) {
    * @param {Array<string>} queryKeys - column names to check if there's already existing row
    * @param {Array<>} queryValues - array matching queryKeys with values to check and write
    */
-  db.insertOrUpdate = async function insertOrUpdate(tableName, dataKeys, dataValues, queryKeys, queryValues) {
+  async insertOrUpdate(tableName, dataKeys, dataValues, queryKeys, queryValues) {
     // TODO: wrap this in a txinsertOrUpdate
     const queryKeyVals = queryKeys.map((queryKey, index) => `${queryKey} = '${queryValues[index]}'`);
     const sqlQuery = `select * from ${tableName} where ${queryKeyVals.join(' and ')}`;
-    const queryRes = await db.query(sqlQuery);
+    const queryRes = await this.query(sqlQuery);
     if (queryRes && queryRes[0]) {
       // update
       const dataKeyVals = dataKeys.map((dataKey, index) => `${dataKey} = '${dataValues[index]}'`);
       const sqlCmd = `update ${tableName} set ${dataKeyVals.join(', ')} where ${queryKeyVals.join(' and ')}`;
-      return await db.query(sqlCmd);
+      return await this.query(sqlCmd);
     } else {
       // insert
-      return await db.insert(tableName, dataKeys.concat(queryKeys), dataValues.concat(queryValues));
+      return await this.insert(tableName, dataKeys.concat(queryKeys), dataValues.concat(queryValues));
     }
   }
 
@@ -126,31 +126,29 @@ export async function initDB(config, useSocket=false) {
    * @param {string} queryKey
    * @param {*} queryValue
    */
-   db.insertIfNew = async function insertIfNew(tableName, dataKeys, dataValues, queryKey, queryValue) {
+   async insertIfNew(tableName, dataKeys, dataValues, queryKey, queryValue) {
     // TODO: wrap this in a tx
     const sqlQuery = `select * from ${tableName} where ${queryKey} = '${queryValue}'`;
-    const queryRes = await db.query(sqlQuery);
+    const queryRes = await this.query(sqlQuery);
     if (queryRes && queryRes[0]) {
       // noop
       return Promise.resolve();
     } else {
       // insert
-      return db.insert(tableName, dataKeys.concat(queryKey), dataValues.concat(queryValue));
+      return this.insert(tableName, dataKeys.concat(queryKey), dataValues.concat(queryValue));
     }
   }
 
   /**
    * Close the DB connection
    */
-  db.close = function dbClose() {
-    if (db.dbType === 'sqlite') {
-      return db.sqlite.close();
-    } else if (db.dbType === 'psql') {
+  close() {
+    if (this.dbType === 'sqlite') {
+      return this.sqlite.close();
+    } else if (this.dbType === 'psql') {
       throw new Error('psql not implemented');
     } else {
       return null;
     }    
   }
-
-  return db;
 }

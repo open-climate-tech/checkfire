@@ -20,7 +20,7 @@
 
 import {Application, Request, Response} from "express";
 
-import * as db_mgr from './db_mgr';
+import { DbMgr } from "./db_mgr";
 import * as apis from './apis';
 import * as sse from './sse';
 import * as pubsub from './pubsub_pull';
@@ -38,7 +38,7 @@ const logger = oct_utils.getLogger('services');
  */
 export async function initServices(app: Application, done: () => void) {
   const config = await oct_utils.getConfig(gcp_storage);
-  const db = await db_mgr.initDB(config);
+  const db = new DbMgr(config);
   apis.initApis(config, app, db);
   const updateFromDetect = sse.initSSE(config, app, db);
   await pubsub.initPubSub(config, updateFromDetect);
