@@ -18,7 +18,7 @@
 'use strict';
 // Helper code for accessing GCS storage
 
-const oct_utils = require('./oct_utils');
+import * as oct_utils from './oct_utils';
 
 const logger = oct_utils.getLogger('gcp_storage');
 
@@ -32,7 +32,7 @@ const GS_URL_REGEXP = /^gs:\/\/([a-z0-9_.-]+)\/(.+)$/;
  * @param {string} path
  * @return {object} with bucket and name properties
  */
-function parsePath(path: string) {
+export function parsePath(path: string) {
   const parsed = GS_URL_REGEXP.exec(path);
   if (parsed && Array.isArray(parsed)) {
     let name = parsed[2];
@@ -52,13 +52,10 @@ function parsePath(path: string) {
  * @param {string} srcFilename
  * @return {string} file contents
  */
-async function getData(bucketName: string, srcFilename: string) {
+export async function getData(bucketName: string, srcFilename: string) {
   let response = await storage
     .bucket(bucketName)
     .file(srcFilename)
     .download();
   return response.toString();
 }
-
-exports.getData = getData;
-exports.parsePath = parsePath;

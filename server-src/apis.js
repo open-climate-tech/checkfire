@@ -18,7 +18,7 @@
 'use strict';
 // API Services clients can invoke
 
-const oct_utils = require('./oct_utils');
+import * as oct_utils from './oct_utils';
 const logger = oct_utils.getLogger('api');
 const {google} = require('googleapis');
 const jwt = require("jsonwebtoken");
@@ -147,7 +147,7 @@ async function apiWrapper(req, res, config, apiDesc, cb) {
  * @param {Express} app
  * @param {db_mgr} db
  */
-function initApis(config, app, db) {
+export function initApis(config, app, db) {
   initPassportAuth(config, app, db);
 
   // This route is just a stub for testing.
@@ -593,5 +593,3 @@ function initApis(config, app, db) {
     }
   });
 }
-
-exports.initApis = initApis;

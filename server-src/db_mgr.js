@@ -21,7 +21,7 @@
 const util = require('util');
 const sqlite3 = require('sqlite3').verbose();
 const { Pool } = require('pg');
-const oct_utils = require('./oct_utils');
+import * as oct_utils from './oct_utils';
 
 const logger = oct_utils.getLogger('db_mgr');
 
@@ -31,7 +31,7 @@ const logger = oct_utils.getLogger('db_mgr');
  * @param {object} config
  * @return {object} db
  */
-async function initDB(config, useSocket=false) {
+export async function initDB(config, useSocket=false) {
   let db = {};
   if (config.db_file) {
     // SQLite
@@ -154,5 +154,3 @@ async function initDB(config, useSocket=false) {
 
   return db;
 }
-
-exports.initDB = initDB;

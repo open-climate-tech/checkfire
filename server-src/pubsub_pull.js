@@ -18,7 +18,7 @@
 'use strict';
 // Google Pubsub listener for potential fire messages from Detection service
 
-const oct_utils = require('./oct_utils');
+import * as oct_utils from './oct_utils';
 const { PubSub } = require('@google-cloud/pubsub');
 
 /**
@@ -55,7 +55,7 @@ async function createSub(pubSubClient, topicName) {
  * @param {json} config 
  * @param {function} sseUpdate 
  */
-async function initPubSub(config, sseUpdate) {
+export async function initPubSub(config, sseUpdate) {
   if (!config.pubsubTopic) {
     return;
   }
@@ -73,5 +73,3 @@ async function initPubSub(config, sseUpdate) {
 
   subscription.on('message', messageHandler);
 }
-
-exports.initPubSub = initPubSub;

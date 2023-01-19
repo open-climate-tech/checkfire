@@ -28,7 +28,7 @@ const jwt = require("jsonwebtoken");
  * Create a winston logger with given label
  * @param {string} label
  */
-function getLogger(label) {
+export function getLogger(label) {
   const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
     format: winston.format.combine(
@@ -47,7 +47,7 @@ const logger = getLogger('oct_utils');
  * Retry the given function up to MAX_RETRIES with increasing delays until it succeeds
  * @param {function} mainFn
  */
-async function retryWrap(mainFn) {
+export async function retryWrap(mainFn) {
   const MAX_RETRIES = 5;
   for (let retryNum = 1; retryNum <= MAX_RETRIES; retryNum++) {
     try {
@@ -68,7 +68,7 @@ async function retryWrap(mainFn) {
  * Read and parse the JSON config file specified in environment variable OCT_FIRE_SETTINGS
  * The variable may point to either local file system file or GCS file
  */
-async function getConfig(gcp_storage) {
+export async function getConfig(gcp_storage) {
   const gsPath = gcp_storage.parsePath(process.env.OCT_FIRE_SETTINGS);
   var configStr
   if (gsPath) {
@@ -88,7 +88,7 @@ async function getConfig(gcp_storage) {
  * @param {*} req
  * @param {*} config
  */
-function checkAuth(req, config) {
+export function checkAuth(req, config) {
   return new Promise((resolve, reject) => {
     if (!req.cookies.cf_token) {
       reject('missing cookie');
@@ -110,7 +110,7 @@ function checkAuth(req, config) {
  * @param {number} timestamp
  * @param {string} email
  */
-async function getUserVotes(db, cameraID, timestamp, email) {
+export async function getUserVotes(db, cameraID, timestamp, email) {
   let sqlStr = `select * from votes where cameraname='${cameraID}' and
                 timestamp=${timestamp} and userid='${email}'`;
   return await db.query(sqlStr);
@@ -121,7 +121,7 @@ async function getUserVotes(db, cameraID, timestamp, email) {
  * @param {db_mgr} db
  * @param {string} userID
  */
-async function getUserPreferences(db, userID) {
+export async function getUserPreferences(db, userID) {
   const sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   const rawPrefs = dbRes && dbRes[0];
@@ -149,7 +149,7 @@ async function getUserPreferences(db, userID) {
  * @param {db_mgr} db
  * @param {string} userID
  */
-async function isUserLabeler(db, userID) {
+export async function isUserLabeler(db, userID) {
   const sqlStr = `select islabeler from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   if (dbRes[0]) {
@@ -207,7 +207,7 @@ function getCardinalHeading(heading) {
   return cardinalHeadings[roundedHeading];
 }
 
-async function augmentCameraInfo(db, config, potFire) {
+export async function augmentCameraInfo(db, config, potFire) {
   // add camera metadata
   const camInfo = await getCameraInfo(db, config, potFire.cameraID);
   potFire.camInfo = camInfo;
@@ -234,7 +234,7 @@ async function augmentCameraInfo(db, config, potFire) {
   return potFire;
 }
 
-async function augmentVotes(db, potFire, userID) {
+export async function augmentVotes(db, potFire, userID) {
   if (userID) {
     const existingVotesByUser = await getUserVotes(db, potFire.cameraID, potFire.timestamp, userID);
     if (existingVotesByUser && (existingVotesByUser.length > 0)) {
@@ -245,7 +245,7 @@ async function augmentVotes(db, potFire, userID) {
   return potFire;
 }
 
-function dbAlertToUiObj(dbEvent) {
+export function dbAlertToUiObj(dbEvent) {
   return {
     timestamp: dbEvent.Timestamp || dbEvent.timestamp,
     cameraID: dbEvent.CameraName || dbEvent.cameraname,
@@ -267,7 +267,7 @@ function dbAlertToUiObj(dbEvent) {
  * @param {Array<Number>} allValues
  * @param {Number} desired
  */
-function findClosest(allValues, desired, direction) {
+export function findClosest(allValues, desired, direction) {
   const closest = allValues.reduce((acc,value) => {
     let diff = Math.abs(value - desired);
     if (direction === 'positive' && (value < desired)) {
@@ -286,7 +286,7 @@ function findClosest(allValues, desired, direction) {
  * @param {string} userID
  * @param {string} type
  */
- async function getUserAuth(db, userID, type) {
+export async function getUserAuth(db, userID, type) {
   const authQuery = `select type,hashedpassword,salt from auth where userid='${userID}' and type='${type}'`;
   return await db.query(authQuery);
 }
@@ -301,20 +301,6 @@ function findClosest(allValues, desired, direction) {
  * @returns {string} A URL for the desired resource, tranformed for development
  *     if necessary.
  */
-function getClientUrl(protocol, host, path) {
+export function getClientUrl(protocol, host, path) {
   return process.env.NODE_ENV === 'development' ? `${protocol}//${host}${path}` : path
 }
-
-exports.retryWrap = retryWrap;
-exports.getLogger = getLogger;
-exports.getConfig = getConfig;
-exports.checkAuth = checkAuth;
-exports.getUserVotes = getUserVotes;
-exports.getUserPreferences = getUserPreferences;
-exports.isUserLabeler = isUserLabeler;
-exports.augmentCameraInfo = augmentCameraInfo;
-exports.augmentVotes = augmentVotes;
-exports.dbAlertToUiObj = dbAlertToUiObj;
-exports.findClosest = findClosest;
-exports.getUserAuth = getUserAuth;
-exports.getClientUrl = getClientUrl;

@@ -20,12 +20,12 @@
 
 import {Application, Request, Response} from "express";
 
-const db_mgr = require('./db_mgr');
-const apis = require('./apis');
-const sse = require('./sse');
-const pubsub = require('./pubsub_pull');
-const gcp_storage = require('./gcp_storage');
-const oct_utils = require('./oct_utils');
+import * as db_mgr from './db_mgr';
+import * as apis from './apis';
+import * as sse from './sse';
+import * as pubsub from './pubsub_pull';
+import * as gcp_storage from './gcp_storage';
+import * as oct_utils from './oct_utils';
 // const detectMgr = require('./detect_mgr');
 
 const logger = oct_utils.getLogger('services');
@@ -36,7 +36,7 @@ const logger = oct_utils.getLogger('services');
  * @param {Express} app
  * @param {function} done
  */
-async function initServices(app: Application, done: () => void) {
+export async function initServices(app: Application, done: () => void) {
   const config = await oct_utils.getConfig(gcp_storage);
   const db = await db_mgr.initDB(config);
   apis.initApis(config, app, db);
@@ -58,5 +58,3 @@ async function initServices(app: Application, done: () => void) {
   });
   done();
 }
-
-exports.initServices = initServices;

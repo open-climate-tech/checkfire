@@ -18,7 +18,7 @@
 'use strict';
 // Server-Sent Events (SSE) backend
 
-const oct_utils = require('./oct_utils');
+import * as oct_utils from './oct_utils';
 
 const logger = oct_utils.getLogger('sse');
 
@@ -130,7 +130,7 @@ function updateFromDetect(db, config, messageData) {
  * @param {db_mgr} db
  * @return {function} Callback for new messages
  */
- function initSSE(config, app, db) {
+export function initSSE(config, app, db) {
   app.get('/fireEvents', async (request, response) => {
     request.setTimeout(50 * 60 * 1000); // extend default timeout of 2 minutes to 50 mins (1 hour is max)
     request.on("close", () => {
@@ -190,7 +190,6 @@ function fakeEvents(response) {
   }, 9000);
 }
 
-exports.initSSE = initSSE;
 if (process.env.CI) { // special exports for testing this module
   exports._testUpdate = updateFromDetect;
   exports._testConnections = tc => {

@@ -25,7 +25,7 @@ import path from 'path';
 
 const cookieParser = require('cookie-parser');
 const oct_utils = require('./server-src/oct_utils');
-const services = require('./server-src/services')
+import * as services from './server-src/services';
 
 const logger = oct_utils.getLogger('main');
 
