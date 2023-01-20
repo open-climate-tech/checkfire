@@ -159,7 +159,7 @@ export function FirePreview(props) {
           &nbsp;(
             <a href={props.potFire.camInfo.networkUrl} target="_blank" rel="noopener noreferrer">{props.potFire.camInfo.network}</a>
             &nbsp;
-            <a href={props.potFire.camInfo.camerakUrl} target="_blank" rel="noopener noreferrer">
+            <a href={props.potFire.camInfo.cameraUrl} target="_blank" rel="noopener noreferrer">
               {props.potFire.camInfo.cameraName}
             </a>
             {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}

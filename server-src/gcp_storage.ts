@@ -18,10 +18,6 @@
 'use strict';
 // Helper code for accessing GCS storage
 
-import * as oct_utils from './oct_utils';
-
-const logger = oct_utils.getLogger('gcp_storage');
-
 import {Storage}  from '@google-cloud/storage';
 const storage = new Storage();
 

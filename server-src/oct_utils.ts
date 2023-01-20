@@ -18,17 +18,21 @@
 'use strict';
 // Utility functions
 
-const fs = require('fs');
-const winston = require('winston');
-const util = require('util');
+import fs from 'fs';
+import winston from 'winston';
+import util from 'util';
+import {Request} from "express";
 const sleep = util.promisify(setTimeout);
 const jwt = require("jsonwebtoken");
+import {DbMgr} from "./db_mgr";
+import {OCT_Config, OCT_CameraInfo, OCT_PotentialFire} from './oct_types';
+import * as gcp_storage from './gcp_storage';
 
 /**
  * Create a winston logger with given label
  * @param {string} label
  */
-export function getLogger(label) {
+export function getLogger(label: string) {
   const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
     format: winston.format.combine(
@@ -43,22 +47,27 @@ export function getLogger(label) {
 
 const logger = getLogger('oct_utils');
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message
+  return String(error)
+}
+
 /**
  * Retry the given function up to MAX_RETRIES with increasing delays until it succeeds
  * @param {function} mainFn
  */
-export async function retryWrap(mainFn) {
+export async function retryWrap(mainFn: () => any) {
   const MAX_RETRIES = 5;
   for (let retryNum = 1; retryNum <= MAX_RETRIES; retryNum++) {
     try {
       return await mainFn();
     } catch (err) {
       if (retryNum < MAX_RETRIES) {
-        logger.warn('Failure %s.  Retry %d in %d seconds:', err.message, retryNum, retryNum);
+        logger.warn('Failure %s.  Retry %d in %d seconds:', getErrorMessage(err), retryNum, retryNum);
         await sleep(retryNum * 1000);
       } else {
-        logger.error('Failure %s.  No more retries', err.message);
-        throw new Error(err);
+        logger.error('Failure %s.  No more retries', getErrorMessage(err));
+        throw err;
       }
     }
   }
@@ -68,15 +77,16 @@ export async function retryWrap(mainFn) {
  * Read and parse the JSON config file specified in environment variable OCT_FIRE_SETTINGS
  * The variable may point to either local file system file or GCS file
  */
-export async function getConfig(gcp_storage) {
-  const gsPath = gcp_storage.parsePath(process.env.OCT_FIRE_SETTINGS);
+export async function getConfig() {
+  const settingsFileName = process.env.OCT_FIRE_SETTINGS || '';
+  const gsPath = gcp_storage.parsePath(settingsFileName);
   var configStr
   if (gsPath) {
     configStr = await gcp_storage.getData(gsPath.bucket, gsPath.name);
-  } else if (!fs.existsSync(process.env.OCT_FIRE_SETTINGS)) {
+  } else if (!fs.existsSync(settingsFileName)) {
     return {};
   } else {
-    configStr = fs.readFileSync(process.env.OCT_FIRE_SETTINGS);
+    configStr = fs.readFileSync(settingsFileName).toString();
   }
   const config = JSON.parse(configStr);
   // logger.info('config', config);
@@ -88,12 +98,12 @@ export async function getConfig(gcp_storage) {
  * @param {*} req
  * @param {*} config
  */
-export function checkAuth(req, config) {
+export function checkAuth(req: Request, config: OCT_Config) {
   return new Promise((resolve, reject) => {
     if (!req.cookies.cf_token) {
       reject('missing cookie');
     }
-    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err, decoded) => {
+    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err: Error, decoded: string) => {
       if (err) {
         reject(err);
       } else {
@@ -110,7 +120,7 @@ export function checkAuth(req, config) {
  * @param {number} timestamp
  * @param {string} email
  */
-export async function getUserVotes(db, cameraID, timestamp, email) {
+export async function getUserVotes(db: DbMgr, cameraID: string, timestamp: number, email: string) {
   let sqlStr = `select * from votes where cameraname='${cameraID}' and
                 timestamp=${timestamp} and userid='${email}'`;
   return await db.query(sqlStr);
@@ -121,11 +131,11 @@ export async function getUserVotes(db, cameraID, timestamp, email) {
  * @param {db_mgr} db
  * @param {string} userID
  */
-export async function getUserPreferences(db, userID) {
+export async function getUserPreferences(db: DbMgr, userID: string) {
   const sqlStr = `select * from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   const rawPrefs = dbRes && dbRes[0];
-  let region = {};
+  let region = null;
   if (rawPrefs) {
     region = {
       topLat: rawPrefs.topLat || rawPrefs.toplat || 0,
@@ -149,7 +159,7 @@ export async function getUserPreferences(db, userID) {
  * @param {db_mgr} db
  * @param {string} userID
  */
-export async function isUserLabeler(db, userID) {
+export async function isUserLabeler(db: DbMgr, userID: string) {
   const sqlStr = `select islabeler from user_preferences where userid='${userID}'`;
   const dbRes = await db.query(sqlStr);
   if (dbRes[0]) {
@@ -164,10 +174,16 @@ export async function isUserLabeler(db, userID) {
  * @param {object} config
  * @param {string} cameraID
  */
-async function getCameraInfo(db, config, cameraID) {
-  const camInfo = {
+async function getCameraInfo(db: DbMgr, config: OCT_Config, cameraID: string) {
+  const camInfo: OCT_CameraInfo = {
     cameraName: cameraID,
-    cameraDir: ''
+    cameraDir: '',
+    network: '',
+    networkUrl: '',
+    latitude: NaN,
+    longitude: NaN,
+    cameraUrl: '',
+    cityName: '',
   };
 
   // query DB to get human name
@@ -181,18 +197,18 @@ async function getCameraInfo(db, config, cameraID) {
     camInfo.longitude = camNameRes[0].Longitude || camNameRes[0].longitude;
     const cameraUrls = config.cameraUrls && config.cameraUrls[camInfo.network];
     if (cameraUrls && cameraUrls.length === 2) {
-      camInfo.camerakUrl = cameraUrls[0] + cameraID + cameraUrls[1];
+      camInfo.cameraUrl = cameraUrls[0] + cameraID + cameraUrls[1];
     } else {
-      camInfo.camerakUrl = '';
+      camInfo.cameraUrl = '';
     }
     camInfo.cityName = camNameRes[0].CityName || camNameRes[0].cityname;
   }
   return camInfo;
 }
 
-function getCardinalHeading(heading) {
+function getCardinalHeading(heading: number) {
   // convert numerical heading to cardinal name
-  const cardinalHeadings = {
+  const cardinalHeadings: Record<number, string> = {
     0: 'North',
     45: 'Northeast',
     90: 'East',
@@ -207,7 +223,7 @@ function getCardinalHeading(heading) {
   return cardinalHeadings[roundedHeading];
 }
 
-export async function augmentCameraInfo(db, config, potFire) {
+export async function augmentCameraInfo(db: DbMgr, config: OCT_Config, potFire: OCT_PotentialFire) {
   // add camera metadata
   const camInfo = await getCameraInfo(db, config, potFire.cameraID);
   potFire.camInfo = camInfo;
@@ -234,7 +250,7 @@ export async function augmentCameraInfo(db, config, potFire) {
   return potFire;
 }
 
-export async function augmentVotes(db, potFire, userID) {
+export async function augmentVotes(db: DbMgr, potFire: OCT_PotentialFire, userID: string) {
   if (userID) {
     const existingVotesByUser = await getUserVotes(db, potFire.cameraID, potFire.timestamp, userID);
     if (existingVotesByUser && (existingVotesByUser.length > 0)) {
@@ -245,7 +261,7 @@ export async function augmentVotes(db, potFire, userID) {
   return potFire;
 }
 
-export function dbAlertToUiObj(dbEvent) {
+export function dbAlertToUiObj(dbEvent: Record<string,any>) {
   return {
     timestamp: dbEvent.Timestamp || dbEvent.timestamp,
     cameraID: dbEvent.CameraName || dbEvent.cameraname,
@@ -267,7 +283,7 @@ export function dbAlertToUiObj(dbEvent) {
  * @param {Array<Number>} allValues
  * @param {Number} desired
  */
-export function findClosest(allValues, desired, direction) {
+export function findClosest(allValues: number[], desired: number, direction: string) {
   const closest = allValues.reduce((acc,value) => {
     let diff = Math.abs(value - desired);
     if (direction === 'positive' && (value < desired)) {
@@ -286,7 +302,7 @@ export function findClosest(allValues, desired, direction) {
  * @param {string} userID
  * @param {string} type
  */
-export async function getUserAuth(db, userID, type) {
+export async function getUserAuth(db: DbMgr, userID: string, type: string) {
   const authQuery = `select type,hashedpassword,salt from auth where userid='${userID}' and type='${type}'`;
   return await db.query(authQuery);
 }
@@ -301,6 +317,6 @@ export async function getUserAuth(db, userID, type) {
  * @returns {string} A URL for the desired resource, tranformed for development
  *     if necessary.
  */
-export function getClientUrl(protocol, host, path) {
+export function getClientUrl(protocol: string, host: string, path: string) {
   return process.env.NODE_ENV === 'development' ? `${protocol}//${host}${path}` : path
 }

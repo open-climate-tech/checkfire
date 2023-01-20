@@ -20,13 +20,11 @@
 
 import {Application, Request, Response} from "express";
 
-import { DbMgr } from "./db_mgr";
+import {DbMgr} from "./db_mgr";
 import * as apis from './apis';
 import * as sse from './sse';
 import * as pubsub from './pubsub_pull';
-import * as gcp_storage from './gcp_storage';
 import * as oct_utils from './oct_utils';
-// const detectMgr = require('./detect_mgr');
 
 const logger = oct_utils.getLogger('services');
 
@@ -37,7 +35,7 @@ const logger = oct_utils.getLogger('services');
  * @param {function} done
  */
 export async function initServices(app: Application, done: () => void) {
-  const config = await oct_utils.getConfig(gcp_storage);
+  const config = await oct_utils.getConfig();
   const db = new DbMgr(config);
   apis.initApis(config, app, db);
   const updateFromDetect = sse.initSSE(config, app, db);
