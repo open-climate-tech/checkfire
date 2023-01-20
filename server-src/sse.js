@@ -23,7 +23,7 @@ import * as oct_utils from './oct_utils';
 const logger = oct_utils.getLogger('sse');
 
 // Interface versioning to ensure browser and nodejs are synced up
-const SSE_INTERFACE_VERSION = 9;
+const SSE_INTERFACE_VERSION = 10;
 
 // Array of all the connections to the frontend
 var connections = [];
