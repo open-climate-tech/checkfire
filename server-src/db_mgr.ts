@@ -29,8 +29,6 @@ const logger = oct_utils.getLogger('db_mgr');
 /**
  * Initilize the SQL DB connection using parameter in config
  * Currently supports SQLite, Postgress, and "nop" DB for testing
- * @param {object} config
- * @return {object} db
  */
 export class DbMgr {
   dbType: string;
@@ -67,7 +65,6 @@ export class DbMgr {
 
   /**
    * Query the database with given SQL query
-   * @param {string} queryStr
    * @return {Array} array of query results
    */
   async query(queryStr: string): Promise<any> {
@@ -84,9 +81,6 @@ export class DbMgr {
 
   /**
    * Insert given data into given table
-   * @param {string} tableName
-   * @param {Array<string>} keys - table column names
-   * @param {Array<string>} values - column values
    */
   async insert(tableName: string, keys: string[], values: string[]) {
     let sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
@@ -125,11 +119,6 @@ export class DbMgr {
 
   /**
    * Insert if there's no existing row in table with given primary key/value (queryKey/queryValue)
-   * @param {string} tableName
-   * @param {Array<string>} dataKeys
-   * @param {Array<>} dataValues
-   * @param {string} queryKey
-   * @param {*} queryValue
    */
    async insertIfNew(tableName: string, dataKeys: string[], dataValues: any[], queryKey: string, queryValue: any) {
     // TODO: wrap this in a tx

@@ -18,43 +18,51 @@
 'use strict';
 
 export type OCT_Config = {
-  db_file: string,
-  psqlSocket: string,
-  psqlHost: string,
-  psqlDb: string,
-  psqlUser: string,
-  psqlPasswd: string,
+  db_file: string;
+  psqlSocket: string;
+  psqlHost: string;
+  psqlDb: string;
+  psqlUser: string;
+  psqlPasswd: string;
 
-  cookieJwtSecret: string,
+  cookieJwtSecret: string;
 
-  networkUrls: {[key: string] : string}
-  cameraUrls: {[key: string] : string[]}
+  networkUrls: {[key: string] : string};
+  cameraUrls: {[key: string] : string[]};
+
+  pubsubTopic: string;
+  gcpServiceKey: string;
 }
 
 export type OCT_CameraInfo = {
-  cameraName: string,
-  cameraDir: string,
-  network: string,
-  networkUrl: string,
-  latitude: number,
-  longitude: number,
-  cameraUrl: string,
-  cityName: string,
+  cameraName: string;
+  cameraDir: string;
+  network: string;
+  networkUrl: string;
+  latitude: number;
+  longitude: number;
+  cameraUrl: string;
+  cityName: string;
 }
 
 export type OCT_PotentialFire = {
-  timestamp: number,
-  cameraID: string,
-  adjScore: number,
-  weatherScore: number,
-  annotatedUrl: string,
-  croppedUrl: string,
-  mapUrl: string,
-  polygon: string,
-  sourcePolygons: string|number[][],
-  fireHeading: number,
-  isProto: number,
-  sortId: number,
-  voted?: boolean,
-  camInfo: OCT_CameraInfo,
+  version?: number;
+  timestamp: number;
+  cameraID: string;
+  adjScore: number;
+  weatherScore: number;
+  annotatedUrl: string;
+  croppedUrl: string;
+  mapUrl: string;
+  polygon: string;
+  sourcePolygons: string|number[][];
+  fireHeading: number;
+  isProto: number;
+  sortId: number;
+  voted?: boolean;
+  camInfo?: OCT_CameraInfo;
+}
+
+export type OCT_Cookie = {
+  email: string;
 }

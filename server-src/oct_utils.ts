@@ -25,12 +25,11 @@ import {Request} from "express";
 const sleep = util.promisify(setTimeout);
 const jwt = require("jsonwebtoken");
 import {DbMgr} from "./db_mgr";
-import {OCT_Config, OCT_CameraInfo, OCT_PotentialFire} from './oct_types';
+import {OCT_Config, OCT_CameraInfo, OCT_PotentialFire, OCT_Cookie} from './oct_types';
 import * as gcp_storage from './gcp_storage';
 
 /**
  * Create a winston logger with given label
- * @param {string} label
  */
 export function getLogger(label: string) {
   const logger = winston.createLogger({
@@ -54,7 +53,6 @@ function getErrorMessage(error: unknown) {
 
 /**
  * Retry the given function up to MAX_RETRIES with increasing delays until it succeeds
- * @param {function} mainFn
  */
 export async function retryWrap(mainFn: () => any) {
   const MAX_RETRIES = 5;
@@ -98,12 +96,12 @@ export async function getConfig() {
  * @param {*} req
  * @param {*} config
  */
-export function checkAuth(req: Request, config: OCT_Config) {
+export function checkAuth(req: Request, config: OCT_Config): Promise<OCT_Cookie> {
   return new Promise((resolve, reject) => {
     if (!req.cookies.cf_token) {
       reject('missing cookie');
     }
-    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err: Error, decoded: string) => {
+    jwt.verify(req.cookies.cf_token, config.cookieJwtSecret, (err: Error, decoded: OCT_Cookie) => {
       if (err) {
         reject(err);
       } else {
@@ -115,10 +113,6 @@ export function checkAuth(req: Request, config: OCT_Config) {
 
 /**
  * Check the DB to get the votes cast by given user (email) for given potential fire (camera, timestamp)
- * @param {db_mgr} db
- * @param {string} cameraID
- * @param {number} timestamp
- * @param {string} email
  */
 export async function getUserVotes(db: DbMgr, cameraID: string, timestamp: number, email: string) {
   let sqlStr = `select * from votes where cameraname='${cameraID}' and
@@ -128,8 +122,6 @@ export async function getUserVotes(db: DbMgr, cameraID: string, timestamp: numbe
 
 /**
  * Return the user preferences of the given user
- * @param {db_mgr} db
- * @param {string} userID
  */
 export async function getUserPreferences(db: DbMgr, userID: string) {
   const sqlStr = `select * from user_preferences where userid='${userID}'`;
@@ -156,8 +148,6 @@ export async function getUserPreferences(db: DbMgr, userID: string) {
 
 /**
  * Return boolean to indicate whether given user has labeler role
- * @param {db_mgr} db
- * @param {string} userID
  */
 export async function isUserLabeler(db: DbMgr, userID: string) {
   const sqlStr = `select islabeler from user_preferences where userid='${userID}'`;
@@ -170,9 +160,6 @@ export async function isUserLabeler(db: DbMgr, userID: string) {
 
 /**
  * Get information about camera (name, direction) from the cameraID
- * @param {db_mgr} db
- * @param {object} config
- * @param {string} cameraID
  */
 async function getCameraInfo(db: DbMgr, config: OCT_Config, cameraID: string) {
   const camInfo: OCT_CameraInfo = {
@@ -261,7 +248,7 @@ export async function augmentVotes(db: DbMgr, potFire: OCT_PotentialFire, userID
   return potFire;
 }
 
-export function dbAlertToUiObj(dbEvent: Record<string,any>) {
+export function dbAlertToUiObj(dbEvent: Record<string,any>) : OCT_PotentialFire {
   return {
     timestamp: dbEvent.Timestamp || dbEvent.timestamp,
     cameraID: dbEvent.CameraName || dbEvent.cameraname,
@@ -280,8 +267,6 @@ export function dbAlertToUiObj(dbEvent: Record<string,any>) {
 
 /**
  * Find the entry in allValues array that has the closest value to given desired value
- * @param {Array<Number>} allValues
- * @param {Number} desired
  */
 export function findClosest(allValues: number[], desired: number, direction: string) {
   const closest = allValues.reduce((acc,value) => {
@@ -298,9 +283,6 @@ export function findClosest(allValues: number[], desired: number, direction: str
 
 /**
  * Check the DB to get the user auth credentials
- * @param {db_mgr} db
- * @param {string} userID
- * @param {string} type
  */
 export async function getUserAuth(db: DbMgr, userID: string, type: string) {
   const authQuery = `select type,hashedpassword,salt from auth where userid='${userID}' and type='${type}'`;

@@ -16,6 +16,10 @@
 */
 
 'use strict';
+
+import {Application, Request, Response} from 'express';
+import {DbMgr} from './db_mgr';
+import {OCT_Config, OCT_PotentialFire} from './oct_types';
 // Server-Sent Events (SSE) backend
 
 import * as oct_utils from './oct_utils';
@@ -26,16 +30,16 @@ const logger = oct_utils.getLogger('sse');
 const SSE_INTERFACE_VERSION = 10;
 
 // Array of all the connections to the frontend
-var connections = [];
+type ConnectionInfo = {
+  email: string;
+  response: Response;
+}
+let connections: ConnectionInfo[] = [];
 
 /**
  * Send SSE eventsource message using given client response
- * @param {object} potFire
- * @param {*} connectionInfo
- * @param {db_mgr} db
- * @param {object} config
  */
-async function sendEvent(potFire, connectionInfo, db, config) {
+async function sendEvent(potFire: OCT_PotentialFire, connectionInfo: ConnectionInfo, db: DbMgr) {
   potFire.version = SSE_INTERFACE_VERSION;
 
   // only show proto events to users with showProto prefs
@@ -70,15 +74,11 @@ async function sendEvent(potFire, connectionInfo, db, config) {
 
 /**
  * Check if given SSE request has last-event-id to restore connection
- * @param {HTTP Request} request
- * @param {*} connectionInfo
- * @param {db_mgr} db
- * @param {object} config
  */
-async function checkConnectionToRestore(request, connectionInfo, db, config) {
+async function checkConnectionToRestore(request: Request, connectionInfo: ConnectionInfo, db: DbMgr, config: OCT_Config) {
   let prevTimestamp = 0;
-  if (request.headers["last-event-id"]) {
-    const eventId = parseInt(request.headers["last-event-id"]);
+  if (request.header('last-event-id')) {
+    const eventId = parseInt(request.header('last-event-id') || '');
     logger.info('ConnectionToRestore', eventId);
     if (Number.isInteger(eventId)) {
       prevTimestamp = eventId;
@@ -86,30 +86,27 @@ async function checkConnectionToRestore(request, connectionInfo, db, config) {
   }
   const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by sortid desc, timestamp desc limit 100`;
   const potFireEvents = await db.query(sqlStr);
-  potFireEvents.reverse().forEach(async potFireEvent => {
+  potFireEvents.reverse().forEach(async (potFireEvent: Record<string,any>) => {
     const potFire = oct_utils.dbAlertToUiObj(potFireEvent);
     await oct_utils.augmentCameraInfo(db, config, potFire);
-    sendEvent(potFire, connectionInfo, db, config);
+    sendEvent(potFire, connectionInfo, db);
   });
 }
 
-async function updateFromDetectAsync(db, config, potFire) {
+async function updateFromDetectAsync(db: DbMgr, config: OCT_Config, potFire: OCT_PotentialFire) {
   await oct_utils.augmentCameraInfo(db, config, potFire);
   connections.forEach(connectionInfo => {
     // clone potFire so any changes made by sendEvent for one connection doesn't affect other connections
     const copyPotFire = Object.assign({}, potFire);
-    sendEvent(copyPotFire, connectionInfo, db, config);
+    sendEvent(copyPotFire, connectionInfo, db);
   });
 }
 
 /**
  * Callback function used for when new messages about potential fires are received
  * from the ML based detection service.  Forward the data to all connected clients
- * @param {db_mgr} db
- * @param {object} config
- * @param {string} messageData - JSON stringified
  */
-function updateFromDetect(db, config, messageData) {
+function updateFromDetect(db: DbMgr, config: OCT_Config, messageData: string) {
   let messageJson;
   try {
     messageJson = JSON.parse(messageData);
@@ -125,13 +122,10 @@ function updateFromDetect(db, config, messageData) {
 
 /**
  * Initialize the SSE module (setup routes) and return callback function used for new potential fires
- * @param {object} config 
- * @param {Express} app
- * @param {db_mgr} db
  * @return {function} Callback for new messages
  */
-export function initSSE(config, app, db) {
-  app.get('/fireEvents', async (request, response) => {
+export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
+  app.get('/fireEvents', async (request: Request, response: Response) => {
     request.setTimeout(50 * 60 * 1000); // extend default timeout of 2 minutes to 50 mins (1 hour is max)
     request.on("close", () => {
       if (!response.finished) {
@@ -150,8 +144,9 @@ export function initSSE(config, app, db) {
     response.writeHead(200);
     response.flushHeaders(); // flush the headers to establish SSE with client
 
-    const connectionInfo = {
-      response: response
+    const connectionInfo: ConnectionInfo = {
+      response: response,
+      email: '',
     };
     try {
       const userInfo = await oct_utils.checkAuth(request, config);
@@ -163,36 +158,12 @@ export function initSSE(config, app, db) {
 
     // fakeEvents(response);
   });
-  return messageData => updateFromDetect(db, config, messageData);
-}
-
-/**
- * Send a couple of sample images with time delay for UI testing
- * @param {HTTP respnose} response 
- */
-function fakeEvents(response) {
-  setTimeout(() => {
-    sendEvent({
-      "timestamp": 1234567890,
-      "cameraID": "testCam1",
-      "adjScore": 0.6,
-      "annotatedUrl": "https://storage.googleapis.com/oct-fire-public/samples/ml-s-mobo-c__2020-01-07T09_33_15_Score.jpg"
-    }, response);
-  }, 4000);
-
-  setTimeout(() => {
-    sendEvent({
-      "timestamp": 1234567891,
-      "cameraID": "testCam2",
-      "adjScore": 0.8,
-      "annotatedUrl": "https://storage.googleapis.com/oct-fire-public/samples/bh-w-mobo-c__2020-01-30T11_48_16.jpg"
-    }, response);
-  }, 9000);
+  return (messageData: string) => updateFromDetect(db, config, messageData);
 }
 
 if (process.env.CI) { // special exports for testing this module
   exports._testUpdate = updateFromDetect;
-  exports._testConnections = tc => {
+  exports._testConnections = (tc: ConnectionInfo[]) => {
     connections = tc;
   };
   exports.SSE_INTERFACE_VERSION = SSE_INTERFACE_VERSION;

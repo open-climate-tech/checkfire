@@ -31,8 +31,6 @@ const logger = oct_utils.getLogger('services');
 
 /**
  * Initialize all the dyanmic services for this server and then call done()
- * @param {Express} app
- * @param {function} done
  */
 export async function initServices(app: Application, done: () => void) {
   const config = await oct_utils.getConfig();

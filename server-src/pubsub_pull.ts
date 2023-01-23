@@ -19,17 +19,15 @@
 // Google Pubsub listener for potential fire messages from Detection service
 
 import * as oct_utils from './oct_utils';
-const { PubSub } = require('@google-cloud/pubsub');
+import {PubSub} from '@google-cloud/pubsub';
+import {OCT_Config} from './oct_types';
 
 /**
  * Create a new pubsub subscription for this nodejs process.
  * Uses 1 day expiration time to get auto-cleanup when/if this node process dies
  * Uses current time as part of the name for easy monitoring and random value for uniqueness
- * 
- * @param {PubSub} pubSubClient 
- * @param {string} topicName 
  */
-async function createSub(pubSubClient, topicName) {
+async function createSub(pubSubClient: PubSub, topicName: string) {
   const d = new Date()
   // generate a unique name
   const subName = 'firecam-sub-' + 'M' + d.getMonth() + 'D' + d.getDate() + 'H' + d.getHours() +
@@ -52,24 +50,20 @@ async function createSub(pubSubClient, topicName) {
 
 /**
  * Initialize Google Pubsub module to listen to potential fire notifications
- * @param {json} config 
- * @param {function} sseUpdate 
  */
-export async function initPubSub(config, sseUpdate) {
+export async function initPubSub(config: OCT_Config, sseUpdate: (a0: string) => void) {
   if (!config.pubsubTopic) {
     return;
   }
-  const options = {};
+  const options:any = {};
   if (config.gcpServiceKey) {
     options.keyFilename = config.gcpServiceKey;
   }
   const pubSubClient = new PubSub(options);
   const subscription = await createSub(pubSubClient, config.pubsubTopic);
 
-  const messageHandler = message => {
+  subscription.on('message', function(message: any) {
     message.ack();
     sseUpdate(message.data);
-  };
-
-  subscription.on('message', messageHandler);
+  });
 }
