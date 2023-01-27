@@ -18,18 +18,21 @@
 'use strict';
 // API Services clients can invoke
 
+import {assert} from 'chai';
+import crypto from 'crypto';
+import {Application, Request, Response} from 'express';
+import passport from 'passport';
+import {Strategy as LocalStrategy} from 'passport-local';
+import {Strategy as FacebookStrategy} from 'passport-facebook';
+import {Strategy as GoogleStrategy} from 'passport-google-oauth20';
+import {DbMgr} from './db_mgr';
+import {OCT_Config} from './oct_types';
+const jwt = require("jsonwebtoken");
+const fetch = require('node-fetch');
+const {DateTime} = require('luxon');
+
 import * as oct_utils from './oct_utils';
 const logger = oct_utils.getLogger('api');
-const {google} = require('googleapis');
-const jwt = require("jsonwebtoken");
-const { assert } = require('chai');
-const fetch = require('node-fetch');
-const { DateTime } = require('luxon');
-const passport = require('passport');
-const LocalStrategy = require('passport-local');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const FacebookStrategy = require('passport-facebook');
-const crypto = require('crypto');
 
 const scopes = [
   'email',
@@ -38,7 +41,15 @@ const scopes = [
 
 const cameraHpwrenRegex = /^[0-9a-z\-]+\-mobo-c$/;
 
-function getUserId(type, username) {
+declare global {
+  namespace Express {
+    interface User {
+      userID: string;
+    }
+  }
+}
+
+function getUserId(type: string, username: string) {
   if (type === 'local') {
     return 'Local:' + username;
   } else if (type === 'google') {
@@ -53,8 +64,8 @@ function getUserId(type, username) {
   }
 }
 
-function initPassportAuth(config, app, db) {
-  passport.use(new LocalStrategy(async function verify(username, password, cb) {
+function initPassportAuth(config: OCT_Config, app: Application, db: DbMgr) {
+  passport.use(new LocalStrategy(async function verify(username: string, password: string, cb: any) {
     try {
       logger.info('Passport use local');
       const authQueryRes = await oct_utils.getUserAuth(db, username, 'local');
@@ -94,7 +105,7 @@ function initPassportAuth(config, app, db) {
       scope: ['email'],
     }, function(accessToken, refreshToken, profile, cb) {
       logger.info('Passport use Google');
-      const email = profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value;
+      const email = (profile && profile.emails && profile.emails.length > 0 && profile.emails[0].value) || '';
       return cb(null, {userID: getUserId('google', email)});
     }));
   } else {
@@ -120,16 +131,14 @@ function initPassportAuth(config, app, db) {
   }
 }
 
+type OCT_AuthDecoded = {
+  email: string;
+}
+
 /**
  * Verify that request is signed in
- * @param {*} req
- * @param {*} res
- * @param {*} config
- * @param {*} apiDesc
- * @param {*} cb
- * @returns
  */
-async function apiWrapper(req, res, config, apiDesc, cb) {
+async function apiWrapper(req: Request, res: Response, config: OCT_Config, apiDesc: string, cb: (decoded: OCT_AuthDecoded) => void) {
   logger.info(apiDesc);
   let decoded;
   try {
@@ -143,15 +152,12 @@ async function apiWrapper(req, res, config, apiDesc, cb) {
 
 /**
  * Initialize all the API routes
- * @param {object} config
- * @param {Express} app
- * @param {db_mgr} db
  */
-export function initApis(config, app, db) {
+export function initApis(config: OCT_Config, app: Application, db: DbMgr) {
   initPassportAuth(config, app, db);
 
   // This route is just a stub for testing.
-  app.get('/api/testGet', async (req, res) => {
+  app.get('/api/testGet', async (req: Request, res: Response) => {
     logger.info('GET testGet');
     res.status(200).send('Hello, m24.1610 world!').end();
   });
@@ -167,7 +173,7 @@ export function initApis(config, app, db) {
     });
   });
 
-  function genJwtCookie(res, userId) {
+  function genJwtCookie(res: Response, userId: string) {
     const expirationDays = 30; // 1 month
     const expirationMS = expirationDays * 24 * 60 * 60 * 1000;
     const expiration = expirationDays.toString() + 'd';
@@ -190,6 +196,9 @@ export function initApis(config, app, db) {
 
   app.get('/api/oauthUrl', (req, res, next) => {
     logger.info('GET /api/oauthUrl %s', JSON.stringify(req.query));
+    if (typeof req.query.path !== "string") {
+      return res.status(400).send('Bad request').end();
+    }
     return passport.authenticate('google', {
       state: req.query.path,
     })(req, res, next);
@@ -197,15 +206,24 @@ export function initApis(config, app, db) {
 
   app.get('/oauth2callback', passport.authenticate('google', {session: false}), function(req, res) {
     logger.info('GET /oauth2callback');
+    if (!req.user || !req.user.userID) {
+      return res.status(400).send('Bad request').end();
+    }
     genJwtCookie(res, req.user.userID);
     // send client browser to desired URL specified in state by leveraging react redirect in client JS
     const qState = req && req.query && req.query.state;
+    if (typeof qState !== "string") {
+      return res.status(400).send('Bad request').end();
+    }
     res.redirect(qState);
   });
 
 
   app.get('/api/oauthFbUrl', (req, res, next) => {
     logger.info('GET /api/oauthFbUrl %s', JSON.stringify(req.query));
+    if (typeof req.query.path !== "string") {
+      return res.status(400).send('Bad request').end();
+    }
     return passport.authenticate('facebook', {
       scope: ['email', 'public_profile'],
       state: req.query.path,
@@ -214,15 +232,24 @@ export function initApis(config, app, db) {
 
   app.get('/oauth2FbCallback', passport.authenticate('facebook', {session: false}), function(req, res) {
     logger.info('GET /oauth2FbCallback');
+    if (!req.user || !req.user.userID) {
+      return res.status(400).send('Bad request').end();
+    }
     genJwtCookie(res, req.user.userID);
     // send client browser to desired URL specified in state by leveraging react redirect in client JS
     const qState = req && req.query && req.query.state;
+    if (typeof qState !== "string") {
+      return res.status(400).send('Bad request').end();
+    }
     res.redirect(qState);
   });
 
 
   app.post('/api/loginPassword', passport.authenticate('local', {session: false}), (req, res) => {
     logger.info('POST /api/loginPassword');
+    if (!req.user || !req.user.userID) {
+      return res.status(400).send('Bad request').end();
+    }
     genJwtCookie(res, req.user.userID);
     return res.status(200).send('success').end();
   });
@@ -257,9 +284,15 @@ export function initApis(config, app, db) {
     // For easier testing, this endpoint simulates an OAuth flow by creating a valid JWT and redirecting
     app.get('/api/oauthDevUrl', (req, res) => {
       logger.info('GET /api/oauthDevUrl %s', JSON.stringify(req.query));
+      if (typeof req.query.email !== "string") {
+        return res.status(400).send('Bad request').end();
+      }
       genJwtCookie(res, getUserId('dev', req.query.email));
       // send client browser to desired URL specified in state by leveraging react redirect in client JS
       const {query: {host, path, protocol}} = req
+      if (typeof protocol !== "string" || typeof host !== "string" || typeof path !== "string") {
+        return res.status(400).send('Bad request').end();
+      }
       const url = oct_utils.getClientUrl(protocol, host, path);
       res.redirect(url);
     });
@@ -399,7 +432,7 @@ export function initApis(config, app, db) {
     }
     sqlStr += ' order by detections.sortId desc, vt.timestamp desc limit 20';
     const dbRes = await db.query(sqlStr);
-    const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
+    const fireEvents = await Promise.all(dbRes.map(async (dbEntry: Record<string,any>) => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
       fireEvent.avgVote = dbEntry.avgrf;
       fireEvent.numVotes = dbEntry.ct;
@@ -423,7 +456,7 @@ export function initApis(config, app, db) {
                         on nfv.cameraname=alerts.cameraname and nfv.timestamp=alerts.timestamp
                       order by alerts.sortId desc, nfv.timestamp desc`;
     const dbRes = await db.query(sqlStr);
-    const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
+    const fireEvents = await Promise.all(dbRes.map(async (dbEntry: Record<string,any>) => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
       fireEvent.avgVote = dbEntry.avgrf;
       fireEvent.numVotes = dbEntry.ct;
@@ -445,7 +478,7 @@ export function initApis(config, app, db) {
                         where alerts.timestamp is null and detections.CroppedID != ''
                         order by detections.sortId desc, detections.timestamp desc limit 20;`;
       const dbRes = await db.query(sqlStr);
-      const fireEvents = await Promise.all(dbRes.map(async dbEntry => {
+      const fireEvents = await Promise.all(dbRes.map(async (dbEntry: Record<string,any>) => {
         const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
         fireEvent.avgVote = dbEntry.avgrf;
         fireEvent.numVotes = dbEntry.ct;
@@ -465,7 +498,7 @@ export function initApis(config, app, db) {
       assert(isLabeler);
       const sqlStr = `select name from sources order by name`;
       const dbRes = await db.query(sqlStr);
-      const cameraIDs = dbRes.map(dbEntry => dbEntry.name);
+      const cameraIDs = dbRes.map((dbEntry: Record<string,any>) => dbEntry.name);
       res.status(200).send(cameraIDs).end();
     });
   });
@@ -479,9 +512,9 @@ export function initApis(config, app, db) {
     const sqlStr = `select latitude, longitude from cameras where locationid in
                      (select locationid from sources where dormant = 0 and (${prodTypesCheck}))`;
     const dbRes = await db.query(sqlStr);
-    const monitoredCameras = dbRes.map(entry => ({
-      latitude: entry['latitude'] || entry['Latitude'],
-      longitude: entry['longitude'] || entry['Longitude'],
+    const monitoredCameras = dbRes.map((dbEntry: Record<string,any>) => ({
+      latitude: dbEntry['latitude'] || dbEntry['Latitude'],
+      longitude: dbEntry['longitude'] || dbEntry['Longitude'],
     }));
     res.status(200).send(monitoredCameras).end();
   });
@@ -493,9 +526,8 @@ export function initApis(config, app, db) {
   app.get('/api/fetchImage', async (req, res) => {
     /***
      * Parse out timestamps from HTTP directory listing of HPWREN archive "Q" directory
-     * @param {string} text
      */
-    function parseTimeFiles(text) {
+    function parseTimeFiles(text: string) {
       const timeFileRegex = /href="(1\d{9})\.jpg"/g;
       const list = [];
       let entry;
@@ -507,9 +539,8 @@ export function initApis(config, app, db) {
 
     /**
      * Get the timestamps of files in given URL of HPWREN archive directory
-     * @param {string} hpwrenUrlDir
      */
-    async function getTimeFiles(hpwrenUrlDir) {
+    async function getTimeFiles(hpwrenUrlDir: string) {
       const resp = await fetch(hpwrenUrlDir);
       const dirText = await resp.text();
       return parseTimeFiles(dirText);
@@ -518,6 +549,9 @@ export function initApis(config, app, db) {
     apiWrapper(req, res, config, 'GET fetchImage', async decoded => {
       const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
       assert(isLabeler);
+      if (typeof req.query.cameraID !== "string") {
+        return res.status(400).send('Bad request').end();
+      }
       assert(cameraHpwrenRegex.test(req.query.cameraID));
       const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZone);
       assert(dateTime.isValid);
@@ -535,7 +569,7 @@ export function initApis(config, app, db) {
         logger.info('fetchImage retry hpwrenUrlDir %s', hpwrenUrlDir);
         timeFiles = await getTimeFiles(hpwrenUrlDir);
       }
-      const result = {};
+      const result:any = {};
       if (timeFiles.length) {
         const closest = oct_utils.findClosest(timeFiles, Math.round(dateTime.valueOf()/1000), req.query.direction);
         const closestDate = DateTime.fromSeconds(closest).setZone(config.timeZone);

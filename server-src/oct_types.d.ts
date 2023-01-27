@@ -32,6 +32,17 @@ export type OCT_Config = {
 
   pubsubTopic: string;
   gcpServiceKey: string;
+
+  webOauthCallbackURL: string;
+  webOauthClientID: string;
+  webOauthClientSecret: string;
+  facebookCallbackURL:string;
+  facebookAppID: string;
+  facebookAppSecret: string;
+
+  prodTypes: string;
+
+  timeZone: string;
 }
 
 export type OCT_CameraInfo = {
@@ -61,6 +72,8 @@ export type OCT_PotentialFire = {
   sortId: number;
   voted?: boolean;
   camInfo?: OCT_CameraInfo;
+  numVotes?: number;
+  avgVote?: number;
 }
 
 export type OCT_Cookie = {
