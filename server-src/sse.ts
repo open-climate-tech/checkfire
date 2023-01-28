@@ -66,8 +66,8 @@ async function sendEvent(potFire: OCT_PotentialFire, connectionInfo: ConnectionI
     '', ''  // two extra empty strings to generate \n\n at the end
   ];
   let eventString = eventParts.join('\n');
-  // logger.info('SendEvent', response.finished, eventString);
-  if (!connectionInfo.response.finished) {
+  // logger.info('SendEvent', response.writableEnded, eventString);
+  if (!connectionInfo.response.writableEnded) {
     connectionInfo.response.write(eventString);
   }
 }
@@ -128,12 +128,12 @@ export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
   app.get('/fireEvents', async (request: Request, response: Response) => {
     request.setTimeout(50 * 60 * 1000); // extend default timeout of 2 minutes to 50 mins (1 hour is max)
     request.on("close", () => {
-      if (!response.finished) {
+      if (!response.writableEnded) {
         response.end();
         logger.info("Stopped sending events.");
       }
-      // remove this response from connections array as well as any others in finished state
-      connections = connections.filter(ci => ((ci.response !== response) && !ci.response.finished));
+      // remove this response from connections array as well as any others in writableEnded state
+      connections = connections.filter(ci => ((ci.response !== response) && !ci.response.writableEnded));
       logger.info('SSE close.  Total %d', connections.length);
     });
 

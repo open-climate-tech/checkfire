@@ -22,9 +22,11 @@ const sse = require('../sse');
 describe('WildfireCheck SSE test', function () {
     function genMockResp(cb) {
         return {
-            finished: false,
-            write: function mockRespWrite(eventString) {
-                cb(eventString);
+            response: {
+                writableEnded: false,
+                write: function mockRespWrite(eventString) {
+                    cb(eventString);
+                }
             }
         };
     }
@@ -35,7 +37,8 @@ describe('WildfireCheck SSE test', function () {
     it('updates are sent to connection in proper format', function (done) {
         const msg = {
             timestamp: 123,
-            foo: 'bar'
+            foo: 'bar0',
+            croppedUrl: 'bar1',
         };
         const msgString = JSON.stringify(msg);
         const mockResp = genMockResp(eventString => {
@@ -54,7 +57,7 @@ describe('WildfireCheck SSE test', function () {
             done();
         });
         sse._testConnections([mockResp]);
-        sse._testUpdate({query: async () => null}, msgString);
+        sse._testUpdate({query: async () => null}, {}, msgString);
     });
 
 });

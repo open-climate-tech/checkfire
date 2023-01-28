@@ -30,7 +30,7 @@ describe('WildfireCheck API test', function () {
 
     it('endpoint should return success', function (done) {
         chai.request(app)
-            .get('/api')
+            .get('/api/testGet')
             .end((err, res) => {
                 res.should.have.status(200);
                 done();
