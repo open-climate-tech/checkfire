@@ -42,7 +42,7 @@
     "dev-server": "NODE_ENV=development node server-main.js",
     "build": "tsc && react-scripts build",
     "// Use `npm test` for cicd pipelines": 0,
-    "test": "export CI=true ; npm run test-client-components ; npm run test-client-modules ; npm run test-server",
+    "test": "export CI=true NODE_ENV=development; npm run test-client-components ; npm run test-client-modules ; npm run test-server",
     "// Use `npm run test-all` for local development": 0,
     "test-all": "npm run test-client-components ; npm run test-client-modules ; npm run test-server",
     "test-client-components": "react-scripts test --watchAll=false",
