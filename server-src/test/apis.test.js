@@ -19,6 +19,7 @@ const chai = require('chai');
 const {assert, expect, should} = chai;
 const chaiHttp = require('chai-http');
 const app = require('../../server-main');
+const test_db = require('./test_db');
 
 chai.use(chaiHttp);
 chai.should();
@@ -38,6 +39,10 @@ describe('WildfireCheck API test', function () {
         expect(err).to.be.null;
         expect(res.statusCode).to.equal(expectedStatus);
     }
+
+    before(async function () {
+        await test_db.setupDb(app.locals.db);
+    });
 
     // beforeEach(function () {
     // });
@@ -125,7 +130,6 @@ describe('WildfireCheck API test', function () {
         checkRoute('/api/monitoredCameras')
             .end((err, res) => {
                 verifyStatus(200, err, res);
-                console.log('XXXXX MMMMMMMM text', res.text);
                 expect(res.text).to.match(/^\[.*\]$/);
                 done();
             });
@@ -135,7 +139,6 @@ describe('WildfireCheck API test', function () {
         checkRoute('/api/activeRxBurns')
             .end((err, res) => {
                 verifyStatus(200, err, res);
-                console.log('XXXXX BBBBBBBBBBBB text', res.text);
                 expect(res.text).to.match(/^\[.*\]$/);
                 done();
             });

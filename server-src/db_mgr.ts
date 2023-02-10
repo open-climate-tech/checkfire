@@ -38,6 +38,9 @@ export class DbMgr {
   constructor(config: OCT_Config, useSocket=false) {
     this.dbType = 'nop'; // missing DB
 
+    if (process.env.CI) { // temporary memory DB for testing
+      config.db_file = ':memory:';
+    }
     if (config.db_file) {
       // SQLite
       this.dbType = 'sqlite';
@@ -69,7 +72,7 @@ export class DbMgr {
    */
   async query(queryStr: string): Promise<any> {
     if ((this.dbType === 'sqlite') && this.sqlite) {
-      let dbAllP = util.promisify(this.sqlite.all).bind(this.sqlite);
+      const dbAllP = util.promisify(this.sqlite.all).bind(this.sqlite);
       return await dbAllP(queryStr);
     } else if ((this.dbType === 'psql') && this.pool) {
       const res = await this.pool.query(queryStr);
@@ -79,14 +82,21 @@ export class DbMgr {
     }
   }
 
+  sqliteRunFn() {
+    if (!this.sqlite) {
+      throw new Error('non sqlite DB');
+    }
+    return util.promisify(this.sqlite.run).bind(this.sqlite);
+  }
+
   /**
    * Insert given data into given table
    */
   async insert(tableName: string, keys: string[], values: string[]) {
-    let sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
+    const sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
     // console.log('sqlC', sqlCmd);
     if ((this.dbType === 'sqlite') && this.sqlite) {
-      let dbRunP = util.promisify(this.sqlite.run).bind(this.sqlite);
+      const dbRunP = util.promisify(this.sqlite.run).bind(this.sqlite);
       return await dbRunP(sqlCmd);
     } else if ((this.dbType === 'psql') && this.pool) {
       return await this.pool.query(sqlCmd);
