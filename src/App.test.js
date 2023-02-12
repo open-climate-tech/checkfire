@@ -27,53 +27,51 @@ var eventListeners = {};
 global.EventSource = function MockEventSource(url) {
   this.addEventListener = function(type, cb) {
     eventListeners[type] = cb;
-  }
+  };
+  this.close = function() {};
 }
 
 test('renders without crashing', () => {
   render(<App />);
 });
 
-test('renders Disclaimer', () => {
+test('renders Terms and Conditions', () => {
   const { getByText } = render(<App />);
-  const disclaimerElt = getByText(/Disclaimer/);
+  const disclaimerElt = getByText(/Terms and Conditions/);
   expect(disclaimerElt).toBeInTheDocument();
 });
 
 test('potential fire events are rendered', () => {
   const cameraID = 'cam1';
   const score = 0.6;
-  const annotatedUrl = 'https://a.b/c.jpg';
-  const croppedUrl = 'https://a.b/c.mp4';
+  const annotatedUrl = 'https://a.b/c1.jpg';
+  const movieUrl = 'https://a.b/c1.mp4';
+  const mapUrl = 'https://a.b/m1.jpg';
   let msg = {
-    timestamp: 1,
+    timestamp: Math.round(new Date().valueOf()/1000) - 60, // one minute ago
     cameraID: cameraID,
     camInfo: {cameraName: cameraID},
     adjScore: score,
     annotatedUrl: annotatedUrl,
-    croppedUrl: croppedUrl,
+    croppedUrl: movieUrl,
+    mapUrl: mapUrl,
   };
   let msgStr = JSON.stringify(msg);
   const { getByText, getByTestId } = render(<App />);
   eventListeners.newPotentialFire({data: msgStr});
-  // let elt = getByText('Potential fire', { exact: false });
-  // expect(elt).toBeInTheDocument();
 
-  // assert(elt.textContent.includes(cameraID));
-  // assert(elt.textContent.includes(score.toString()));
+  const camElt = getByText(cameraID, { exact: false });
+  expect(camElt).toBeInTheDocument();
 
-  let elt = getByText(cameraID, { exact: false });
-  expect(elt).toBeInTheDocument();
+  const fireElt = getByTestId('FireListElement');
+  expect(fireElt).toBeInTheDocument();
 
-  elt = getByText(score.toString(), { exact: false });
-  expect(elt).toBeInTheDocument();
-
-  elt = getByTestId('FireListElement');
-  expect(elt).toBeInTheDocument();
-
-  const href = elt.querySelector('a').getAttribute('href');
+  const href = getByText('Full image').closest('a').getAttribute('href');
   assert.strictEqual(href, annotatedUrl);
 
-  const videoSrc = elt.querySelector('source').getAttribute('src');
-  assert.strictEqual(videoSrc, croppedUrl);
+  const videoSrc = fireElt.querySelector('source').getAttribute('src');
+  assert.strictEqual(videoSrc, movieUrl);
+
+  const mapSrc = fireElt.querySelector('img').getAttribute('src');
+  assert.strictEqual(mapSrc, mapUrl);
 });
