@@ -47,7 +47,7 @@
     "test-all": "npm run test-client-components && npm run test-client-modules && npm run test-server",
     "test-client-components": "react-scripts test --passWithNoTests --watchAll=false",
     "test-client-modules": "mocha 'test/**/*.test.mjs'",
-    "test-server": "nyc mocha dist/server-src/test",
+    "test-server": "tsc && nyc mocha dist/server-src/test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
