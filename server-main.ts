@@ -116,6 +116,7 @@ services.initServices(app, () => {
   app.listen(PORT, () => {
     logger.info(`WildfireCheck back listening on port ${PORT}`);
     logger.info('Press Ctrl+C to quit.');
+    app.emit('app_ready', null)
   });
 });
 

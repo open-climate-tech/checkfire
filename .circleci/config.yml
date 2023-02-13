@@ -11,6 +11,7 @@ jobs:
       - node/install-packages
       - run:
           command: npm run test
+          no_output_timeout: 2m
 workflows:
   test_my_app:
     jobs:

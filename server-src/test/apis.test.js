@@ -41,7 +41,12 @@ describe('WildfireCheck API test', function () {
     }
 
     before(async function () {
-        await test_db.setupDb(app.locals.db);
+        return new Promise((resolve, reject) => {
+            app.on('app_ready', async function() {
+                await test_db.setupDb(app.locals.db);
+                resolve();
+            });
+        });
     });
 
     // beforeEach(function () {
