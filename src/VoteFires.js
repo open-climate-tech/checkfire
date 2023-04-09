@@ -430,7 +430,9 @@ class VoteFires extends Component {
         }
         {(this.state.numOldFires > 0) &&
           (<div>
-            <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> this.toggleOldFires()}>
+            <button className="w3-button w3-border w3-round-large w3-black"
+              data-cy="toggleOldFires"
+              onClick={()=> this.toggleOldFires()}>
               {this.state.showOldFires ? 'Hide old fires' : 'Show old fires'}
             </button>
             <div className="w3-padding"></div>

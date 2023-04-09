@@ -40,7 +40,13 @@ export async function serverGet(serverUrl) {
   if (process.env.NODE_ENV === 'development') {
     getParams.credentials = 'include'; //send cookies to dev server on separate port
   }
-  return await fetch(serverUrl, getParams);
+  let retval = {};
+  try {
+    retval = await fetch(serverUrl, getParams);
+  } catch (err) {
+    console.log('serverGet err', err);
+  }
+  return retval;
 }
 
 /**

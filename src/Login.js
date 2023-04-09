@@ -73,7 +73,9 @@ export default function Login(props) {
 
           <div className="col">
             <div>
-              <button style={{padding: 0, outline: "none", border: "none"}} onClick={()=> loginGoogle(fwdPath)}>
+              <button style={{padding: 0, outline: "none", border: "none"}}
+               data-cy="loginGoogle"
+               onClick={()=> loginGoogle(fwdPath)}>
                 <img src={googleSigninImg} alt="Sign in with Google"
                   onMouseOver={e=>(e.currentTarget.src=googleSigninImgFocus)}
                   onMouseOut={e=>(e.currentTarget.src=googleSigninImg)} />
