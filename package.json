@@ -41,8 +41,9 @@
   "scripts": {
     "start": "node dist/server-main.js",
     "dev": "npm run dev-server & ; npm run dev-client",
+    "npx dev-client": "REACT_APP_BE_PORT=3141 npx react-scripts -r @cypress/instrument-cra start",
     "dev-client": "REACT_APP_BE_PORT=3141 react-scripts -r @cypress/instrument-cra start",
-    "dev-server": "NODE_ENV=development node server-main.js",
+    "dev-server": "NODE_ENV=development ts-node server-main.ts",
     "build": "tsc && react-scripts build",
     "// Use `npm test` for cicd pipelines": 0,
     "test": "cross-env CI=true NODE_ENV=development npm run test-all",
