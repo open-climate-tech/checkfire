@@ -17,7 +17,8 @@
 
 // Selected Fires
 
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
+import {useSearchParams} from "react-router-dom";
 import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
 
 /**
@@ -32,39 +33,39 @@ function VoteStats(props) {
   );
 }
 
-class SelectedFires extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+function SelectedFires(props) {
+  const [selectedFires, setSelectedFires] = useState([]);
+  const [searchParams] = useSearchParams();
+  const fireName = searchParams.get("fireName") || 'comet';
 
-  async componentDidMount() {
-    const serverUrl = getServerUrl('/api/selectedFires');
-    const resp = await serverGet(serverUrl);
-    const selectedFires = await resp.json();
-    this.setState({selectedFires: selectedFires});
-  }
+  useEffect(() => {
+    async function fetchSelectedFires() {
+      const serverUrl = getServerUrl(`/api/selectedFires?fireName=${fireName}`);
+      const resp = await serverGet(serverUrl);
+      const selectedFires = await resp.json();
+      setSelectedFires(selectedFires);
+    };
+    fetchSelectedFires();
+  }, [fireName]);
 
-  render() {
-    return (
-      <div>
-        <h1 className="w3-padding-32 w3-row-padding">
-          Selected Fires
-        </h1>
-        <p>
-          This page shows selected fires.
-          Therefore, it is not suitable for monitoring for earliest notification of potential fires.
-          This page is intended for demonstrating the capability of the system.
-        </p>
-        {
-          this.state.selectedFires && this.state.selectedFires.map(potFire =>
-            <FirePreview key={potFire.annotatedUrl} potFire={potFire}
-              childComponent={<VoteStats potFire={potFire} />}
-            />)
-        }
-      </div>
-    );
-  }
+  return (
+    <div>
+      <h1 className="w3-padding-32 w3-row-padding">
+        Selected Fires
+      </h1>
+      <p>
+        This page shows selected fires.
+        Therefore, it is not suitable for monitoring for earliest notification of potential fires.
+        This page is intended for demonstrating the capability of the system.
+      </p>
+      {
+        selectedFires && selectedFires.map(potFire =>
+          <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+            childComponent={<VoteStats potFire={potFire} />}
+          />)
+      }
+    </div>
+  );
 }
 
 export default SelectedFires;

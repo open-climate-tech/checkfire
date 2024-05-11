@@ -446,15 +446,19 @@ export function initApis(config: OCT_Config, app: Application, db: DbMgr) {
    */
   app.get('/api/selectedFires', async (req, res) => {
     logger.info('GET selectedFires');
-    const fireName = 'comet';
+    let fireName = 'comet';
+
+    if (req.query.fireName && typeof req.query.fireName === "string") {
+      fireName = req.query.fireName;
+    }
     const sqlStr = `select * from
                       (select nf.cameraname as cameraname, nf.timestamp as timestamp, avg(isrealfire) as avgrf, count(*) as ct from
                         (select * from named_fires where firename='${fireName}' order by timestamp desc limit 20) as nf
                         join votes
                           on nf.cameraname=votes.cameraname and nf.timestamp=votes.timestamp group by nf.cameraname,nf.timestamp) as nfv
-                      join alerts
-                        on nfv.cameraname=alerts.cameraname and nfv.timestamp=alerts.timestamp
-                      order by alerts.sortId desc, nfv.timestamp desc`;
+                      join detections
+                        on nfv.cameraname=detections.cameraname and nfv.timestamp=detections.timestamp
+                      order by detections.sortId desc, nfv.timestamp desc`;
     const dbRes = await db.query(sqlStr);
     const fireEvents = await Promise.all(dbRes.map(async (dbEntry: Record<string,any>) => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
