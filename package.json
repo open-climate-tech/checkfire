@@ -1,10 +1,10 @@
 {
   "name": "wildfirecheck",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "engines": {
-    "node": "16.20.1"
+    "node": "20.x"
   },
-  "private": true,
+  "gcp-build":"",
   "homepage": ".",
   "dependencies": {
     "@google-cloud/compute": "^3.7.0",
@@ -39,15 +39,16 @@
     "winston": "^3.8.2"
   },
   "scripts": {
+    "gcp-build":"",
     "start": "node dist/server-main.js",
     "dev": "npm run dev-server & ; npm run dev-client",
     "npx dev-client": "REACT_APP_BE_PORT=3141 npx react-scripts -r @cypress/instrument-cra start",
     "dev-client": "REACT_APP_BE_PORT=3141 react-scripts -r @cypress/instrument-cra start",
     "dev-server": "NODE_ENV=development ts-node server-main.ts",
-    "build": "tsc && react-scripts build",
-    "// Use `npm test` for cicd pipelines": 0,
+    "build": "tsc && npx react-scripts build",
+    "// Use `npm test` for cicd pipelines": "a",
     "test": "cross-env CI=true NODE_ENV=development npm run test-all",
-    "// Use `npm run test-all` for local development": 0,
+    "// Use `npm run test-all` for local development": "a",
     "test-all": "npm run test-client-components && npm run test-client-modules && npm run test-server",
     "test-client-components": "react-scripts test --passWithNoTests --watchAll=false",
     "test-client-modules": "mocha 'test/**/*.test.mjs'",

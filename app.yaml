@@ -1,14 +1,13 @@
+# npm run build
 # gcloud app deploy app.yaml
 runtime: nodejs
 env: flex
 
-# node version is specified in package.json: engines.node
-# GAE seems to prefer fixed versions there vs. ">=N" spec
+# node version is also specified in package.json: engines.node
 # According to https://cloud.google.com/appengine/docs/flexible/nodejs/runtime,
-#   node 18 and higher require runtime_config, but currently seems to error out during deploy.
-#   TODO: retry later...
-# runtime_config:
-#   operating_system: ubuntu22
+runtime_config:
+  operating_system: "ubuntu22"
+  runtime_version: "20"
 
 # https://cloud.google.com/appengine/docs/flexible/nodejs/configuring-your-app-with-app-yaml
 # Minimal sizing for dev/test

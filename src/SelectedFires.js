@@ -33,7 +33,7 @@ function VoteStats(props) {
   );
 }
 
-function SelectedFires(props) {
+export default function SelectedFires(props) {
   const [selectedFires, setSelectedFires] = useState([]);
   const [searchParams] = useSearchParams();
   const fireName = searchParams.get("fireName") || 'comet';
@@ -67,5 +67,3 @@ function SelectedFires(props) {
     </div>
   );
 }
-
-export default SelectedFires;
