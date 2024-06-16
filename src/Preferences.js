@@ -22,25 +22,25 @@ import ResizeObserver from 'react-resize-observer';
 import Notification  from "react-web-notification";
 
 import {getServerUrl, serverPost, getUserPreferences} from './OctReactUtils';
-// import cams1320 from './midsocalCams-1320x1150.jpg';
-// import cams1110 from './midsocalCams-1110x960.jpg';
-// import cams930 from './midsocalCams-930x810.jpg';
-// import cams780 from './midsocalCams-780x680.jpg';
+import cams1320 from './midsocalCams-1320x1150.jpg';
+import cams1110 from './midsocalCams-1110x960.jpg';
+import cams930 from './midsocalCams-930x810.jpg';
+import cams780 from './midsocalCams-780x680.jpg';
 // import hpwren1078 from './hpwren-1078x638.jpg';
 // import hpwren1290 from './hpwren-1290x762.jpg';
 // import hpwren1492 from './hpwren-1492x870.jpg';
-import cams1078 from './cams-socal-1078x638.jpg';
-import cams1290 from './cams-socal-1290x762.jpg';
-import cams1492 from './cams-socal-1492x870.jpg';
+// import cams1078 from './cams-socal-1078x638.jpg';
+// import cams1290 from './cams-socal-1290x762.jpg';
+// import cams1492 from './cams-socal-1492x870.jpg';
 
 const maps = [
-  // {name: cams1320, topLat: 36.85, leftLong: -122.08, bottomLat: 32.39, rightLong: -115.83, pixelWidth: 1320, pixelHeight: 1150},
-  // {name: cams1110, topLat: 36.86, leftLong: -122.11, bottomLat: 32.38, rightLong: -115.8, pixelWidth: 1110, pixelHeight: 960},
-  // {name: cams930, topLat: 36.88, leftLong: -122.15, bottomLat: 32.35, rightLong: -115.8, pixelWidth: 930, pixelHeight: 810},
-  // {name: cams780, topLat: 36.9, leftLong: -122.18, bottomLat: 32.33, rightLong: -115.8, pixelWidth: 780, pixelHeight: 680},
-  {name: cams1492, topLat: 34.79, leftLong: -120.59, bottomLat: 32.42, rightLong: -115.72, pixelWidth: 1492, pixelHeight: 870},
-  {name: cams1290, topLat: 34.81, leftLong: -120.58, bottomLat: 32.43, rightLong: -115.72, pixelWidth: 1290, pixelHeight: 762},
-  {name: cams1078, topLat: 34.82, leftLong: -120.60, bottomLat: 32.41, rightLong: -115.72, pixelWidth: 1078, pixelHeight: 638},
+  {name: cams1320, topLat: 36.85, leftLong: -122.08, bottomLat: 32.39, rightLong: -115.83, pixelWidth: 1320, pixelHeight: 1150},
+  {name: cams1110, topLat: 36.86, leftLong: -122.11, bottomLat: 32.38, rightLong: -115.8, pixelWidth: 1110, pixelHeight: 960},
+  {name: cams930, topLat: 36.88, leftLong: -122.15, bottomLat: 32.35, rightLong: -115.8, pixelWidth: 930, pixelHeight: 810},
+  {name: cams780, topLat: 36.9, leftLong: -122.18, bottomLat: 32.33, rightLong: -115.8, pixelWidth: 780, pixelHeight: 680},
+  // {name: cams1492, topLat: 34.79, leftLong: -120.59, bottomLat: 32.42, rightLong: -115.72, pixelWidth: 1492, pixelHeight: 870},
+  // {name: cams1290, topLat: 34.81, leftLong: -120.58, bottomLat: 32.43, rightLong: -115.72, pixelWidth: 1290, pixelHeight: 762},
+  // {name: cams1078, topLat: 34.82, leftLong: -120.60, bottomLat: 32.41, rightLong: -115.72, pixelWidth: 1078, pixelHeight: 638},
 ];
 maps.forEach(mapInfo => {
   mapInfo.longWidth = mapInfo.rightLong - mapInfo.leftLong;
