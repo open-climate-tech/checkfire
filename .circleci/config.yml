@@ -12,7 +12,27 @@ jobs:
       - run:
           command: npm run test
           no_output_timeout: 2m
+  lint:
+    executor:
+      name: node/default
+      tag: '16.16'
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          command: npm run lint
+  format:
+    executor:
+      name: node/default
+      tag: '16.16'
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          command: npm run format
 workflows:
   test_my_app:
     jobs:
       - test
+      - lint
+      - format
