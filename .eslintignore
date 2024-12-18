@@ -2,3 +2,5 @@ node_modules
 dist
 build
 coverage
+src/v2
+LabelImage.js

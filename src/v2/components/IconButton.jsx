@@ -14,11 +14,11 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import Icon from './Icon.jsx'
+import Icon from './Icon.jsx';
 
-import concatClassNames from '../modules/concatClassNames.mjs'
+import concatClassNames from '../modules/concatClassNames.mjs';
 
 /**
  * @param {Object} props
@@ -29,19 +29,40 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function IconButton(props) {
-  const {className, disabled, href, icon, label, ...otherProps} = props
-  const classNames =
-    concatClassNames(className, 'c7e-icon-button', disabled && 'c7e-icon-button--disabled')
+  const { className, disabled, href, icon, label, ...otherProps } = props;
+  const classNames = concatClassNames(
+    className,
+    'c7e-icon-button',
+    disabled && 'c7e-icon-button--disabled'
+  );
 
   if (href != null) {
-    return 0,
-    <a href={href} aria-label={label} className={classNames} {...otherProps}>
-      <Icon className="c7e-icon-button--icon" icon={icon}/>
-    </a>
+    return (
+      0,
+      (
+        <a
+          href={href}
+          aria-label={label}
+          className={classNames}
+          {...otherProps}
+        >
+          <Icon className="c7e-icon-button--icon" icon={icon} />
+        </a>
+      )
+    );
   }
 
-  return 0,
-  <button aria-label={label} disabled={disabled} className={classNames} {...otherProps}>
-    <Icon className="c7e-icon-button--icon" icon={icon}/>
-  </button>
+  return (
+    0,
+    (
+      <button
+        aria-label={label}
+        disabled={disabled}
+        className={classNames}
+        {...otherProps}
+      >
+        <Icon className="c7e-icon-button--icon" icon={icon} />
+      </button>
+    )
+  );
 }

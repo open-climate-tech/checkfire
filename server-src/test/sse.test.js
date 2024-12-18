@@ -20,44 +20,43 @@ const assert = chai.assert;
 const sse = require('../sse');
 
 describe('WildfireCheck SSE test', function () {
-    function genMockResp(cb) {
-        return {
-            response: {
-                writableEnded: false,
-                write: function mockRespWrite(eventString) {
-                    cb(eventString);
-                }
-            }
-        };
-    }
+  function genMockResp(cb) {
+    return {
+      response: {
+        writableEnded: false,
+        write: function mockRespWrite(eventString) {
+          cb(eventString);
+        },
+      },
+    };
+  }
 
-    // beforeEach(function () {
-    // });
+  // beforeEach(function () {
+  // });
 
-    it('updates are sent to connection in proper format', function (done) {
-        const msg = {
-            timestamp: 123,
-            foo: 'bar0',
-            croppedUrl: 'bar1',
-        };
-        const msgString = JSON.stringify(msg);
-        const mockResp = genMockResp(eventString => {
-            assert(eventString);
-            const eventParts = eventString.split('\n');
-            assert.strictEqual(eventParts.length, 5);
-            assert.strictEqual(eventParts[0].split(':')[0], 'id');
-            assert.strictEqual(parseInt(eventParts[0].split(':')[1]), msg.timestamp);
-            assert.strictEqual(eventParts[1], 'event: newPotentialFire');
-            assert.strictEqual(eventParts[2].slice(0,6), 'data: ');
-            const msgPayloadStr = eventParts[2].slice(6);
-            const msgPayload = JSON.parse(msgPayloadStr);
-            assert.strictEqual(msgPayload.timestamp, msg.timestamp);
-            assert.strictEqual(msgPayload.foo, msg.foo);
-            assert.strictEqual(msgPayload.version, sse.SSE_INTERFACE_VERSION);
-            done();
-        });
-        sse._testConnections([mockResp]);
-        sse._testUpdate({query: async () => null}, {}, msgString);
+  it('updates are sent to connection in proper format', function (done) {
+    const msg = {
+      timestamp: 123,
+      foo: 'bar0',
+      croppedUrl: 'bar1',
+    };
+    const msgString = JSON.stringify(msg);
+    const mockResp = genMockResp((eventString) => {
+      assert(eventString);
+      const eventParts = eventString.split('\n');
+      assert.strictEqual(eventParts.length, 5);
+      assert.strictEqual(eventParts[0].split(':')[0], 'id');
+      assert.strictEqual(parseInt(eventParts[0].split(':')[1]), msg.timestamp);
+      assert.strictEqual(eventParts[1], 'event: newPotentialFire');
+      assert.strictEqual(eventParts[2].slice(0, 6), 'data: ');
+      const msgPayloadStr = eventParts[2].slice(6);
+      const msgPayload = JSON.parse(msgPayloadStr);
+      assert.strictEqual(msgPayload.timestamp, msg.timestamp);
+      assert.strictEqual(msgPayload.foo, msg.foo);
+      assert.strictEqual(msgPayload.version, sse.SSE_INTERFACE_VERSION);
+      done();
     });
-
+    sse._testConnections([mockResp]);
+    sse._testUpdate({ query: async () => null }, {}, msgString);
+  });
 });

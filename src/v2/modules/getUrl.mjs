@@ -25,5 +25,5 @@
 export default function getUrl(endpoint) {
   return process.env.NODE_ENV === 'development'
     ? `http://localhost:${process.env.REACT_APP_BE_PORT}${endpoint}`
-    : endpoint
+    : endpoint;
 }

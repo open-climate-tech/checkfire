@@ -19,10 +19,10 @@
 // SQL DB accessor that interfaces to either SQLite or Postgres
 
 import util from 'util';
-import {Database as SQLiteDb, OPEN_READWRITE as SQLite_RW} from 'sqlite3';
-import {Pool} from 'pg';
+import { Database as SQLiteDb, OPEN_READWRITE as SQLite_RW } from 'sqlite3';
+import { Pool } from 'pg';
 import * as oct_utils from './oct_utils';
-import {OCT_Config} from './oct_types';
+import { OCT_Config } from './oct_types';
 
 const logger = oct_utils.getLogger('db_mgr');
 
@@ -35,10 +35,11 @@ export class DbMgr {
   sqlite?: SQLiteDb;
   pool?: Pool;
 
-  constructor(config: OCT_Config, useSocket=false) {
+  constructor(config: OCT_Config, useSocket = false) {
     this.dbType = 'nop'; // missing DB
 
-    if (process.env.CI) { // temporary memory DB for testing
+    if (process.env.CI) {
+      // temporary memory DB for testing
       config.db_file = ':memory:';
     }
     if (config.db_file) {
@@ -58,7 +59,7 @@ export class DbMgr {
         host: useSocket ? config.psqlSocket : config.psqlHost,
         database: config.psqlDb,
         user: config.psqlUser,
-        password: config.psqlPasswd
+        password: config.psqlPasswd,
       });
       this.pool.on('error', (err, client) => {
         logger.error('Pool error', err);
@@ -71,10 +72,10 @@ export class DbMgr {
    * @return {Array} array of query results
    */
   async query(queryStr: string): Promise<any> {
-    if ((this.dbType === 'sqlite') && this.sqlite) {
+    if (this.dbType === 'sqlite' && this.sqlite) {
       const dbAllP = util.promisify(this.sqlite.all).bind(this.sqlite);
       return await dbAllP(queryStr);
-    } else if ((this.dbType === 'psql') && this.pool) {
+    } else if (this.dbType === 'psql' && this.pool) {
       const res = await this.pool.query(queryStr);
       return res.rows;
     } else {
@@ -93,12 +94,14 @@ export class DbMgr {
    * Insert given data into given table
    */
   async insert(tableName: string, keys: string[], values: string[]) {
-    const sqlCmd = `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${values.map(x=> "'" + x + "'").join(',')})`
+    const sqlCmd = `INSERT INTO ${tableName} (${keys.join(
+      ','
+    )}) VALUES (${values.map((x) => "'" + x + "'").join(',')})`;
     // console.log('sqlC', sqlCmd);
-    if ((this.dbType === 'sqlite') && this.sqlite) {
+    if (this.dbType === 'sqlite' && this.sqlite) {
       const dbRunP = util.promisify(this.sqlite.run).bind(this.sqlite);
       return await dbRunP(sqlCmd);
-    } else if ((this.dbType === 'psql') && this.pool) {
+    } else if (this.dbType === 'psql' && this.pool) {
       return await this.pool.query(sqlCmd);
     }
   }
@@ -111,26 +114,50 @@ export class DbMgr {
    * @param {Array<string>} queryKeys - column names to check if there's already existing row
    * @param {Array<>} queryValues - array matching queryKeys with values to check and write
    */
-  async insertOrUpdate(tableName: string, dataKeys: string[], dataValues: any[], queryKeys: string[], queryValues: any[]) {
+  async insertOrUpdate(
+    tableName: string,
+    dataKeys: string[],
+    dataValues: any[],
+    queryKeys: string[],
+    queryValues: any[]
+  ) {
     // TODO: wrap this in a txinsertOrUpdate
-    const queryKeyVals = queryKeys.map((queryKey, index) => `${queryKey} = '${queryValues[index]}'`);
-    const sqlQuery = `select * from ${tableName} where ${queryKeyVals.join(' and ')}`;
+    const queryKeyVals = queryKeys.map(
+      (queryKey, index) => `${queryKey} = '${queryValues[index]}'`
+    );
+    const sqlQuery = `select * from ${tableName} where ${queryKeyVals.join(
+      ' and '
+    )}`;
     const queryRes = await this.query(sqlQuery);
     if (queryRes && queryRes[0]) {
       // update
-      const dataKeyVals = dataKeys.map((dataKey, index) => `${dataKey} = '${dataValues[index]}'`);
-      const sqlCmd = `update ${tableName} set ${dataKeyVals.join(', ')} where ${queryKeyVals.join(' and ')}`;
+      const dataKeyVals = dataKeys.map(
+        (dataKey, index) => `${dataKey} = '${dataValues[index]}'`
+      );
+      const sqlCmd = `update ${tableName} set ${dataKeyVals.join(
+        ', '
+      )} where ${queryKeyVals.join(' and ')}`;
       return await this.query(sqlCmd);
     } else {
       // insert
-      return await this.insert(tableName, dataKeys.concat(queryKeys), dataValues.concat(queryValues));
+      return await this.insert(
+        tableName,
+        dataKeys.concat(queryKeys),
+        dataValues.concat(queryValues)
+      );
     }
   }
 
   /**
    * Insert if there's no existing row in table with given primary key/value (queryKey/queryValue)
    */
-   async insertIfNew(tableName: string, dataKeys: string[], dataValues: any[], queryKey: string, queryValue: any) {
+  async insertIfNew(
+    tableName: string,
+    dataKeys: string[],
+    dataValues: any[],
+    queryKey: string,
+    queryValue: any
+  ) {
     // TODO: wrap this in a tx
     const sqlQuery = `select * from ${tableName} where ${queryKey} = '${queryValue}'`;
     const queryRes = await this.query(sqlQuery);
@@ -139,7 +166,11 @@ export class DbMgr {
       return Promise.resolve();
     } else {
       // insert
-      return this.insert(tableName, dataKeys.concat(queryKey), dataValues.concat(queryValue));
+      return this.insert(
+        tableName,
+        dataKeys.concat(queryKey),
+        dataValues.concat(queryValue)
+      );
     }
   }
 
@@ -147,12 +178,12 @@ export class DbMgr {
    * Close the DB connection
    */
   close() {
-    if ((this.dbType === 'sqlite') && this.sqlite) {
+    if (this.dbType === 'sqlite' && this.sqlite) {
       return this.sqlite.close();
     } else if (this.dbType === 'psql') {
       throw new Error('psql not implemented');
     } else {
       return null;
-    }    
+    }
   }
 }

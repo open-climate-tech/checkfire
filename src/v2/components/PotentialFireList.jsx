@@ -21,30 +21,30 @@
 //   - Implement camera ID pinning.
 //   - Implement adaptive/mobile version.
 
-import React, {useCallback, useEffect, useRef, useState} from 'react'
-import Notification from 'react-web-notification'
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import Notification from 'react-web-notification';
 
-import Duration from '../modules/Duration.mjs'
+import Duration from '../modules/Duration.mjs';
 
-import getCameraKey from '../modules/getCameraKey.mjs'
-import getEventSource from '../modules/getEventSource.mjs'
-import getPreferences from '../modules/getPreferences.mjs'
-import hasAngleOfFire from '../modules/hasAngleOfFire.mjs'
-import isPolygonWithinRegion from '../modules/isPolygonWithinRegion.mjs'
+import getCameraKey from '../modules/getCameraKey.mjs';
+import getEventSource from '../modules/getEventSource.mjs';
+import getPreferences from '../modules/getPreferences.mjs';
+import hasAngleOfFire from '../modules/hasAngleOfFire.mjs';
+import isPolygonWithinRegion from '../modules/isPolygonWithinRegion.mjs';
 
-import FireList from './FireList.jsx'
+import FireList from './FireList.jsx';
 
 const ShouldNotify = {
   MIN_INTERVAL_SECONDS: 30,
   MAX_RECENT_NOTIFICATIONS: 2,
   MAX_RECENT_SECONDS: 5 * 60,
   // XXX: Used to instantiate empty Notification to track window activity.
-  NO_NOTIFICATION: {}
-}
+  NO_NOTIFICATION: {},
+};
 
-const TIMESTAMP_LIMIT = 2 * Duration.HOUR
+const TIMESTAMP_LIMIT = 2 * Duration.HOUR;
 
-const {error: report} = console
+const { error: report } = console;
 
 /**
  * Responsible for querying the detected fire list, monitoring new fire events,
@@ -55,67 +55,76 @@ const {error: report} = console
 export default function PotentialFireList(props) {
   // Fires newer than `TIMESTAMP_LIMIT` (or all fires if `includesAllFires` is
   // `true`) displayed to the user for review.
-  const [fires, setFires] = useState([])
-  const [includesAllFires, setIncludesAllFires] = useState(false)
-  const [indexOfOldFires, setIndexOfOldFires] = useState(-1)
-  const [region, setRegion] = useState(null)
-  const [shouldNotify, setShouldNotify] = useState(false)
-  const [notification, setNotification] = useState(ShouldNotify.NO_NOTIFICATION)
+  const [fires, setFires] = useState([]);
+  const [includesAllFires, setIncludesAllFires] = useState(false);
+  const [indexOfOldFires, setIndexOfOldFires] = useState(-1);
+  const [region, setRegion] = useState(null);
+  const [shouldNotify, setShouldNotify] = useState(false);
+  const [notification, setNotification] = useState(
+    ShouldNotify.NO_NOTIFICATION
+  );
 
-  const allFiresRef = useRef([])
-  const eventSourceRef = useRef()
-  const firesByKeyRef = useRef({})
-  const sseVersionRef = useRef()
+  const allFiresRef = useRef([]);
+  const eventSourceRef = useRef();
+  const firesByKeyRef = useRef({});
+  const sseVersionRef = useRef();
 
   const updateFires = useCallback((shouldIncludeAllFires) => {
-    const {current: allFires} = allFiresRef
-    const timestampLimit = Math.round((Date.now() - TIMESTAMP_LIMIT) / 1000)
-    const index = allFires.findIndex((x) => x.timestamp < timestampLimit)
-    const fires =
-      shouldIncludeAllFires ? allFires.slice(0) : allFires.slice(0, index)
+    const { current: allFires } = allFiresRef;
+    const timestampLimit = Math.round((Date.now() - TIMESTAMP_LIMIT) / 1000);
+    const index = allFires.findIndex((x) => x.timestamp < timestampLimit);
+    const fires = shouldIncludeAllFires
+      ? allFires.slice(0)
+      : allFires.slice(0, index);
 
-    setFires(fires)
-    setIndexOfOldFires(index)
-  }, [])
+    setFires(fires);
+    setIndexOfOldFires(index);
+  }, []);
 
   const handleNotification = useCallback(() => {
     if (!shouldNotify) {
-      return setNotification(ShouldNotify.NO_NOTIFICATION)
+      return setNotification(ShouldNotify.NO_NOTIFICATION);
     }
 
-    const {current: allFires} = allFiresRef
-    const fire = allFires[0]
+    const { current: allFires } = allFiresRef;
+    const fire = allFires[0];
     const {
-      camInfo: {cameraName, cameraDir = 'UNKNOWN'},
-      isRealTime, notified = false, timestamp
-    } = fire
+      camInfo: { cameraName, cameraDir = 'UNKNOWN' },
+      isRealTime,
+      notified = false,
+      timestamp,
+    } = fire;
 
     if (notified || !isRealTime) {
-      return report('Failed precondition: `fire` should be real-time and shouldn’t be notified')
+      return report(
+        'Failed precondition: `fire` should be real-time and shouldn’t be notified'
+      );
     }
 
     // -------------------------------------------------------------------------
     // Prevent notifications from appearing too frequently.
 
-    const notifiedFires = allFires.filter((x) => x.isRealTime && x.notified)
-    const mru = notifiedFires.length > 0 ? notifiedFires[0].timestamp : 0
+    const notifiedFires = allFires.filter((x) => x.isRealTime && x.notified);
+    const mru = notifiedFires.length > 0 ? notifiedFires[0].timestamp : 0;
 
     // At least MIN_INTERVAL_SECONDS between notifications.
     if (timestamp - mru <= ShouldNotify.MIN_INTERVAL_SECONDS) {
-      return setNotification(ShouldNotify.NO_NOTIFICATION)
+      return setNotification(ShouldNotify.NO_NOTIFICATION);
     }
 
-    const timestampLimit = timestamp - ShouldNotify.MAX_RECENT_SECONDS
-    const recentlyNotifiedFires = notifiedFires.filter((x) => x.timestamp > timestampLimit)
+    const timestampLimit = timestamp - ShouldNotify.MAX_RECENT_SECONDS;
+    const recentlyNotifiedFires = notifiedFires.filter(
+      (x) => x.timestamp > timestampLimit
+    );
 
     // At most MAX_RECENT_NOTIFICATIONS every MAX_RECENT_SECONDS.
     if (recentlyNotifiedFires.length >= ShouldNotify.MAX_RECENT_NOTIFICATIONS) {
-      return setNotification(ShouldNotify.NO_NOTIFICATION)
+      return setNotification(ShouldNotify.NO_NOTIFICATION);
     }
 
     // -------------------------------------------------------------------------
 
-    fire.notified = true
+    fire.notified = true;
 
     setNotification({
       title: 'Potential fire',
@@ -123,107 +132,127 @@ export default function PotentialFireList(props) {
         body: `Camera ${cameraName} facing ${cameraDir}`,
         icon: '/wildfirecheck/checkfire192.png',
         lang: 'en',
-        tag: `${timestamp}`
-      }
-    })
-  }, [shouldNotify])
+        tag: `${timestamp}`,
+      },
+    });
+  }, [shouldNotify]);
 
   const handleToggleAllFires = useCallback(() => {
-    const shouldIncludeAllFires = !includesAllFires
-    setIncludesAllFires(shouldIncludeAllFires)
-    updateFires(shouldIncludeAllFires)
-  }, [includesAllFires, updateFires])
+    const shouldIncludeAllFires = !includesAllFires;
+    setIncludesAllFires(shouldIncludeAllFires);
+    updateFires(shouldIncludeAllFires);
+  }, [includesAllFires, updateFires]);
 
-  const handlePotentialFire = useCallback((event) => {
-    const fire = JSON.parse(event.data)
-    const {cameraID, croppedUrl, polygon, timestamp, version} = fire
+  const handlePotentialFire = useCallback(
+    (event) => {
+      const fire = JSON.parse(event.data);
+      const { cameraID, croppedUrl, polygon, timestamp, version } = fire;
 
-    if (region != null && !isPolygonWithinRegion(polygon, region)) {
-      return false
-    }
-
-    if (!croppedUrl || croppedUrl.startsWith('c:/')) {
-      return
-    }
-
-    if (sseVersionRef.current == null) {
-      sseVersionRef.current = version
-    }
-
-    if (version !== sseVersionRef.current) {
-      return window.location.reload()
-    }
-
-    const {current: allFires} = allFiresRef
-    const {current: firesByKey} = firesByKeyRef
-    const key = getCameraKey(fire)
-
-    if (firesByKey[key] != null) {
-      if (firesByKey[key].croppedUrl !== croppedUrl) {
-        // Fire is already indexed, but its video has been updated.
-        firesByKey[key].croppedUrl = croppedUrl
-        // TODO: Update video source, reload video.
-        ['console'].error('Not implemented: updateFires()')
+      if (region != null && !isPolygonWithinRegion(polygon, region)) {
+        return false;
       }
-    } else {
-      allFires.forEach((x) => hasAngleOfFire(x, fire))
 
-      firesByKey[key] = fire
-      allFires.unshift(fire)
-      allFires.sort((a, b) => b.sortId - a.sortId)
+      if (!croppedUrl || croppedUrl.startsWith('c:/')) {
+        return;
+      }
 
-      const first = allFires[0]
-      if (first != null) {
-        if (first.isRealTime && first.timestamp === timestamp && first.cameraID === cameraID) {
-          handleNotification()
+      if (sseVersionRef.current == null) {
+        sseVersionRef.current = version;
+      }
+
+      if (version !== sseVersionRef.current) {
+        return window.location.reload();
+      }
+
+      const { current: allFires } = allFiresRef;
+      const { current: firesByKey } = firesByKeyRef;
+      const key = getCameraKey(fire);
+
+      if (firesByKey[key] != null) {
+        if (firesByKey[key].croppedUrl !== croppedUrl) {
+          // Fire is already indexed, but its video has been updated.
+          firesByKey[key].croppedUrl = croppedUrl[
+            // TODO: Update video source, reload video.
+            'console'
+          ].error('Not implemented: updateFires()');
         }
-      }
+      } else {
+        allFires.forEach((x) => hasAngleOfFire(x, fire));
 
-      updateFires(includesAllFires)
-    }
-  }, [handleNotification, includesAllFires, region, updateFires])
+        firesByKey[key] = fire;
+        allFires.unshift(fire);
+        allFires.sort((a, b) => b.sortId - a.sortId);
+
+        const first = allFires[0];
+        if (first != null) {
+          if (
+            first.isRealTime &&
+            first.timestamp === timestamp &&
+            first.cameraID === cameraID
+          ) {
+            handleNotification();
+          }
+        }
+
+        updateFires(includesAllFires);
+      }
+    },
+    [handleNotification, includesAllFires, region, updateFires]
+  );
 
   useEffect(() => {
-    getPreferences().then(({region, shouldNotify}) => {
-      setRegion(region)
-      setShouldNotify(shouldNotify)
-    })
-  }, [])
+    getPreferences().then(({ region, shouldNotify }) => {
+      setRegion(region);
+      setShouldNotify(shouldNotify);
+    });
+  }, []);
 
   useEffect(() => {
     if (eventSourceRef.current == null) {
-      eventSourceRef.current = getEventSource('/fireEvents')
+      eventSourceRef.current = getEventSource('/fireEvents');
     }
 
-    const {current: eventSource} = eventSourceRef
+    const { current: eventSource } = eventSourceRef;
 
     function handleClosedConnection() {
-      eventSourceRef.current = null
-      tidy()
+      eventSourceRef.current = null;
+      tidy();
     }
 
     function tidy() {
-      eventSource.removeEventListener('newPotentialFire', handlePotentialFire)
-      eventSource.removeEventListener('closedConnection', handleClosedConnection)
+      eventSource.removeEventListener('newPotentialFire', handlePotentialFire);
+      eventSource.removeEventListener(
+        'closedConnection',
+        handleClosedConnection
+      );
     }
 
-    eventSource.addEventListener('newPotentialFire', handlePotentialFire)
-    eventSource.addEventListener('closedConnection', handleClosedConnection)
+    eventSource.addEventListener('newPotentialFire', handlePotentialFire);
+    eventSource.addEventListener('closedConnection', handleClosedConnection);
 
-    return tidy
-  }, [handlePotentialFire])
+    return tidy;
+  }, [handlePotentialFire]);
 
-  return 0,
-  <>
-    <Notification disableActiveWindow={true} title="" {...notification}/>
-    <FireList
-      fires={fires}
-      firesByKey={firesByKeyRef.current}
-      indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
-      nOldFires={indexOfOldFires > -1 ? allFiresRef.current.length - indexOfOldFires : 0}
-      onToggleAllFires={handleToggleAllFires}
-      region={region}
-      updateFires={updateFires}
-      {...props}/>
-  </>
+  return (
+    0,
+    (
+      <>
+        <Notification disableActiveWindow={true} title="" {...notification} />
+        <FireList
+          fires={fires}
+          firesByKey={firesByKeyRef.current}
+          indexOfOldFires={includesAllFires ? indexOfOldFires : -1}
+          nOldFires={
+            indexOfOldFires > -1
+              ? allFiresRef.current.length - indexOfOldFires
+              : 0
+          }
+          onToggleAllFires={handleToggleAllFires}
+          region={region}
+          updateFires={updateFires}
+          {...props}
+        />
+      </>
+    )
+  );
 }

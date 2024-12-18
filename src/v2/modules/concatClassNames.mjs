@@ -31,5 +31,5 @@
  * @returns {string} The concatenated class names.
  */
 export default function concatClassNames(...classNames) {
-  return classNames.filter((x) => !!x).join(' ')
+  return classNames.filter((x) => !!x).join(' ');
 }

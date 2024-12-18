@@ -6,8 +6,8 @@ env: flex
 # node version is also specified in package.json: engines.node
 # According to https://cloud.google.com/appengine/docs/flexible/nodejs/runtime,
 runtime_config:
-  operating_system: "ubuntu22"
-  runtime_version: "20"
+  operating_system: 'ubuntu22'
+  runtime_version: '20'
 
 # https://cloud.google.com/appengine/docs/flexible/nodejs/configuring-your-app-with-app-yaml
 # Minimal sizing for dev/test
@@ -19,7 +19,7 @@ resources:
   disk_size_gb: 10
 
 env_variables:
-  OCT_FIRE_SETTINGS: "gs://oct-fire-configs/config-gcp.json"
+  OCT_FIRE_SETTINGS: 'gs://oct-fire-configs/config-gcp.json'
 
 network:
   name: default

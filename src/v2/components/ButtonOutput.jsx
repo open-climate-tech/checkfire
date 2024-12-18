@@ -14,11 +14,11 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import Icon from './Icon.jsx'
+import Icon from './Icon.jsx';
 
-import concatClassNames from '../modules/concatClassNames.mjs'
+import concatClassNames from '../modules/concatClassNames.mjs';
 
 /**
  * Provides a button-like element intended to be included within a button group
@@ -34,17 +34,20 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function ButtonOutput(props) {
-  const {className, disabled, icon, label} = props
-  const classNames =
-    concatClassNames(className, 'c7e-button-output', disabled && 'c7e-button--disabled')
+  const { className, disabled, icon, label } = props;
+  const classNames = concatClassNames(
+    className,
+    'c7e-button-output',
+    disabled && 'c7e-button--disabled'
+  );
 
-  return 0,
-  <span className={classNames}>
-    { icon &&
-      <Icon className="c7e-button--icon" icon={icon}/>
-    }
-    { label &&
-      <span className="c7e-button--label">{label}</span>
-    }
-  </span>
+  return (
+    0,
+    (
+      <span className={classNames}>
+        {icon && <Icon className="c7e-button--icon" icon={icon} />}
+        {label && <span className="c7e-button--label">{label}</span>}
+      </span>
+    )
+  );
 }

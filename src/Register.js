@@ -17,17 +17,16 @@
 
 // Register page
 
-import React, {useState} from "react";
-import {getServerUrl, serverPost} from './OctReactUtils';
+import React, { useState } from 'react';
+import { getServerUrl, serverPost } from './OctReactUtils';
 
 import { useLocation } from 'react-router-dom';
 
-
 export default function Register(props) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [errMessage, setErrMessage] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [errMessage, setErrMessage] = useState('');
 
   const location = useLocation();
   const fwdPath = (location.query && location.query.fwdPath) || '/';
@@ -36,9 +35,13 @@ export default function Register(props) {
   const registerSubmit = async (event) => {
     event.preventDefault();
     const registerUrl = getServerUrl('/api/register');
-    const registerRespText = await serverPost(registerUrl, {username: username, password: password, email: email});
+    const registerRespText = await serverPost(registerUrl, {
+      username: username,
+      password: password,
+      email: email,
+    });
     console.log('Register resp', registerRespText);
-    setErrMessage((registerRespText === 'success') ? '' : 'Incorrect username');
+    setErrMessage(registerRespText === 'success' ? '' : 'Incorrect username');
     if (registerRespText === 'success') {
       window.location.href = fwdPath;
     }
@@ -47,22 +50,46 @@ export default function Register(props) {
   return (
     <div>
       <div className="w3-container w3-light-grey">
-        <div className="w3-row w3-content" style={{maxWidth:"600px"}}>
-          <h2 style={{textAlign:"center"}}>Register</h2>
+        <div className="w3-row w3-content" style={{ maxWidth: '600px' }}>
+          <h2 style={{ textAlign: 'center' }}>Register</h2>
           <form onSubmit={registerSubmit}>
             <section>
-              <input id="username" name="username" type="text" autoComplete="username" placeholder="Username" required autoFocus
-                value={username} onChange={event => setUsername(event.target.value)} />
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                placeholder="Username"
+                required
+                autoFocus
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+              />
             </section>
             <section>
-              <input id="current-password" name="password" type="password" autoComplete="current-password" placeholder="Password" required
-                value={password} onChange={event => setPassword(event.target.value)} />
+              <input
+                id="current-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
             </section>
             <section>
-              <input id="current-email" name="email" type="text" autoComplete="email" placeholder="Email (used for account recovery)"
-                value={email} onChange={event => setEmail(event.target.value)} />
+              <input
+                id="current-email"
+                name="email"
+                type="text"
+                autoComplete="email"
+                placeholder="Email (used for account recovery)"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
             </section>
-            <input type="submit" value="Sign up"/>
+            <input type="submit" value="Sign up" />
             {errMessage || <span>&nbsp;</span>}
           </form>
         </div>

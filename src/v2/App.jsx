@@ -14,76 +14,87 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useCallback, useEffect, useState} from 'react'
+import React, { useCallback, useEffect, useState } from 'react';
 
-import AppFooter from './components/AppFooter.jsx'
-import Authentication from './components/Authentication.jsx'
-import PotentialFireList from './components/PotentialFireList.jsx'
-import Preferences from './components/Preferences.jsx'
+import AppFooter from './components/AppFooter.jsx';
+import Authentication from './components/Authentication.jsx';
+import PotentialFireList from './components/PotentialFireList.jsx';
+import Preferences from './components/Preferences.jsx';
 
-import query from './modules/query.mjs'
+import query from './modules/query.mjs';
 
-import './App.css'
+import './App.css';
 
 export default function App(props) {
-  const [authnTitle, setAuthnTitle] = useState()
-  const [handleAuthenticated, setHandleAuthenticated] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [shouldShowAuthn, setShouldShowAuthn] = useState(false)
+  const [authnTitle, setAuthnTitle] = useState();
+  const [handleAuthenticated, setHandleAuthenticated] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [shouldShowAuthn, setShouldShowAuthn] = useState(false);
 
   const updateAuthentication = useCallback(() => {
     query
       .get('/api/checkAuth')
       .then(() => setIsAuthenticated(true))
-      .catch(({status}) => {
+      .catch(({ status }) => {
         if (status === 401) {
-          setIsAuthenticated(false)
+          setIsAuthenticated(false);
         }
-      })
-  }, [])
+      });
+  }, []);
 
-  const handleToggleAuthn = useCallback((title = null, fn = null, hide = false) => {
-    // XXX: Functions aren’t state. They return state. Wrap and return callback.
-    // See: https://reactjs.org/docs/hooks-reference.html#functional-updates
-    setHandleAuthenticated(() => () => {
-      if (typeof fn === 'function') {
-        fn()
-      }
+  const handleToggleAuthn = useCallback(
+    (title = null, fn = null, hide = false) => {
+      // XXX: Functions aren’t state. They return state. Wrap and return callback.
+      // See: https://reactjs.org/docs/hooks-reference.html#functional-updates
+      setHandleAuthenticated(() => () => {
+        if (typeof fn === 'function') {
+          fn();
+        }
 
-      updateAuthentication()
-    })
+        updateAuthentication();
+      });
 
-    setAuthnTitle(title != null ? title : undefined)
-    setShouldShowAuthn(hide === true ? false : !shouldShowAuthn)
-  }, [shouldShowAuthn, updateAuthentication])
+      setAuthnTitle(title != null ? title : undefined);
+      setShouldShowAuthn(hide === true ? false : !shouldShowAuthn);
+    },
+    [shouldShowAuthn, updateAuthentication]
+  );
 
   useEffect(() => {
-    updateAuthentication()
+    updateAuthentication();
 
     // XXX: Reset scroll position on page load. Otherwise, the window may be
     // scrolled a couple hundred pixels down (not sure why).
-    ;(function check() {
+    (function check() {
       /complete/.test(document.readyState)
-        // XXX: Set scroll position asynchronously; otherwise, as observed,
-        // scroll position setting isn’t guaranteed to take effect.
-        ? requestAnimationFrame(() => window.scrollTo(0, 0))
-        : setTimeout(check)
-    })()
-  }, [updateAuthentication])
+        ? // XXX: Set scroll position asynchronously; otherwise, as observed,
+          // scroll position setting isn’t guaranteed to take effect.
+          requestAnimationFrame(() => window.scrollTo(0, 0))
+        : setTimeout(check);
+    })();
+  }, [updateAuthentication]);
 
   const authnProps = {
     isAuthenticated: isAuthenticated,
-    onToggleAuthn: handleToggleAuthn
-  }
+    onToggleAuthn: handleToggleAuthn,
+  };
 
-  return 0,
-  <div className="c7e-root">
-    { shouldShowAuthn &&
-      <Authentication onAuthenticated={handleAuthenticated} onCancel={handleToggleAuthn} title={authnTitle}/>
-    }
-    <PotentialFireList {...authnProps}/>
-    <AppFooter/>
+  return (
+    0,
+    (
+      <div className="c7e-root">
+        {shouldShowAuthn && (
+          <Authentication
+            onAuthenticated={handleAuthenticated}
+            onCancel={handleToggleAuthn}
+            title={authnTitle}
+          />
+        )}
+        <PotentialFireList {...authnProps} />
+        <AppFooter />
 
-    {props.prefs && (<Preferences {...props} />)}
-  </div>
+        {props.prefs && <Preferences {...props} />}
+      </div>
+    )
+  );
 }

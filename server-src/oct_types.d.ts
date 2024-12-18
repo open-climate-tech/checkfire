@@ -27,8 +27,8 @@ export type OCT_Config = {
 
   cookieJwtSecret: string;
 
-  networkUrls: {[key: string] : string};
-  cameraUrls: {[key: string] : string[]};
+  networkUrls: { [key: string]: string };
+  cameraUrls: { [key: string]: string[] };
 
   pubsubTopic: string;
   gcpServiceKey: string;
@@ -36,14 +36,14 @@ export type OCT_Config = {
   webOauthCallbackURL: string;
   webOauthClientID: string;
   webOauthClientSecret: string;
-  facebookCallbackURL:string;
+  facebookCallbackURL: string;
   facebookAppID: string;
   facebookAppSecret: string;
 
   prodTypes: string;
 
   timeZone: string;
-}
+};
 
 export type OCT_CameraInfo = {
   cameraName: string;
@@ -54,7 +54,7 @@ export type OCT_CameraInfo = {
   longitude: number;
   cameraUrl: string;
   cityName: string;
-}
+};
 
 export type OCT_PotentialFire = {
   version?: number;
@@ -66,7 +66,7 @@ export type OCT_PotentialFire = {
   croppedUrl: string;
   mapUrl: string;
   polygon: string;
-  sourcePolygons: string|number[][];
+  sourcePolygons: string | number[][];
   fireHeading: number;
   isProto: number;
   sortId: number;
@@ -74,8 +74,8 @@ export type OCT_PotentialFire = {
   camInfo?: OCT_CameraInfo;
   numVotes?: number;
   avgVote?: number;
-}
+};
 
 export type OCT_Cookie = {
   email: string;
-}
+};

@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import concatClassNames from '../modules/concatClassNames.mjs'
+import concatClassNames from '../modules/concatClassNames.mjs';
 
 /**
  * @param {Object} props
@@ -28,17 +28,37 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function TextInput(props) {
-  const {className, disabled, label, placeholder, ...otherProps} = props
-  const classNames =
-    concatClassNames(className, 'c7e-text-input', disabled && 'c7e-text-input--disabled')
+  const { className, disabled, label, placeholder, ...otherProps } = props;
+  const classNames = concatClassNames(
+    className,
+    'c7e-text-input',
+    disabled && 'c7e-text-input--disabled'
+  );
 
-  return 0,
-  <label>
-    { label
-      ? <span className="c7e-text-input--label">{label}</span>
-      : placeholder &&
-        <span className="c7e-text-input--label" style={{position: 'absolute', left: -99999}}>{placeholder}</span>
-    }
-    <input type="text" placeholder={placeholder} disabled={disabled} className={classNames} {...otherProps}/>
-  </label>
+  return (
+    0,
+    (
+      <label>
+        {label ? (
+          <span className="c7e-text-input--label">{label}</span>
+        ) : (
+          placeholder && (
+            <span
+              className="c7e-text-input--label"
+              style={{ position: 'absolute', left: -99999 }}
+            >
+              {placeholder}
+            </span>
+          )
+        )}
+        <input
+          type="text"
+          placeholder={placeholder}
+          disabled={disabled}
+          className={classNames}
+          {...otherProps}
+        />
+      </label>
+    )
+  );
 }

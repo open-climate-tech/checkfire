@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import query from './query.mjs'
+import query from './query.mjs';
 
 /**
  * Sends `decision` requests for each fire in `fires` that is at least as old as
@@ -26,40 +26,45 @@ import query from './query.mjs'
  */
 export default function vote(decision, maximumTimestamp, fires) {
   return fires.reduce((requests, fire) => {
-    const {cameraID, sortId, timestamp, voted} = fire
-    const hasVote = voted != null
-    const isSameVote = decision === voted
-    const isUndo = decision === 'undo'
+    const { cameraID, sortId, timestamp, voted } = fire;
+    const hasVote = voted != null;
+    const isSameVote = decision === voted;
+    const isUndo = decision === 'undo';
 
     // - Don’t vote for fires newer than `maximumTimestamp`.
     // - Don’t cast the same vote twice.
     // - Don’t undo nonexistent votes.
     if (sortId > maximumTimestamp || isSameVote || (isUndo && !hasVote)) {
-      return requests
+      return requests;
     }
 
     // Undo existing vote in order to overwrite it.
-    let endpoint = '/api/undoVoteFire'
-    const undo = hasVote && !isUndo
-      ? query.post(endpoint, {cameraID, timestamp}).then(() => delete fire.voted)
-      : Promise.resolve()
+    let endpoint = '/api/undoVoteFire';
+    const undo =
+      hasVote && !isUndo
+        ? query
+            .post(endpoint, { cameraID, timestamp })
+            .then(() => delete fire.voted)
+        : Promise.resolve();
 
-    const isRealFire = isUndo ? undefined : decision === 'yes'
+    const isRealFire = isUndo ? undefined : decision === 'yes';
     if (!isUndo) {
-      endpoint = '/api/voteFire'
+      endpoint = '/api/voteFire';
     }
 
     const promise = undo.then(() => {
-      return query.post(endpoint, {cameraID, isRealFire, timestamp}).then(() => {
-        if (isUndo) {
-          delete fire.voted
-        } else {
-          fire.voted = isRealFire
-        }
-      })
-    })
+      return query
+        .post(endpoint, { cameraID, isRealFire, timestamp })
+        .then(() => {
+          if (isUndo) {
+            delete fire.voted;
+          } else {
+            fire.voted = isRealFire;
+          }
+        });
+    });
 
-    requests.push(promise)
-    return requests
-  }, [])
+    requests.push(promise);
+    return requests;
+  }, []);
 }

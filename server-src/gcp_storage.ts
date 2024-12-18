@@ -18,7 +18,7 @@
 'use strict';
 // Helper code for accessing GCS storage
 
-import {Storage}  from '@google-cloud/storage';
+import { Storage } from '@google-cloud/storage';
 const storage = new Storage();
 
 const GS_URL_REGEXP = /^gs:\/\/([a-z0-9_.-]+)\/(.+)$/;
@@ -32,13 +32,14 @@ export function parsePath(path: string) {
   const parsed = GS_URL_REGEXP.exec(path);
   if (parsed && Array.isArray(parsed)) {
     let name = parsed[2];
-    if (name.endsWith('/')) { // strip the final / if any
-      name = name.slice(0,name.length-1);
+    if (name.endsWith('/')) {
+      // strip the final / if any
+      name = name.slice(0, name.length - 1);
     }
     return {
       bucket: parsed[1],
       name: name,
-    }
+    };
   }
 }
 
@@ -49,7 +50,7 @@ export function parsePath(path: string) {
  * @return {string} file contents
  */
 export async function getData(bucketName: string, srcFilename: string) {
-  let response = await storage
+  const response = await storage
     .bucket(bucketName)
     .file(srcFilename)
     .download();

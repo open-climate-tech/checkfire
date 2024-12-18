@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import ContentType from 'content-type'
+import ContentType from 'content-type';
 
-import getUrl from './getUrl.mjs'
+import getUrl from './getUrl.mjs';
 
 /**
  * Requests the specified `endpoint`, reads the response stream to completion,
@@ -42,84 +42,100 @@ import getUrl from './getUrl.mjs'
  *     or custom method.
  */
 export default function query(endpoint, options = {}) {
-  const {consume: consumer, headers = {}, ...fetchOptions} = options
+  const { consume: consumer, headers = {}, ...fetchOptions } = options;
 
   // ---------------------------------------------------------------------------
   // Modify request to account for development environment and common/default
   // request settings.
 
   if (process.env.NODE_ENV === 'development') {
-    fetchOptions.credentials = 'include' // Allow cross-origin requests.
+    fetchOptions.credentials = 'include'; // Allow cross-origin requests.
   }
 
   if ('body' in fetchOptions) {
     if (typeof fetchOptions.body !== 'undefined') {
       // Use 'application/json' if request includes body without content-type.
-      const {'content-type': contentType = 'application/json'} = headers
-      headers['content-type'] = contentType
+      const { 'content-type': contentType = 'application/json' } = headers;
+      headers['content-type'] = contentType;
 
       if (typeof body !== 'string') {
-        fetchOptions.body = JSON.stringify(fetchOptions.body)
+        fetchOptions.body = JSON.stringify(fetchOptions.body);
       }
     } else {
-      delete fetchOptions.body
+      delete fetchOptions.body;
     }
   }
 
   if (headers['accept'] == null) {
-    headers['accept'] = 'application/json, text/plain, */*'
+    headers['accept'] = 'application/json, text/plain, */*';
   }
 
-  fetchOptions.headers = headers
+  fetchOptions.headers = headers;
 
   // ---------------------------------------------------------------------------
 
   return fetch(getUrl(endpoint), fetchOptions).then((response) => {
     if (response == null) {
-      throw new Error('Offline')
+      throw new Error('Offline');
     }
 
-    const {ok, status, statusText} = response
+    const { ok, status, statusText } = response;
 
     if (ok === false) {
-      const error = new Error(`${status}${statusText ? `: ${statusText}` : ''}`)
+      const error = new Error(
+        `${status}${statusText ? `: ${statusText}` : ''}`
+      );
 
-      error.status = status
-      error.statusText = statusText
+      error.status = status;
+      error.statusText = statusText;
 
       // Collect additional error information if possible...
-      return response.json().then((data) => {
-        error.cause = data
-        throw error
-      }, () => {
-        return response.text().then((data) => {
-          error.cause = data.trim()
-          throw error
-        }, () => {
-          throw error
-        })
-      })
+      return response.json().then(
+        (data) => {
+          error.cause = data;
+          throw error;
+        },
+        () => {
+          return response.text().then(
+            (data) => {
+              error.cause = data.trim();
+              throw error;
+            },
+            () => {
+              throw error;
+            }
+          );
+        }
+      );
     }
 
     if (consumer === 'raw') {
-      return response
+      return response;
     }
 
-    const {body, bodyUsed, headers, redirected, type, url} = response
+    const { body, bodyUsed, headers, redirected, type, url } = response;
 
     return consume(response, consumer).then((data) => {
       return {
-        body, bodyUsed, data, headers, ok, redirected, status, statusText,
-        type, url
-      }
-    })
-  })
+        body,
+        bodyUsed,
+        data,
+        headers,
+        ok,
+        redirected,
+        status,
+        statusText,
+        type,
+        url,
+      };
+    });
+  });
 }
 
 /** Alias for `query(endpoint, {method: 'GET'})`. */
 query.get = function (endpoint, options) {
-  return query(endpoint, {...options, method: 'GET'})
-}
+  return query(endpoint, { ...options, method: 'GET' });
+};
 
 /**
  * Alias for `query(endpoint, {method: 'POST', body})`.
@@ -141,16 +157,16 @@ query.get = function (endpoint, options) {
  *     or custom method.
  */
 query.post = function post(endpoint, body, options) {
-  return query(endpoint, {...options, method: 'POST', body})
-}
+  return query(endpoint, { ...options, method: 'POST', body });
+};
 
 // -----------------------------------------------------------------------------
 
 const consumersByContentType = {
   'application/json': 'json',
   'multipart/form-data': 'formData',
-  'text/plain': 'text'
-}
+  'text/plain': 'text',
+};
 
 /**
  * Reads `response` stream to completion, decodes it, and returns a promise that
@@ -168,14 +184,14 @@ const consumersByContentType = {
  */
 function consume(response, consumer) {
   if (consumer == null) {
-    const header = response.headers.get('content-type')
-    const {type} = header != null ? ContentType.parse(header) : {}
+    const header = response.headers.get('content-type');
+    const { type } = header != null ? ContentType.parse(header) : {};
 
-    consumer = consumersByContentType[type] || 'text'
+    consumer = consumersByContentType[type] || 'text';
   }
 
   if (typeof response[consumer] === 'function') {
-    return response[consumer]()
+    return response[consumer]();
   }
 
   // Allow handling of custom content types such as 'application/yaml' or
@@ -187,8 +203,8 @@ function consume(response, consumer) {
   // }
   // ```
   if (typeof consume[consumer] === 'function') {
-    return consume[consumer](response)
+    return consume[consumer](response);
   }
 
-  throw new Error(`Unexpected response consumer: ${consumer}`)
+  throw new Error(`Unexpected response consumer: ${consumer}`);
 }

@@ -20,6 +20,6 @@
  * @param {Event} event - The event to be trapped.
  */
 export default function trapEvent(event) {
-  event.preventDefault()
-  event.stopPropagation()
+  event.preventDefault();
+  event.stopPropagation();
 }

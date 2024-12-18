@@ -14,10 +14,10 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import FireListPagination from './FireListPagination.jsx'
-import FireListVoting from './FireListVoting.jsx'
+import FireListPagination from './FireListPagination.jsx';
+import FireListVoting from './FireListVoting.jsx';
 
 /**
  * Provides a simple toolbar for the main app layout.
@@ -29,11 +29,15 @@ import FireListVoting from './FireListVoting.jsx'
  * @returns {React.Element}
  */
 export default function FireListToolbar(props) {
-  const {toolbarRef, ...otherProps} = props
+  const { toolbarRef, ...otherProps } = props;
 
-  return 0,
-  <div ref={toolbarRef} className="c7e-fire-list--toolbar">
-    <FireListVoting {...otherProps}/>
-    <FireListPagination {...otherProps}/>
-  </div>
+  return (
+    0,
+    (
+      <div ref={toolbarRef} className="c7e-fire-list--toolbar">
+        <FireListVoting {...otherProps} />
+        <FireListPagination {...otherProps} />
+      </div>
+    )
+  );
 }

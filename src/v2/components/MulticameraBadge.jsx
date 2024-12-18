@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
 /**
  * Provides an HTML marker whose numerical content can be specified.
@@ -25,12 +25,19 @@ import React from 'react'
  * @returns {React.Element}
  */
 export default function MulticameraBadge(props) {
-  const {count = 1} = props
+  const { count = 1 } = props;
 
-  return 0,
-  <div className="c7e-map--multicamera-badge">
-    <div className="c7e-map--multicamera-badge--content" data-count={count}></div>
-  </div>
+  return (
+    0,
+    (
+      <div className="c7e-map--multicamera-badge">
+        <div
+          className="c7e-map--multicamera-badge--content"
+          data-count={count}
+        ></div>
+      </div>
+    )
+  );
 }
 
 /**
@@ -41,12 +48,12 @@ export default function MulticameraBadge(props) {
  * @see MulticameraBadge
  */
 MulticameraBadge.render = function (props) {
-  const {count = 1} = props
+  const { count = 1 } = props;
 
   // TODO: Add test to compare rendered string value to element instance.
 
-   return `\
+  return `\
 <div class="c7e-map--multicamera-badge">
  <div class="c7e-map--multicamera-badge--content" data-count=${count}></div>
-</div>`
-}
+</div>`;
+};

@@ -1,4 +1,6 @@
-* {box-sizing: border-box}
+* {
+  box-sizing: border-box;
+}
 
 /* style the container */
 .container {
@@ -30,12 +32,12 @@ input:hover,
 
 /* add appropriate colors to fb, twitter and google buttons */
 .fb {
-  background-color: #3B5998;
+  background-color: #3b5998;
   color: white;
 }
 
 .twitter {
-  background-color: #55ACEE;
+  background-color: #55acee;
   color: white;
 }
 
@@ -45,13 +47,13 @@ input:hover,
 }
 
 /* style the submit button */
-input[type=submit] {
-  background-color: #04AA6D;
+input[type='submit'] {
+  background-color: #04aa6d;
   color: white;
   cursor: pointer;
 }
 
-input[type=submit]:hover {
+input[type='submit']:hover {
   background-color: #45a049;
 }
 
@@ -66,7 +68,7 @@ input[type=submit]:hover {
 
 /* Clear floats after the columns */
 .row:after {
-  content: "";
+  content: '';
   display: table;
   clear: both;
 }

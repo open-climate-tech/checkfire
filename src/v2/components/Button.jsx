@@ -14,11 +14,11 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import Icon from './Icon.jsx'
+import Icon from './Icon.jsx';
 
-import concatClassNames from '../modules/concatClassNames.mjs'
+import concatClassNames from '../modules/concatClassNames.mjs';
 
 /**
  * @param {Object} props
@@ -29,20 +29,24 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function Button(props) {
-  const {className, disabled, icon, label, ...otherProps} = props
-  const classNames =
-    concatClassNames(className, 'c7e-button', disabled && 'c7e-button--disabled')
+  const { className, disabled, icon, label, ...otherProps } = props;
+  const classNames = concatClassNames(
+    className,
+    'c7e-button',
+    disabled && 'c7e-button--disabled'
+  );
 
-  const content =
+  const content = (
     <div className="c7e-button--content">
-      { icon &&
-        <Icon className="c7e-button--icon" icon={icon}/>
-      }
-      { label &&
-        <span className="c7e-button--label">{label}</span>
-      }
+      {icon && <Icon className="c7e-button--icon" icon={icon} />}
+      {label && <span className="c7e-button--label">{label}</span>}
     </div>
+  );
 
-  const containerProps = {disabled, className: classNames, ...otherProps}
-  return React.createElement(props.href ? 'a' : 'button', containerProps, content)
+  const containerProps = { disabled, className: classNames, ...otherProps };
+  return React.createElement(
+    props.href ? 'a' : 'button',
+    containerProps,
+    content
+  );
 }

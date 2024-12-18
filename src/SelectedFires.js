@@ -17,9 +17,9 @@
 
 // Selected Fires
 
-import React, { useState, useEffect } from "react";
-import {useSearchParams} from "react-router-dom";
-import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { getServerUrl, serverGet, FirePreview } from './OctReactUtils';
 
 /**
  * Show voting stats
@@ -27,16 +27,14 @@ import {getServerUrl, serverGet, FirePreview} from './OctReactUtils';
  */
 function VoteStats(props) {
   return (
-    <div>
-      {Math.round(props.potFire.avgVote * 100)} % votes for real fire
-    </div>
+    <div>{Math.round(props.potFire.avgVote * 100)} % votes for real fire</div>
   );
 }
 
 export default function SelectedFires(props) {
   const [selectedFires, setSelectedFires] = useState([]);
   const [searchParams] = useSearchParams();
-  const fireName = searchParams.get("fireName") || 'comet';
+  const fireName = searchParams.get('fireName') || 'comet';
 
   useEffect(() => {
     async function fetchSelectedFires() {
@@ -44,26 +42,26 @@ export default function SelectedFires(props) {
       const resp = await serverGet(serverUrl);
       const selectedFires = await resp.json();
       setSelectedFires(selectedFires);
-    };
+    }
     fetchSelectedFires();
   }, [fireName]);
 
   return (
     <div>
-      <h1 className="w3-padding-32 w3-row-padding">
-        Selected Fires
-      </h1>
+      <h1 className="w3-padding-32 w3-row-padding">Selected Fires</h1>
       <p>
-        This page shows selected fires.
-        Therefore, it is not suitable for monitoring for earliest notification of potential fires.
-        This page is intended for demonstrating the capability of the system.
+        This page shows selected fires. Therefore, it is not suitable for
+        monitoring for earliest notification of potential fires. This page is
+        intended for demonstrating the capability of the system.
       </p>
-      {
-        selectedFires && selectedFires.map(potFire =>
-          <FirePreview key={potFire.annotatedUrl} potFire={potFire}
+      {selectedFires &&
+        selectedFires.map((potFire) => (
+          <FirePreview
+            key={potFire.annotatedUrl}
+            potFire={potFire}
             childComponent={<VoteStats potFire={potFire} />}
-          />)
-      }
+          />
+        ))}
     </div>
   );
 }

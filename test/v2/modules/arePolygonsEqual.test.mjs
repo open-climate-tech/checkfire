@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import {expect} from 'chai'
+import { expect } from 'chai';
 
-import arePolygonsEqual from '../../../src/v2/modules/arePolygonsEqual.mjs'
+import arePolygonsEqual from '../../../src/v2/modules/arePolygonsEqual.mjs';
 
 describe('arePolygonsEqual()', () => {
   it('should be equal', () => {
@@ -24,53 +24,53 @@ describe('arePolygonsEqual()', () => {
       [32.8403, -117.249],
       [33.37490391451302, -116.97660570015627],
       [33.42492203887114, -117.11402936739367],
-      [32.8403, -117.249]
-    ]
+      [32.8403, -117.249],
+    ];
 
     const b = [
       [32.8403, -117.249],
       [33.37490391451302, -116.97660570015627],
       [33.42492203887114, -117.11402936739367],
-      [32.8403, -117.249]
-    ]
+      [32.8403, -117.249],
+    ];
 
-    expect(arePolygonsEqual(a, b)).to.be.true
-  })
+    expect(arePolygonsEqual(a, b)).to.be.true;
+  });
 
   it('should not be equal (vertex coordinates)', () => {
     const a = [
       [32.8403, -117.249],
       [33.37490391451301, -116.97660570015627],
       [33.42492203887114, -117.11402936739367],
-      [32.8403, -117.249]
-    ]
+      [32.8403, -117.249],
+    ];
 
     const b = [
       [32.8403, -117.249],
       [33.37490391451302, -116.97660570015627],
       [33.42492203887114, -117.11402936739367],
-      [32.8403, -117.249]
-    ]
+      [32.8403, -117.249],
+    ];
 
-    expect(arePolygonsEqual(a, b)).to.be.false
-  })
+    expect(arePolygonsEqual(a, b)).to.be.false;
+  });
 
   it('should not be equal (n vertices)', () => {
     const a = [
       [32.8403, -117.249],
       [33.37490391451302, -116.97660570015627],
       [33.42492203887114, -117.11402936739367],
-      [32.8403, -117.249]
-    ]
+      [32.8403, -117.249],
+    ];
 
     const b = [
       [32.8403, -117.249],
       [33.37490391451302, -116.97660570015627],
       [33.37490391451302, -116.97660570015627],
       [33.42492203887114, -117.11402936739367],
-      [32.8403, -117.249]
-    ]
+      [32.8403, -117.249],
+    ];
 
-    expect(arePolygonsEqual(a, b)).to.be.false
-  })
-})
+    expect(arePolygonsEqual(a, b)).to.be.false;
+  });
+});

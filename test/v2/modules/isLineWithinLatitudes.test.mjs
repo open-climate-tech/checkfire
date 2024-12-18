@@ -14,28 +14,34 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import {expect} from 'chai'
+import { expect } from 'chai';
 
-import isLineWithinLatitudes from '../../../src/v2/modules/isLineWithinLatitudes.mjs'
+import isLineWithinLatitudes from '../../../src/v2/modules/isLineWithinLatitudes.mjs';
 
 describe('isLineWithinLatitudes()', () => {
-  it("should return true", () => {
-    const line = [[32.9, -117.2], [33.1, -116.7]]
-    const north = 33
-    const south = 32.7
-    const longitude = -117.1
+  it('should return true', () => {
+    const line = [
+      [32.9, -117.2],
+      [33.1, -116.7],
+    ];
+    const north = 33;
+    const south = 32.7;
+    const longitude = -117.1;
 
-    const actual = isLineWithinLatitudes(line, north, south, longitude)
-    expect(actual).to.be.true
-  })
+    const actual = isLineWithinLatitudes(line, north, south, longitude);
+    expect(actual).to.be.true;
+  });
 
-  it("should return false", () => {
-    const line = [[33.1, -116.6], [32.6, -116.5]]
-    const north = 33
-    const south = 32.7
-    const longitude = -117.1
+  it('should return false', () => {
+    const line = [
+      [33.1, -116.6],
+      [32.6, -116.5],
+    ];
+    const north = 33;
+    const south = 32.7;
+    const longitude = -117.1;
 
-    const actual = isLineWithinLatitudes(line, north, south, longitude)
-    expect(actual).to.be.false
-  })
-})
+    const actual = isLineWithinLatitudes(line, north, south, longitude);
+    expect(actual).to.be.false;
+  });
+});

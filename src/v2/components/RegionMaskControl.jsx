@@ -14,43 +14,52 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useMemo} from 'react'
-import ReactDOM from 'react-dom'
+import React, { useMemo } from 'react';
+import ReactDOM from 'react-dom';
 
-import trapEvent from '../modules/trapEvent.mjs'
-import trapEvents from '../modules/trapEvents.mjs'
+import trapEvent from '../modules/trapEvent.mjs';
+import trapEvents from '../modules/trapEvents.mjs';
 
-import ButtonGroup from './ButtonGroup.jsx'
-import IconButton from './IconButton.jsx'
-import ZoomControl from './ZoomControl.jsx'
+import ButtonGroup from './ButtonGroup.jsx';
+import IconButton from './IconButton.jsx';
+import ZoomControl from './ZoomControl.jsx';
 
 export default function RegionMaskControl(props) {
-  const {container, map} = props
+  const { container, map } = props;
 
   const jsx = useMemo(() => {
     if (map == null) {
-      return null
+      return null;
     }
 
     const openPrefs = (event) => {
-      trapEvent(event)
-      window.location.replace('/v2/wildfirecheck/preferences')
-    }
+      trapEvent(event);
+      window.location.replace('/v2/wildfirecheck/preferences');
+    };
 
-    const types = 'onContextMenu onDragStart onDoubleClick onMouseDown onTouchStart'
-    const traps = trapEvents(types, {draggable: true})
+    const types =
+      'onContextMenu onDragStart onDoubleClick onMouseDown onTouchStart';
+    const traps = trapEvents(types, { draggable: true });
 
-    return 0,
-    <div className="c7e-map--control">
-      <ButtonGroup className="c7e-map--control--preferences">
-        <IconButton icon='c7e-icon--select-all' label="Select all" title="Select all" onClick={openPrefs} {...traps}/>
-      </ButtonGroup>
+    return (
+      0,
+      (
+        <div className="c7e-map--control">
+          <ButtonGroup className="c7e-map--control--preferences">
+            <IconButton
+              icon="c7e-icon--select-all"
+              label="Select all"
+              title="Select all"
+              onClick={openPrefs}
+              {...traps}
+            />
+          </ButtonGroup>
 
-      <ZoomControl map={map}/>
-    </div>
-  }, [map])
+          <ZoomControl map={map} />
+        </div>
+      )
+    );
+  }, [map]);
 
-  return container != null
-    ? ReactDOM.createPortal(jsx, container)
-    : jsx
+  return container != null ? ReactDOM.createPortal(jsx, container) : jsx;
 }

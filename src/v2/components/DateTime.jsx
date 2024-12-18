@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import renderDateTimeString from '../modules/renderDateTimeString.mjs'
+import renderDateTimeString from '../modules/renderDateTimeString.mjs';
 
 /**
  * Provides a simple footer for the main app layout.
@@ -24,11 +24,15 @@ import renderDateTimeString from '../modules/renderDateTimeString.mjs'
  * @returns {React.Element}
  */
 export default function DateTime(props) {
-  const {date} = props
-  return 0,
-  <time dateTime={date.toISOString()} className="c7e-date-time">
-    {renderDateTimeString(date)}
-  </time>
+  const { date } = props;
+  return (
+    0,
+    (
+      <time dateTime={date.toISOString()} className="c7e-date-time">
+        {renderDateTimeString(date)}
+      </time>
+    )
+  );
 }
 
 /**
@@ -38,9 +42,9 @@ export default function DateTime(props) {
  * @see DateTime
  */
 DateTime.render = function (props) {
-  const {date} = props
+  const { date } = props;
   return `\
 <time datetime="${date.toISOString()}" class="c7e-date-time">
   ${renderDateTimeString(date)}
-</time>`
-}
+</time>`;
+};

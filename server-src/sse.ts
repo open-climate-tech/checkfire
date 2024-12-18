@@ -17,9 +17,9 @@
 
 'use strict';
 
-import {Application, Request, Response} from 'express';
-import {DbMgr} from './db_mgr';
-import {OCT_Config, OCT_PotentialFire} from './oct_types';
+import { Application, Request, Response } from 'express';
+import { DbMgr } from './db_mgr';
+import { OCT_Config, OCT_PotentialFire } from './oct_types';
 // Server-Sent Events (SSE) backend
 
 import * as oct_utils from './oct_utils';
@@ -33,13 +33,17 @@ const SSE_INTERFACE_VERSION = 10;
 type ConnectionInfo = {
   email: string;
   response: Response;
-}
+};
 let connections: ConnectionInfo[] = [];
 
 /**
  * Send SSE eventsource message using given client response
  */
-async function sendEvent(potFire: OCT_PotentialFire, connectionInfo: ConnectionInfo, db: DbMgr) {
+async function sendEvent(
+  potFire: OCT_PotentialFire,
+  connectionInfo: ConnectionInfo,
+  db: DbMgr
+) {
   potFire.version = SSE_INTERFACE_VERSION;
 
   // only show proto events to users with showProto prefs
@@ -59,13 +63,14 @@ async function sendEvent(potFire: OCT_PotentialFire, connectionInfo: ConnectionI
   // DB objects already have croppedUrl fixed, but this is needed for pubsub objects and is idempotent
   potFire.croppedUrl = potFire.croppedUrl.split(',')[0];
 
-  let eventParts = [
+  const eventParts = [
     'id: ' + potFire.timestamp,
     'event: newPotentialFire',
     'data: ' + JSON.stringify(potFire),
-    '', ''  // two extra empty strings to generate \n\n at the end
+    '',
+    '', // two extra empty strings to generate \n\n at the end
   ];
-  let eventString = eventParts.join('\n');
+  const eventString = eventParts.join('\n');
   // logger.info('SendEvent', response.writableEnded, eventString);
   if (!connectionInfo.response.writableEnded) {
     connectionInfo.response.write(eventString);
@@ -75,7 +80,12 @@ async function sendEvent(potFire: OCT_PotentialFire, connectionInfo: ConnectionI
 /**
  * Check if given SSE request has last-event-id to restore connection
  */
-async function checkConnectionToRestore(request: Request, connectionInfo: ConnectionInfo, db: DbMgr, config: OCT_Config) {
+async function checkConnectionToRestore(
+  request: Request,
+  connectionInfo: ConnectionInfo,
+  db: DbMgr,
+  config: OCT_Config
+) {
   let prevTimestamp = 0;
   if (request.header('last-event-id')) {
     const eventId = parseInt(request.header('last-event-id') || '');
@@ -86,16 +96,20 @@ async function checkConnectionToRestore(request: Request, connectionInfo: Connec
   }
   const sqlStr = `select * from alerts where timestamp > ${prevTimestamp} order by sortid desc, timestamp desc limit 100`;
   const potFireEvents = await db.query(sqlStr);
-  potFireEvents.reverse().forEach(async (potFireEvent: Record<string,any>) => {
+  potFireEvents.reverse().forEach(async (potFireEvent: Record<string, any>) => {
     const potFire = oct_utils.dbAlertToUiObj(potFireEvent);
     await oct_utils.augmentCameraInfo(db, config, potFire);
     sendEvent(potFire, connectionInfo, db);
   });
 }
 
-async function updateFromDetectAsync(db: DbMgr, config: OCT_Config, potFire: OCT_PotentialFire) {
+async function updateFromDetectAsync(
+  db: DbMgr,
+  config: OCT_Config,
+  potFire: OCT_PotentialFire
+) {
   await oct_utils.augmentCameraInfo(db, config, potFire);
-  connections.forEach(connectionInfo => {
+  connections.forEach((connectionInfo) => {
     // clone potFire so any changes made by sendEvent for one connection doesn't affect other connections
     const copyPotFire = Object.assign({}, potFire);
     sendEvent(copyPotFire, connectionInfo, db);
@@ -127,13 +141,15 @@ function updateFromDetect(db: DbMgr, config: OCT_Config, messageData: string) {
 export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
   app.get('/fireEvents', async (request: Request, response: Response) => {
     request.setTimeout(50 * 60 * 1000); // extend default timeout of 2 minutes to 50 mins (1 hour is max)
-    request.on("close", () => {
+    request.on('close', () => {
       if (!response.writableEnded) {
         response.end();
-        logger.info("Stopped sending events.");
+        logger.info('Stopped sending events.');
       }
       // remove this response from connections array as well as any others in writableEnded state
-      connections = connections.filter(ci => ((ci.response !== response) && !ci.response.writableEnded));
+      connections = connections.filter(
+        (ci) => ci.response !== response && !ci.response.writableEnded
+      );
       logger.info('SSE close.  Total %d', connections.length);
     });
 
@@ -151,8 +167,13 @@ export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
     try {
       const userInfo = await oct_utils.checkAuth(request, config);
       connectionInfo.email = userInfo.email;
+      // eslint-disable-next-line no-empty
     } catch (_) {}
-    logger.info('SSE add %s.  Total %d', !!connectionInfo.email, connections.length);
+    logger.info(
+      'SSE add %s.  Total %d',
+      !!connectionInfo.email,
+      connections.length
+    );
     connections.push(connectionInfo);
     checkConnectionToRestore(request, connectionInfo, db, config);
 
@@ -161,7 +182,8 @@ export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
   return (messageData: string) => updateFromDetect(db, config, messageData);
 }
 
-if (process.env.CI) { // special exports for testing this module
+if (process.env.CI) {
+  // special exports for testing this module
   exports._testUpdate = updateFromDetect;
   exports._testConnections = (tc: ConnectionInfo[]) => {
     connections = tc;

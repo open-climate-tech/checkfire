@@ -22,5 +22,5 @@
  * @returns {string} A CSS value string.
  */
 export default function getCssValue(value) {
-  return typeof value === 'number' ? `${value}px` : value
+  return typeof value === 'number' ? `${value}px` : value;
 }

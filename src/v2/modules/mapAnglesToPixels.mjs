@@ -25,5 +25,5 @@
  * @returns {{x: number, y: number}} A Leaflet `Point` instance.
  */
 export default function mapAnglesToPixels(map, lat, lng) {
-  return map.latLngToContainerPoint(window.L.latLng(lat, lng))
+  return map.latLngToContainerPoint(window.L.latLng(lat, lng));
 }
