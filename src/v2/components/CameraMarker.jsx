@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import Icon from './Icon.jsx'
+import Icon from './Icon.jsx';
 
 // TODO: Support camera markers with or without fire events (and thus bearing).
 
@@ -30,17 +30,18 @@ import Icon from './Icon.jsx'
  * @returns {React.Element}
  */
 export default function CameraMarker(props) {
-  const {bearing = 0, icon = 'c7e-icon--potential-fire'} = props
+  const { bearing = 0, icon = 'c7e-icon--potential-fire' } = props;
   const styles = {
     left: '50%',
     position: 'absolute',
     top: '50%',
     transform: `rotate(${bearing}deg) translate(-50%, -50%)`,
-    transformOrigin: 'top left'
-  }
+    transformOrigin: 'top left',
+  };
 
-  return 0,
-  <Icon className="c7e-map--camera-marker" icon={icon} style={styles}/>
+  return (
+    0, (<Icon className="c7e-map--camera-marker" icon={icon} style={styles} />)
+  );
 }
 
 /**
@@ -50,16 +51,20 @@ export default function CameraMarker(props) {
  * @see CameraMarker
  */
 CameraMarker.render = function (props) {
-  const {bearing = 0, icon = 'c7e-icon--potential-fire'} = props
+  const { bearing = 0, icon = 'c7e-icon--potential-fire' } = props;
   const styles = {
     left: '50%',
     position: 'absolute',
     top: '50%',
     transform: `rotate(${bearing}deg) translate(-50%, -50%)`,
-    transformOrigin: 'top left'
-  }
+    transformOrigin: 'top left',
+  };
 
   // TODO: Add test to compare rendered string value to element instance.
 
-  return Icon.render({className: 'c7e-map--camera-marker', icon, style: styles})
-}
+  return Icon.render({
+    className: 'c7e-map--camera-marker',
+    icon,
+    style: styles,
+  });
+};

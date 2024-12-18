@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import trapEvent from './trapEvent.mjs'
+import trapEvent from './trapEvent.mjs';
 
 /**
  * Given a list of event types, returns a keyed collection of event handlers
@@ -30,5 +30,5 @@ import trapEvent from './trapEvent.mjs'
  *     the events named by `types`.
  */
 export default function tarpeEvents(types, handlers = {}) {
-  return types.split(/\s+/).forEach((type) => (handlers[type] = trapEvent))
+  return types.split(/\s+/).forEach((type) => (handlers[type] = trapEvent));
 }

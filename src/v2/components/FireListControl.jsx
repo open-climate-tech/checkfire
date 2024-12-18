@@ -14,10 +14,10 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import FireListMap from './FireListMap.jsx'
-import FireListToolbar from './FireListToolbar.jsx'
+import FireListMap from './FireListMap.jsx';
+import FireListToolbar from './FireListToolbar.jsx';
 
 /**
  * Provides layout for toolbar and map around the actual fire list content.
@@ -28,11 +28,15 @@ import FireListToolbar from './FireListToolbar.jsx'
  * @returns {React.Element}
  */
 export default function FireListControl(props) {
-  const {toolbarRef, ...otherProps} = props
+  const { toolbarRef, ...otherProps } = props;
 
-  return 0,
-  <div className="c7e-fire-list--control">
-    <FireListToolbar toolbarRef={toolbarRef} {...otherProps}/>
-    <FireListMap {...otherProps}/>
-  </div>
+  return (
+    0,
+    (
+      <div className="c7e-fire-list--control">
+        <FireListToolbar toolbarRef={toolbarRef} {...otherProps} />
+        <FireListMap {...otherProps} />
+      </div>
+    )
+  );
 }

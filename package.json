@@ -4,7 +4,7 @@
   "engines": {
     "node": "20.x"
   },
-  "gcp-build":"",
+  "gcp-build": "",
   "homepage": ".",
   "dependencies": {
     "@google-cloud/compute": "^3.7.0",
@@ -39,7 +39,7 @@
     "winston": "^3.8.2"
   },
   "scripts": {
-    "gcp-build":"",
+    "gcp-build": "",
     "start": "node dist/server-main.js",
     "dev": "npm run dev-server & ; npm run dev-client",
     "npx dev-client": "REACT_APP_BE_PORT=3141 npx react-scripts -r @cypress/instrument-cra start",

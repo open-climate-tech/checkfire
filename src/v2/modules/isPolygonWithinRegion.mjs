@@ -14,8 +14,8 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import isLineWithinLatitudes from './isLineWithinLatitudes.mjs'
-import isLineWithinLongitudes from './isLineWithinLongitudes.mjs'
+import isLineWithinLatitudes from './isLineWithinLatitudes.mjs';
+import isLineWithinLongitudes from './isLineWithinLongitudes.mjs';
 
 /**
  * Determines whether `region` contains some or all of `polygon`.
@@ -29,46 +29,51 @@ import isLineWithinLongitudes from './isLineWithinLongitudes.mjs'
  *     intersects with `region`; otherwise, `false`.
  */
 export default function isWithinRegion(polygon, region) {
-  const {east, north, south, west} = region
+  const { east, north, south, west } = region;
 
   // Northern hemisphere
-  let minLat = 90
-  let maxLat = 0
+  let minLat = 90;
+  let maxLat = 0;
 
   // Western hemisphere
   let minLong = 0;
-  let maxLong = -180
+  let maxLong = -180;
 
   for (let i = 0, n = polygon.length; i < n; ++i) {
-    const [x, y] = polygon[i]
+    const [x, y] = polygon[i];
 
-    minLat = Math.min(minLat, x)
-    maxLat = Math.max(maxLat, x)
-    minLong = Math.min(minLong, y)
-    maxLong = Math.max(maxLong, y)
+    minLat = Math.min(minLat, x);
+    maxLat = Math.max(maxLat, x);
+    minLong = Math.min(minLong, y);
+    maxLong = Math.max(maxLong, y);
 
     if (x >= south && x <= north && y >= west && y <= east) {
       // Vertex is within region.
-      return true
+      return true;
     }
   }
 
   if (minLat > north || maxLat < south || minLong > east || maxLong < west) {
     // Every vertex is outside of `region`.
-    return false
+    return false;
   }
 
   // `polygon` may have a diagonal edge crossing a corner of `region`. Check
   // every line segment of `polygon` for intersection with `region` rectangle.
-  return null != polygon.find((vertex, i) => {
-    const nextVertex = polygon[(i + 1) % polygon.length]
-    const line = [vertex, nextVertex]
+  return (
+    null !=
+    polygon.find((vertex, i) => {
+      const nextVertex = polygon[(i + 1) % polygon.length];
+      const line = [vertex, nextVertex];
 
-    return isLineWithinLongitudes(line, east, west, north)
-      || isLineWithinLongitudes(line, east, west, south)
-      || isLineWithinLatitudes(line, north, south, west)
-      || isLineWithinLatitudes(line, north, south, east)
-  })
+      return (
+        isLineWithinLongitudes(line, east, west, north) ||
+        isLineWithinLongitudes(line, east, west, south) ||
+        isLineWithinLatitudes(line, north, south, west) ||
+        isLineWithinLatitudes(line, north, south, east)
+      );
+    })
+  );
 
   // TODO: Even without intersecting line segments, areas may overlap if
   // `polygon` completely encapsulates `region`. Ignore this possibility on the

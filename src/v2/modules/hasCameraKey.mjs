@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import getCameraKey from './getCameraKey.mjs'
+import getCameraKey from './getCameraKey.mjs';
 
 /**
  * Compares the unique ID derived from `fireEvent` with `key`.
@@ -27,5 +27,5 @@ import getCameraKey from './getCameraKey.mjs'
  *     otherwise, `false`.
  */
 export default function hasCameraKey(fireEvent, key) {
-  return getCameraKey(fireEvent) === key
+  return getCameraKey(fireEvent) === key;
 }

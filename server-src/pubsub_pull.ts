@@ -19,8 +19,8 @@
 // Google Pubsub listener for potential fire messages from Detection service
 
 import * as oct_utils from './oct_utils';
-import {PubSub} from '@google-cloud/pubsub';
-import {OCT_Config} from './oct_types';
+import { PubSub } from '@google-cloud/pubsub';
+import { OCT_Config } from './oct_types';
 
 /**
  * Create a new pubsub subscription for this nodejs process.
@@ -28,18 +28,26 @@ import {OCT_Config} from './oct_types';
  * Uses current time as part of the name for easy monitoring and random value for uniqueness
  */
 async function createSub(pubSubClient: PubSub, topicName: string) {
-  const d = new Date()
+  const d = new Date();
   // generate a unique name
-  const subName = 'firecam-sub-' + 'M' + d.getMonth() + 'D' + d.getDate() + 'H' + d.getHours() +
-                  'u' + Math.floor(Math.random()*1000);
+  const subName =
+    'firecam-sub-' +
+    'M' +
+    d.getMonth() +
+    'D' +
+    d.getDate() +
+    'H' +
+    d.getHours() +
+    'u' +
+    Math.floor(Math.random() * 1000);
   const oneDaySeconds = 3600 * 24; // minimum duration is 1 day
   const options = {
     expirationPolicy: {
       ttl: {
-        seconds: oneDaySeconds 
-      }
+        seconds: oneDaySeconds,
+      },
     },
-    messageRetentionDuration: oneDaySeconds
+    messageRetentionDuration: oneDaySeconds,
   };
 
   const res = await oct_utils.retryWrap(async () => {
@@ -51,18 +59,21 @@ async function createSub(pubSubClient: PubSub, topicName: string) {
 /**
  * Initialize Google Pubsub module to listen to potential fire notifications
  */
-export async function initPubSub(config: OCT_Config, sseUpdate: (a0: string) => void) {
+export async function initPubSub(
+  config: OCT_Config,
+  sseUpdate: (a0: string) => void
+) {
   if (!config.pubsubTopic) {
     return;
   }
-  const options:any = {};
+  const options: any = {};
   if (config.gcpServiceKey) {
     options.keyFilename = config.gcpServiceKey;
   }
   const pubSubClient = new PubSub(options);
   const subscription = await createSub(pubSubClient, config.pubsubTopic);
 
-  subscription.on('message', function(message: any) {
+  subscription.on('message', function (message: any) {
     message.ack();
     sseUpdate(message.data);
   });

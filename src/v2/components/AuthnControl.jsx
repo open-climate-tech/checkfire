@@ -14,39 +14,52 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useCallback, useMemo} from 'react'
-import ReactDOM from 'react-dom'
+import React, { useCallback, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 
-import query from '../modules/query.mjs'
+import query from '../modules/query.mjs';
 
-import IconButton from './IconButton.jsx'
+import IconButton from './IconButton.jsx';
 
 export default function AuthnControl(props) {
-  const {container, isAuthenticated, map, onToggleAuthn} = props
+  const { container, isAuthenticated, map, onToggleAuthn } = props;
 
   const signIn = useCallback(() => {
-    onToggleAuthn('Sign in', () => onToggleAuthn(null, null, true))
-  }, [onToggleAuthn])
+    onToggleAuthn('Sign in', () => onToggleAuthn(null, null, true));
+  }, [onToggleAuthn]);
 
   const signOut = useCallback(() => {
-    query.get('/api/logout').then(() => window.location.reload())
-  }, [])
+    query.get('/api/logout').then(() => window.location.reload());
+  }, []);
 
   const jsx = useMemo(() => {
     if (map == null) {
-      return null
+      return null;
     }
 
-    return 0,
-    <div className="c7e-map--control">
-      { isAuthenticated
-        ? <IconButton icon='c7e-icon--sign-out' label="Sign out" title="Sign out" onClick={signOut}/>
-        : <IconButton icon='c7e-icon--sign-in' label="Sign in" title="Sign in" onClick={signIn}/>
-      }
-    </div>
-  }, [isAuthenticated, map, signIn, signOut])
+    return (
+      0,
+      (
+        <div className="c7e-map--control">
+          {isAuthenticated ? (
+            <IconButton
+              icon="c7e-icon--sign-out"
+              label="Sign out"
+              title="Sign out"
+              onClick={signOut}
+            />
+          ) : (
+            <IconButton
+              icon="c7e-icon--sign-in"
+              label="Sign in"
+              title="Sign in"
+              onClick={signIn}
+            />
+          )}
+        </div>
+      )
+    );
+  }, [isAuthenticated, map, signIn, signOut]);
 
-  return container != null
-    ? ReactDOM.createPortal(jsx, container)
-    : jsx
+  return container != null ? ReactDOM.createPortal(jsx, container) : jsx;
 }

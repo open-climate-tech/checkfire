@@ -17,23 +17,25 @@
 
 // Utility functions for react code
 
-import React from "react";
-import {Link, useLocation} from "react-router-dom";
-import { useMediaQuery } from 'react-responsive'
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useMediaQuery } from 'react-responsive';
 
 /**
  * Return the full URL for UI backend for given route
- * @param {string} path 
+ * @param {string} path
  */
 export function getServerUrl(path) {
-  const serverPrefix = (process.env.NODE_ENV === 'development') ?
-    `http://localhost:${process.env.REACT_APP_BE_PORT}` : '';
+  const serverPrefix =
+    process.env.NODE_ENV === 'development'
+      ? `http://localhost:${process.env.REACT_APP_BE_PORT}`
+      : '';
   return serverPrefix + path;
 }
 
 /**
  * Make a GET API call to the UI backend to given URL
- * @param {string} serverUrl 
+ * @param {string} serverUrl
  */
 export async function serverGet(serverUrl) {
   const getParams = {};
@@ -51,18 +53,18 @@ export async function serverGet(serverUrl) {
 
 /**
  * Make POST API call to the UI backend to given URL with given body data
- * @param {string} serverUrl 
- * @param {json} body 
+ * @param {string} serverUrl
+ * @param {json} body
  */
 export async function serverPost(serverUrl, body) {
   const postParams = {
     method: 'POST',
     headers: {
-      'Accept': 'application/json, text/plain, */*',
-      'Content-Type': 'application/json'
+      Accept: 'application/json, text/plain, */*',
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
-  }
+  };
   if (process.env.NODE_ENV === 'development') {
     postParams.credentials = 'include'; //send cookies to dev server on separate port
   }
@@ -93,7 +95,7 @@ export function Legalese(props) {
         <a href="/privacy.html">Privacy Policy</a>
       </p>
     </div>
-  )
+  );
 }
 
 /**
@@ -102,7 +104,7 @@ export function Legalese(props) {
  */
 export function ZoomableMaps(props) {
   const mapsList = props.mapUrls.split(',');
-  const initialIndex = (mapsList.length > 1) ? (mapsList.length - 2) : 0;
+  const initialIndex = mapsList.length > 1 ? mapsList.length - 2 : 0;
   const [index, setIndex] = React.useState(initialIndex);
   return (
     <div>
@@ -114,17 +116,33 @@ export function ZoomableMaps(props) {
         </p>
         <p>View area</p>
       </div> */}
-      <p style={{marginBottom:0}}>View area</p>
-      <div className="w3-display-container" style={{height: "280px"}}>
-        <div className="w3-display-topmiddle" style={{width: "280px"}}>
-          {(mapsList.length > 1) &&
+      <p style={{ marginBottom: 0 }}>View area</p>
+      <div className="w3-display-container" style={{ height: '280px' }}>
+        <div className="w3-display-topmiddle" style={{ width: '280px' }}>
+          {mapsList.length > 1 && (
             <div className="w3-display-topleft">
-              <button className={"w3-button w3-border w3-round-large w3-black w3-padding-small" + ((index === mapsList.length - 1) ? " w3-disabled" : "")}
-                onClick={() => setIndex(index < mapsList.length - 1 ? index + 1 : index)}>+</button>
-              <button className={"w3-button w3-border w3-round-large w3-black w3-padding-small" + ((index === 0) ? " w3-disabled" : "")}
-                onClick={() => setIndex(index > 0 ? index - 1 : index)}>-</button>
+              <button
+                className={
+                  'w3-button w3-border w3-round-large w3-black w3-padding-small' +
+                  (index === mapsList.length - 1 ? ' w3-disabled' : '')
+                }
+                onClick={() =>
+                  setIndex(index < mapsList.length - 1 ? index + 1 : index)
+                }
+              >
+                +
+              </button>
+              <button
+                className={
+                  'w3-button w3-border w3-round-large w3-black w3-padding-small' +
+                  (index === 0 ? ' w3-disabled' : '')
+                }
+                onClick={() => setIndex(index > 0 ? index - 1 : index)}
+              >
+                -
+              </button>
             </div>
-          }
+          )}
           <img width="280" height="280" src={mapsList[index]} alt="Viewshed" />
         </div>
       </div>
@@ -135,13 +153,24 @@ export function ZoomableMaps(props) {
 function TimeLapseVideo(props) {
   return (
     <div className="w3-tooltip">
-      <p className="tooltip-text" style={{width: '640px'}}>
-        Time-lapse video starting a few minutes prior to the automatically detected potential wildfire.
-        The video shows a portion of the images near the suspected location of fire smoke (highlighted by a rectangle).
-        The rectangle is colored yellow on images prior to the detection and colored red afterwards.
-        To see a broader view for more context, click on the "full image" link above the video.
+      <p className="tooltip-text" style={{ width: '640px' }}>
+        Time-lapse video starting a few minutes prior to the automatically
+        detected potential wildfire. The video shows a portion of the images
+        near the suspected location of fire smoke (highlighted by a rectangle).
+        The rectangle is colored yellow on images prior to the detection and
+        colored red afterwards. To see a broader view for more context, click on
+        the `&quot;`full image`&quot;` link above the video.
       </p>
-      <video controls autoPlay muted loop playsInline width="640" height="412" poster={props.videoUrl}>
+      <video
+        controls
+        autoPlay
+        muted
+        loop
+        playsInline
+        width="640"
+        height="412"
+        poster={props.videoUrl}
+      >
         <source src={props.videoUrl} type="video/mp4" />
         Your browser does not support the video tag
       </video>
@@ -159,43 +188,65 @@ export function FirePreview(props) {
   return (
     <div key={props.potFire.croppedUrl} data-testid="FireListElement">
       <div className="w3-row-padding w3-padding-small w3-container w3-light-grey">
-        <h5 style={{marginTop:0}}>
-          {new Date(props.potFire.timestamp * 1000).toLocaleString("en-US")}:&nbsp;
+        <h5 style={{ marginTop: 0 }}>
+          {new Date(props.potFire.timestamp * 1000).toLocaleString('en-US')}
+          :&nbsp;
           {props.potFire.camInfo.cityName}
           &nbsp;(
-            <a href={props.potFire.camInfo.networkUrl} target="_blank" rel="noopener noreferrer">{props.potFire.camInfo.network}</a>
-            &nbsp;
-            <a href={props.potFire.camInfo.cameraUrl} target="_blank" rel="noopener noreferrer">
-              {props.potFire.camInfo.cameraName}
-            </a>
-            {props.potFire.camInfo.cameraDir && ' facing ' + props.potFire.camInfo.cameraDir}
-          )
-          {/* &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)} */}
+          <a
+            href={props.potFire.camInfo.networkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {props.potFire.camInfo.network}
+          </a>
+          &nbsp;
+          <a
+            href={props.potFire.camInfo.cameraUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {props.potFire.camInfo.cameraName}
+          </a>
+          {props.potFire.camInfo.cameraDir &&
+            ' facing ' + props.potFire.camInfo.cameraDir}
+          ){/* &nbsp;with score {Number(props.potFire.adjScore).toFixed(2)} */}
           :&nbsp;
-          <a href={props.potFire.annotatedUrl} target="_blank" rel="noopener noreferrer">Full image</a>
-          {props.showProto && props.potFire.weatherScore &&
-            <div className={(props.potFire.weatherScore > 0.3) ? "w3-pale-red" : ""}>
+          <a
+            href={props.potFire.annotatedUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Full image
+          </a>
+          {props.showProto && props.potFire.weatherScore && (
+            <div
+              className={props.potFire.weatherScore > 0.3 ? 'w3-pale-red' : ''}
+            >
               Wscore: {props.potFire.weatherScore}
             </div>
-          }
-          {props.showProto && props.potFire.isProto > 1 &&
+          )}
+          {props.showProto && props.potFire.isProto > 1 && (
             <div className="w3-pale-green">Proto: {props.potFire.isProto}</div>
-          }
+          )}
         </h5>
-        {sideBySide ? (<div>
-          <div className="w3-col m8">
-            <TimeLapseVideo videoUrl={props.potFire.croppedUrl}/>
+        {sideBySide ? (
+          <div>
+            <div className="w3-col m8">
+              <TimeLapseVideo videoUrl={props.potFire.croppedUrl} />
+            </div>
+            <div className="w3-col m4">
+              {props.childComponent}
+              <ZoomableMaps mapUrls={props.potFire.mapUrl} />
+            </div>
           </div>
-          <div className="w3-col m4">
+        ) : (
+          <div>
+            <TimeLapseVideo videoUrl={props.potFire.croppedUrl} />
             {props.childComponent}
-            <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
+            <ZoomableMaps mapUrls={props.potFire.mapUrl} />
           </div>
-        </div>)
-        : (<div>
-            <TimeLapseVideo videoUrl={props.potFire.croppedUrl}/>
-            {props.childComponent}
-            <ZoomableMaps mapUrls={props.potFire.mapUrl}/>
-        </div>)}
+        )}
       </div>
       &nbsp;
     </div>
@@ -209,48 +260,62 @@ export function FirePreview(props) {
 export function VoteButtons(props) {
   const myLoc = useLocation();
   const myPath = myLoc.pathname;
-if (!props.validCookie) {
+  if (!props.validCookie) {
     return (
-    <div>
-      <p style={{margin:0}}>
-        <Link to={{pathname: '/login', query: {fwdPath: myPath} }}>Sign in</Link> to vote if this is a fire
-      </p>
-    </div>
+      <div>
+        <p style={{ margin: 0 }}>
+          <Link to={{ pathname: '/login', query: { fwdPath: myPath } }}>
+            Sign in
+          </Link>{' '}
+          to vote if this is a fire
+        </p>
+      </div>
     );
   } else if (props.potFire.voted !== undefined) {
-    return (<div>
-      <p style={{margin:0}}>
-        Thanks for confirming this is&nbsp;
-        {props.potFire.voted ? 'a real' : 'not a'}
-        &nbsp;fire.
-      </p>
-      <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, 'undo')}>
-        Undo vote
-      </button>
-    </div>);
+    return (
+      <div>
+        <p style={{ margin: 0 }}>
+          Thanks for confirming this is&nbsp;
+          {props.potFire.voted ? 'a real' : 'not a'}
+          &nbsp;fire.
+        </p>
+        <button
+          className="w3-button w3-border w3-round-large w3-black"
+          onClick={() => props.onVote(props.potFire, 'undo')}
+        >
+          Undo vote
+        </button>
+      </div>
+    );
   } else {
     return (
-    <div>
-      <p style={{margin:0}}>Is this a fire?</p>
-      <div className="w3-tooltip w3-col m6 w3-right-align">
-        <p className="tooltip-text" style={{width: '120px'}}>
-          Wildfires and prescribed burns
-        </p>
-        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, 'yes')}>
-          <i className="fa fa-fire" style={{color: "red"}} />
-          &nbsp;Real fire
-        </button>
+      <div>
+        <p style={{ margin: 0 }}>Is this a fire?</p>
+        <div className="w3-tooltip w3-col m6 w3-right-align">
+          <p className="tooltip-text" style={{ width: '120px' }}>
+            Wildfires and prescribed burns
+          </p>
+          <button
+            className="w3-button w3-border w3-round-large w3-black"
+            onClick={() => props.onVote(props.potFire, 'yes')}
+          >
+            <i className="fa fa-fire" style={{ color: 'red' }} />
+            &nbsp;Real fire
+          </button>
+        </div>
+        <div className="w3-tooltip w3-col m6 w3-left-align">
+          <p className="tooltip-text" style={{ width: '120px' }}>
+            Fog, clouds, chimney smoke, dust, and glare
+          </p>
+          <button
+            className="w3-button w3-border w3-round-large w3-black"
+            onClick={() => props.onVote(props.potFire, 'no')}
+          >
+            <i className="fa fa-close" />
+            &nbsp;Not a fire
+          </button>
+        </div>
       </div>
-      <div className="w3-tooltip w3-col m6 w3-left-align">
-        <p className="tooltip-text" style={{width: '120px'}}>
-          Fog, clouds, chimney smoke, dust, and glare
-        </p>
-        <button className="w3-button w3-border w3-round-large w3-black" onClick={()=> props.onVote(props.potFire, 'no')}>
-          <i className="fa fa-close" />
-          &nbsp;Not a fire
-        </button>
-      </div>
-    </div>
     );
   }
 }

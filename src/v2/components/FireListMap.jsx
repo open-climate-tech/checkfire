@@ -14,39 +14,49 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
-import Duration from '../modules/Duration.mjs'
+import Duration from '../modules/Duration.mjs';
 
-import AuthnControl from './AuthnControl.jsx'
-import CameraMarker from './CameraMarker.jsx'
-import DateTime from './DateTime.jsx'
-import MulticameraBadge from './MulticameraBadge.jsx'
-import PreferencesControl from './PreferencesControl.jsx'
+import AuthnControl from './AuthnControl.jsx';
+import CameraMarker from './CameraMarker.jsx';
+import DateTime from './DateTime.jsx';
+import MulticameraBadge from './MulticameraBadge.jsx';
+import PreferencesControl from './PreferencesControl.jsx';
 
-import getCameraKey from '../modules/getCameraKey.mjs'
-import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs'
-import hasCameraKey from '../modules/hasCameraKey.mjs'
+import getCameraKey from '../modules/getCameraKey.mjs';
+import findPrimaryPolygon from '../modules/findPrimaryPolygon.mjs';
+import hasCameraKey from '../modules/hasCameraKey.mjs';
 
-const {error: report} = console
+const { error: report } = console;
 
 const Props = {
   BADGE_Z_INDEX_OFFSET: 500,
-  BOUNDS: [[32.4, -122.1], [36.9, -115.8]], // Corners of `midsocalCams` region.
+  BOUNDS: [
+    [32.4, -122.1],
+    [36.9, -115.8],
+  ], // Corners of `midsocalCams` region.
   CENTER: [34.69, 240.96], // Midpoint between corners of `BOUNDS`.
   DEFAULT_Z_INDEX_OFFSET: 0,
   INTERSECTING_POLYGON: {
     color: '#c00',
     fill: '#c00',
     fillOpacity: 0.15,
-    opacity: 0.80,
-    weight: 1.50
+    opacity: 0.8,
+    weight: 1.5,
   },
   MAP: {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    attribution:
+      '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 18,
     zoomAnimationThreshold: 18,
-    zoomControl: false
+    zoomControl: false,
   },
   MARKER_Z_INDEX_OFFSET: 250,
   POLYGON: {
@@ -55,22 +65,22 @@ const Props = {
     fill: '#00f',
     fillOpacity: 0.07,
     opacity: 0.33,
-    weight: 1.50
+    weight: 1.5,
   },
   PRIMARY_POLYGON: {
     color: '#f0f',
     dashArray: null,
     fill: '#f0f',
     fillOpacity: 0.15,
-    opacity: 0.60,
-    weight: 1.50
+    opacity: 0.6,
+    weight: 1.5,
   },
   SET_VIEW: {
     animate: true,
-    duration: Duration.SECOND / 1000
+    duration: Duration.SECOND / 1000,
   },
-  URL_TEMPLATE: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-}
+  URL_TEMPLATE: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+};
 
 // TODO: Implement prescribed fire markers.
 
@@ -88,17 +98,25 @@ const Props = {
  */
 export default function FireMap(props) {
   const {
-    fires, firesByKey, isAuthenticated, onScrollToFire, onToggleAuthn,
-    region, selectedIndex
-  } = props
+    fires,
+    firesByKey,
+    isAuthenticated,
+    onScrollToFire,
+    onToggleAuthn,
+    region,
+    selectedIndex,
+  } = props;
 
-  const [scrollingTo, setScrollingTo] = useState(-1)
+  const [scrollingTo, setScrollingTo] = useState(-1);
 
   const bounds = useMemo(() => {
     return region != null
-      ? [[region.west, region.north], [region.east, region.south]]
-      : Props.BOUNDS
-  }, [region])
+      ? [
+          [region.west, region.north],
+          [region.east, region.south],
+        ]
+      : Props.BOUNDS;
+  }, [region]);
 
   // NOTE: Use references extensively here because React and Leaflet use
   // different models for maintaining state and interacting with the DOM. For
@@ -107,34 +125,34 @@ export default function FireMap(props) {
   // register an event listener with cached markers, we need a stable callback
   // and list of fires (otherwise the cached markers will use stale instances of
   // these in the closure created by the React render cycle).
-  const controlRef = useRef({})
-  const expandedStackRef = useRef(null)
-  const fireRef = useRef()
-  const firesRef = useRef()
-  const mapRef = useRef()
-  const markersRef = useRef({})
-  const onScrollToFireRef = useRef()
-  const stacksRef = useRef({})
-  const timerRef = useRef()
+  const controlRef = useRef({});
+  const expandedStackRef = useRef(null);
+  const fireRef = useRef();
+  const firesRef = useRef();
+  const mapRef = useRef();
+  const markersRef = useRef({});
+  const onScrollToFireRef = useRef();
+  const stacksRef = useRef({});
+  const timerRef = useRef();
 
-  firesRef.current = fires
-  onScrollToFireRef.current = onScrollToFire
+  firesRef.current = fires;
+  onScrollToFireRef.current = onScrollToFire;
 
   const handleCameraClick = useCallback((key) => {
-    const {current: fires} = firesRef
-    const {current: onScrollToFire} = onScrollToFireRef
-    const index = fires.findIndex((x) => hasCameraKey(x, key))
+    const { current: fires } = firesRef;
+    const { current: onScrollToFire } = onScrollToFireRef;
+    const index = fires.findIndex((x) => hasCameraKey(x, key));
 
-    setScrollingTo(index)
-    onScrollToFire(index)
-  }, [])
+    setScrollingTo(index);
+    onScrollToFire(index);
+  }, []);
 
   useEffect(() => {
     // Finished scrolling. Allow the map to update.
     if (selectedIndex === scrollingTo) {
-      setScrollingTo(-1)
+      setScrollingTo(-1);
     }
-  }, [scrollingTo, selectedIndex])
+  }, [scrollingTo, selectedIndex]);
 
   useEffect(() => {
     // Generate map objects (markers, polygons, ...) once whenever the list of
@@ -142,91 +160,101 @@ export default function FireMap(props) {
 
     // Start by clearing all cached markers...
     Object.keys(markersRef.current).forEach((key) => {
-      const marker = markersRef.current[key]
-      marker.icon.remove()
-      marker.polygons.forEach((x) => x.remove())
+      const marker = markersRef.current[key];
+      marker.icon.remove();
+      marker.polygons.forEach((x) => x.remove());
 
       if (marker.intersection != null) {
-        marker.intersection.remove()
+        marker.intersection.remove();
       }
-    })
+    });
 
     // ...and all cached stacks.
     Object.keys(stacksRef.current).forEach((key) => {
-      const stack = stacksRef.current[key]
+      const stack = stacksRef.current[key];
       if (stack.badge != null) {
-        stack.badge.remove()
+        stack.badge.remove();
       }
-    })
+    });
 
-    const {L} = window
-    const {current: map} = initializeMap(mapRef, controlRef)
-    const markers = (markersRef.current = {})
-    const stacks = (stacksRef.current = {})
+    const { L } = window;
+    const { current: map } = initializeMap(mapRef, controlRef);
+    const markers = (markersRef.current = {});
+    const stacks = (stacksRef.current = {});
 
     fires.forEach((fire) => {
-      const key = getCameraKey(fire)
+      const key = getCameraKey(fire);
 
       if (markers[key] != null) {
-        report(`Marker '${key}' already exists`)
-        return
+        report(`Marker '${key}' already exists`);
+        return;
       }
 
       const {
-        camInfo: {
-          latitude, longitude
-        }, fireHeading: bearing = -0, polygon, sourcePolygons = []
-      } = fire
+        camInfo: { latitude, longitude },
+        fireHeading: bearing = -0,
+        polygon,
+        sourcePolygons = [],
+      } = fire;
 
       if (sourcePolygons.length === 0) {
-        sourcePolygons[0] = polygon
+        sourcePolygons[0] = polygon;
       }
 
-      const coordinates = [latitude, longitude]
-      const html = CameraMarker.render({bearing})
-      const cameraMarker = L.divIcon({html, tooltipAnchor: [12, 0]})
+      const coordinates = [latitude, longitude];
+      const html = CameraMarker.render({ bearing });
+      const cameraMarker = L.divIcon({ html, tooltipAnchor: [12, 0] });
 
-      const greatPolygon = []
-      const polygons = []
+      const greatPolygon = [];
+      const polygons = [];
 
       // Generate polygons for each secondary angle on this fire.
       Object.keys(fire._anglesByKey).forEach((k) =>
-        addPolygon(firesByKey[k], polygons, greatPolygon))
+        addPolygon(firesByKey[k], polygons, greatPolygon)
+      );
 
       // Generate a polygon for this fire’s primary angle.
-      addPolygon(fire, polygons, greatPolygon)
+      addPolygon(fire, polygons, greatPolygon);
 
       markers[key] = {
         bearing,
         greatPolygon: L.polygon(greatPolygon, Props.POLYGON),
-        icon: L.marker(coordinates, {icon: cameraMarker}),
+        icon: L.marker(coordinates, { icon: cameraMarker }),
         latitude,
         longitude,
-        polygons
-      }
+        polygons,
+      };
 
-      markers[key].icon.bindTooltip(renderFireTooltip(fire))
-      markers[key].icon.on({click: () => {
-        handleCameraClick(key)
-      }})
+      markers[key].icon.bindTooltip(renderFireTooltip(fire));
+      markers[key].icon.on({
+        click: () => {
+          handleCameraClick(key);
+        },
+      });
 
-      markers[key].icon.addTo(map)
+      markers[key].icon.addTo(map);
 
       if (fire.sourcePolygons.length > 1) {
         // NOTE: Points passed when creating a polygon shouldn’t have a last
         // point equal to the first one. It’s better to filter out such points.
         // https://leafletjs.com/reference.html#polygon
-        const vertices = fire.polygon.slice(0, fire.polygon.length - 1)
-        markers[key].intersection = L.polygon(vertices, Props.INTERSECTING_POLYGON)
+        const vertices = fire.polygon.slice(0, fire.polygon.length - 1);
+        markers[key].intersection = L.polygon(
+          vertices,
+          Props.INTERSECTING_POLYGON
+        );
       }
 
       if (fire.sourcePolygons.length > 1) {
-        markers[key].intersection = L.polygon(fire.polygon, Props.INTERSECTING_POLYGON)
+        markers[key].intersection = L.polygon(
+          fire.polygon,
+          Props.INTERSECTING_POLYGON
+        );
       }
 
       markers[key].icon.on({
         click() {
-          handleCameraClick(key)
+          handleCameraClick(key);
         },
 
         // Handle hover events when this marker’s stack is expanded (actually,
@@ -235,271 +263,307 @@ export default function FireMap(props) {
 
         mouseout(event) {
           if (expandedStackRef.current != null) {
-            event.target.setZIndexOffset(Props.DEFAULT_Z_INDEX_OFFSET)
+            event.target.setZIndexOffset(Props.DEFAULT_Z_INDEX_OFFSET);
           }
         },
         mouseover(event) {
           if (expandedStackRef.current != null) {
-            event.target.setZIndexOffset(Props.MARKER_Z_INDEX_OFFSET)
+            event.target.setZIndexOffset(Props.MARKER_Z_INDEX_OFFSET);
           }
-        }
-      })
+        },
+      });
 
-      markers[key].icon.addTo(map)
+      markers[key].icon.addTo(map);
 
-      const coordinatesKey = getCoordinatesKey(coordinates)
+      const coordinatesKey = getCoordinatesKey(coordinates);
       if (stacks[coordinatesKey] == null) {
         stacks[coordinatesKey] = {
           cameraName: fire.camInfo.cameraName,
           cityName: fire.camInfo.cityName,
           badge: null,
           keys: new Set(),
-          timestamp: Number.POSITIVE_INFINITY
-        }
+          timestamp: Number.POSITIVE_INFINITY,
+        };
       }
 
-      const stack = stacks[coordinatesKey]
+      const stack = stacks[coordinatesKey];
 
-      stack.keys.add(key)
+      stack.keys.add(key);
 
       // The existing badge will be orphaned. Unregister its event handler.
       if (stack.badge != null) {
-        stack.badge.off('click')
+        stack.badge.off('click');
       }
 
       // Render a new badge each time to reflect changing `keys.size`.
-      stack.badge =
-        L.marker(coordinates, {
-          icon: L.divIcon({
-            html: MulticameraBadge.render({count: stack.keys.size})
-          }),
-          zIndexOffset: Props.BADGE_Z_INDEX_OFFSET
-        })
+      stack.badge = L.marker(coordinates, {
+        icon: L.divIcon({
+          html: MulticameraBadge.render({ count: stack.keys.size }),
+        }),
+        zIndexOffset: Props.BADGE_Z_INDEX_OFFSET,
+      });
 
-      stack.timestamp = Math.min(stack.timestamp, fire.timestamp)
-      stack.tooltip = renderStackTooltip(stack)
-      stack.badge.bindTooltip(stack.tooltip)
+      stack.timestamp = Math.min(stack.timestamp, fire.timestamp);
+      stack.tooltip = renderStackTooltip(stack);
+      stack.badge.bindTooltip(stack.tooltip);
       stack.badge.on({
-        click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef, stack)
-      })
-    })
-  }, [bounds, fires, firesByKey, handleCameraClick])
+        click: () =>
+          toggleStack(map, markersRef, stacksRef, expandedStackRef, stack),
+      });
+    });
+  }, [bounds, fires, firesByKey, handleCameraClick]);
 
   useEffect(() => {
     // `selectedIndex` will change rapidly when fires are loading, once for each
     // fire loaded.
-    const fire = fires[selectedIndex]
+    const fire = fires[selectedIndex];
 
     if (fire != null && scrollingTo === -1) {
-      const {current: map} = initializeMap(mapRef, controlRef)
-      const {current: markers} = markersRef
-      const {current: stacks} = stacksRef
-      const {camInfo: {latitude, longitude}} = fire
-      const key = getCameraKey(fire)
+      const { current: map } = initializeMap(mapRef, controlRef);
+      const { current: markers } = markersRef;
+      const { current: stacks } = stacksRef;
+      const {
+        camInfo: { latitude, longitude },
+      } = fire;
+      const key = getCameraKey(fire);
 
       if (expandedStackRef.current != null) {
-        toggleStack(map, markersRef, stacksRef, expandedStackRef)
+        toggleStack(map, markersRef, stacksRef, expandedStackRef);
       }
 
       Object.values(markers).forEach((x) => {
         if (x !== markers[key]) {
-          x.polygons.forEach((p) => p.remove())
-          if (x.intersection != null ) {
-            x.intersection.remove()
+          x.polygons.forEach((p) => p.remove());
+          if (x.intersection != null) {
+            x.intersection.remove();
           }
         }
-      })
+      });
 
       // XXX: Force icon to front.
-      markers[key].icon.remove()
-      markers[key].icon.addTo(map)
+      markers[key].icon.remove();
+      markers[key].icon.addTo(map);
 
       Object.keys(fire._anglesByKey).forEach((k) => {
         if (markers[k] != null) {
           // XXX: Force icon to front.
-          markers[k].icon.remove()
-          markers[k].icon.addTo(map)
+          markers[k].icon.remove();
+          markers[k].icon.addTo(map);
         }
-      })
+      });
 
-      Object.values(stacks).forEach(({badge, keys}) => {
+      Object.values(stacks).forEach(({ badge, keys }) => {
         // XXX: Force badge to front when relevant.
-        badge.remove()
+        badge.remove();
         if (keys.size > 1) {
-          badge.addTo(map)
+          badge.addTo(map);
         }
-      })
+      });
 
       markers[key].polygons.forEach((p) => {
-        p.addTo(map)
+        p.addTo(map);
 
         // Search polygon `p` for coordinates at the same latitude and
         // longitude as the camera itself.
-        const isPrimary = p.getLatLngs()[0].some(({lat, lng}) =>
-          lat === latitude && lng === longitude)
+        const isPrimary = p
+          .getLatLngs()[0]
+          .some(({ lat, lng }) => lat === latitude && lng === longitude);
 
         if (isPrimary) {
-          p.setStyle(Props.PRIMARY_POLYGON)
-          p.bringToFront()
+          p.setStyle(Props.PRIMARY_POLYGON);
+          p.bringToFront();
         } else {
-          p.setStyle(Props.POLYGON)
+          p.setStyle(Props.POLYGON);
         }
-      })
+      });
 
       if (markers[key].intersection != null) {
-        markers[key].intersection.addTo(map)
+        markers[key].intersection.addTo(map);
       }
 
       // Only animate map if the selected fire has changed.
       if (fireRef.current !== fire) {
-        fireRef.current = fire
+        fireRef.current = fire;
 
         // Debounce map pan and zoom.
-        clearTimeout(timerRef.current)
+        clearTimeout(timerRef.current);
 
         // Zoom out to give the user some context.
-        map.setZoom(8, Props.SET_VIEW)
+        map.setZoom(8, Props.SET_VIEW);
 
         timerRef.current = setTimeout(() => {
-          map.panTo([latitude, longitude], Props.SET_VIEW)
+          map.panTo([latitude, longitude], Props.SET_VIEW);
 
           timerRef.current = setTimeout(() => {
             timerRef.current = setTimeout(() => {
-              map.fitBounds(markers[key].greatPolygon.getBounds(), Props.SET_VIEW)
-            }, Duration.SECOND)
-          }, Duration.SECOND / 4)
-        }, Duration.SECOND / 4)
+              map.fitBounds(
+                markers[key].greatPolygon.getBounds(),
+                Props.SET_VIEW
+              );
+            }, Duration.SECOND);
+          }, Duration.SECOND / 4);
+        }, Duration.SECOND / 4);
       }
     }
-  }, [bounds, fires, scrollingTo, selectedIndex])
+  }, [bounds, fires, scrollingTo, selectedIndex]);
 
-  return 0,
-  <div className="c7e-fire-list--map" id="map">
-    <AuthnControl
-      container={controlRef.current.authn} map={mapRef.current}
-      isAuthenticated={isAuthenticated} onToggleAuthn={onToggleAuthn}/>
-    <PreferencesControl container={controlRef.current.zoom} map={mapRef.current}/>
-  </div>
+  return (
+    0,
+    (
+      <div className="c7e-fire-list--map" id="map">
+        <AuthnControl
+          container={controlRef.current.authn}
+          map={mapRef.current}
+          isAuthenticated={isAuthenticated}
+          onToggleAuthn={onToggleAuthn}
+        />
+        <PreferencesControl
+          container={controlRef.current.zoom}
+          map={mapRef.current}
+        />
+      </div>
+    )
+  );
 }
 
 // -----------------------------------------------------------------------------
 
 function addPolygon(fire, polygons, greatPolygon) {
-  const {L} = window
-  const p = findPrimaryPolygon(fire)
+  const { L } = window;
+  const p = findPrimaryPolygon(fire);
 
   // NOTE: Points passed when creating a polygon shouldn’t have a last
   // point equal to the first one. It’s better to filter out such points.
   // https://leafletjs.com/reference.html#polygon
-  const vertices = p.slice(0, p.length - 1)
+  const vertices = p.slice(0, p.length - 1);
 
-  greatPolygon.splice(greatPolygon.length, 0, ...vertices)
+  greatPolygon.splice(greatPolygon.length, 0, ...vertices);
 
-  polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON))
+  polygons.push(L.polygon(vertices, Props.PRIMARY_POLYGON));
 }
 
 function collapseStack(map, markers, stacks, stack) {
   // Rebind stack’s tooltip when it’s collapsed.
-  stack.badge.bindTooltip(stack.tooltip)
+  stack.badge.bindTooltip(stack.tooltip);
 
   Object.values(markers).forEach((marker) => {
-    const {latitude, longitude} = marker
-    marker.icon.setLatLng([latitude, longitude])
-    marker.icon.addTo(map)
-  })
+    const { latitude, longitude } = marker;
+    marker.icon.setLatLng([latitude, longitude]);
+    marker.icon.addTo(map);
+  });
 
-  Object.values(stacks).forEach((x) => x.keys.size > 1 && x.badge.addTo(map))
+  Object.values(stacks).forEach((x) => x.keys.size > 1 && x.badge.addTo(map));
 }
 
 function expandStack(map, markers, stacks, stack) {
-  const {L} = window
-  const projection = L.CRS.EPSG3857
-  const zoom = map.getZoom()
+  const { L } = window;
+  const projection = L.CRS.EPSG3857;
+  const zoom = map.getZoom();
 
   // Hide stack’s tooltip while it’s expanded.
-  stack.badge.unbindTooltip()
+  stack.badge.unbindTooltip();
 
   // Fan each marker out in a circle around the latitude-longitude origin.
   Object.keys(markers).forEach((key) => {
-    const marker = markers[key]
+    const marker = markers[key];
 
     if (stack.keys.has(key)) {
-      const {bearing, latitude, longitude} = marker
-      const point = projection.latLngToPoint(L.latLng([latitude, longitude]), zoom)
-      const x = point.x + 32 * Math.sin(bearing * Math.PI / 180)
-      const y = point.y - 32 * Math.cos(bearing * Math.PI / 180)
-      const coordinates = projection.pointToLatLng(L.point([x, y]), zoom)
+      const { bearing, latitude, longitude } = marker;
+      const point = projection.latLngToPoint(
+        L.latLng([latitude, longitude]),
+        zoom
+      );
+      const x = point.x + 32 * Math.sin((bearing * Math.PI) / 180);
+      const y = point.y - 32 * Math.cos((bearing * Math.PI) / 180);
+      const coordinates = projection.pointToLatLng(L.point([x, y]), zoom);
 
-      marker.icon.setLatLng(coordinates)
+      marker.icon.setLatLng(coordinates);
     } else {
-      marker.icon.remove()
+      marker.icon.remove();
     }
-  })
+  });
 
-  Object.values(stacks).forEach((x) => x !== stack && x.badge.remove())
+  Object.values(stacks).forEach((x) => x !== stack && x.badge.remove());
 }
 
 function getCoordinatesKey(coordinates) {
-  return coordinates.join(',')
+  return coordinates.join(',');
 }
 
 function initializeMap(mapRef, controlRef) {
   if (mapRef.current == null) {
-    const {L} = window
-    const map = mapRef.current = L.map('map', Props.MAP).setView(Props.CENTER, 8)
+    const { L } = window;
+    const map = (mapRef.current = L.map('map', Props.MAP).setView(
+      Props.CENTER,
+      8
+    ));
 
-    const authnControl = L.control({position: 'topright'})
-    const authnControlDiv = document.createElement('div')
-    authnControl.onAdd = () => (controlRef.current.authn = authnControlDiv)
-    authnControl.addTo(mapRef.current)
+    const authnControl = L.control({ position: 'topright' });
+    const authnControlDiv = document.createElement('div');
+    authnControl.onAdd = () => (controlRef.current.authn = authnControlDiv);
+    authnControl.addTo(mapRef.current);
 
-    const zoomControl = L.control({position: 'bottomright'})
-    const zoomControlDiv = document.createElement('div')
-    zoomControl.onAdd = () => (controlRef.current.zoom = zoomControlDiv)
-    zoomControl.addTo(mapRef.current)
+    const zoomControl = L.control({ position: 'bottomright' });
+    const zoomControlDiv = document.createElement('div');
+    zoomControl.onAdd = () => (controlRef.current.zoom = zoomControlDiv);
+    zoomControl.addTo(mapRef.current);
 
-    map.fitBounds(Props.BOUNDS, Props.SET_VIEW)
-    L.tileLayer(Props.URL_TEMPLATE).addTo(mapRef.current)
+    map.fitBounds(Props.BOUNDS, Props.SET_VIEW);
+    L.tileLayer(Props.URL_TEMPLATE).addTo(mapRef.current);
   }
 
-  return mapRef
+  return mapRef;
 }
 
 function renderFireTooltip(fire) {
-  const {camInfo: {cameraName, cityName}, timestamp} = fire
-  const date = new Date(timestamp * 1000)
+  const {
+    camInfo: { cameraName, cityName },
+    timestamp,
+  } = fire;
+  const date = new Date(timestamp * 1000);
 
   return `\
 <div class="c7e-fire--location">
   <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
-  <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
-</div>`
+  <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render(
+    { date }
+  )}</time>
+</div>`;
 }
 
 function renderStackTooltip(stack) {
-  const {cameraName, cityName, keys: {size}, timestamp} = stack
-  const date = new Date(timestamp * 1000)
+  const {
+    cameraName,
+    cityName,
+    keys: { size },
+    timestamp,
+  } = stack;
+  const date = new Date(timestamp * 1000);
 
   return `\
 <div class="c7e-fire--location">
   <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
   <span>${size} ${size !== 1 ? 'fires' : 'fire'} detected since \
-    <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render({date})}</time>
+    <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render(
+    { date }
+  )}</time>
   </span>
-</div>`
+</div>`;
 }
 
 function toggleStack(map, markersRef, stacksRef, expandedStackRef, stack) {
-  const {current: markers} = markersRef
-  const {current: stacks} = stacksRef
+  const { current: markers } = markersRef;
+  const { current: stacks } = stacksRef;
 
   if (expandedStackRef.current != null) {
-    collapseStack(map, markers, stacks, expandedStackRef.current)
-    expandedStackRef.current = null
-    map.off('click')
+    collapseStack(map, markers, stacks, expandedStackRef.current);
+    expandedStackRef.current = null;
+    map.off('click');
   } else {
-    expandStack(map, markers, stacks, stack)
-    expandedStackRef.current = stack
-    map.on({click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef)})
+    expandStack(map, markers, stacks, stack);
+    expandedStackRef.current = stack;
+    map.on({
+      click: () => toggleStack(map, markersRef, stacksRef, expandedStackRef),
+    });
   }
 }

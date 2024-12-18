@@ -23,6 +23,6 @@
  * @returns {Array} The polygon originating at the fire event’s coordinates.
  */
 export default function findPrimaryPolygon(fire) {
-  const {sourcePolygons} = fire
-  return sourcePolygons[sourcePolygons.length - 1]
+  const { sourcePolygons } = fire;
+  return sourcePolygons[sourcePolygons.length - 1];
 }

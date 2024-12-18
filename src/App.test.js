@@ -25,11 +25,12 @@ var eventListeners = {};
 
 // create a mock EventSource
 global.EventSource = function MockEventSource(url) {
-  this.addEventListener = function(type, cb) {
+  this.addEventListener = function (type, cb) {
     eventListeners[type] = cb;
   };
-  this.close = function() {};
-}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  this.close = function () {};
+};
 
 test('renders without crashing', () => {
   render(<App />);
@@ -48,9 +49,9 @@ test('potential fire events are rendered', () => {
   const movieUrl = 'https://a.b/c1.mp4';
   const mapUrl = 'https://a.b/m1.jpg';
   let msg = {
-    timestamp: Math.round(new Date().valueOf()/1000) - 60, // one minute ago
+    timestamp: Math.round(new Date().valueOf() / 1000) - 60, // one minute ago
     cameraID: cameraID,
-    camInfo: {cameraName: cameraID},
+    camInfo: { cameraName: cameraID },
     adjScore: score,
     annotatedUrl: annotatedUrl,
     croppedUrl: movieUrl,
@@ -58,7 +59,7 @@ test('potential fire events are rendered', () => {
   };
   let msgStr = JSON.stringify(msg);
   const { getByText, getByTestId } = render(<App />);
-  eventListeners.newPotentialFire({data: msgStr});
+  eventListeners.newPotentialFire({ data: msgStr });
 
   const camElt = getByText(cameraID, { exact: false });
   expect(camElt).toBeInTheDocument();

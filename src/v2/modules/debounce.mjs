@@ -21,17 +21,17 @@
  * @param {funciton(...?)} callback
  */
 export default function debounce(callback) {
-  let requestId
+  let requestId;
 
   // eslint-disable-next-line func-names
   return function (...argv) {
-    const [event] = argv
+    const [event] = argv;
     if (event && typeof event.persist === 'function') {
       // Preserve event properties so they can be accessed after debouncing.
-      event.persist()
+      event.persist();
     }
 
-    cancelAnimationFrame(requestId)
-    requestId = requestAnimationFrame(() => callback.apply(this, argv))
-  }
+    cancelAnimationFrame(requestId);
+    requestId = requestAnimationFrame(() => callback.apply(this, argv));
+  };
 }

@@ -40,61 +40,63 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
   if (process.env.NODE_ENV === 'development') {
     // Permissive CORS to allow for testing with server on differnt port
     if (req.header('origin')) {
-      res.setHeader("Access-Control-Allow-Origin", req.header('origin') || '');
+      res.setHeader('Access-Control-Allow-Origin', req.header('origin') || '');
     }
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Headers","origin, content-type, accept");
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'origin, content-type, accept'
+    );
   }
   next();
 });
 
 app.use(helmet());
 // setup CSP
-const trusted = [
-  "'self'",
-];
+const trusted = ["'self'"];
 if (process.env.NODE_ENV === 'development') {
   trusted.push('http://localhost:*');
 }
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: trusted,
-    scriptSrc: [
-      "'unsafe-inline'",
-      'https://www.googletagmanager.com',
-      '*.googletagmanager.com',
-      'unpkg.com',
-    ].concat(trusted),
-    styleSrc: [
-      "'unsafe-inline'",
-      '*.w3schools.com',
-      'cdnjs.cloudflare.com',
-      'unpkg.com',
-    ].concat(trusted),
-    imgSrc: [
-      'data:',
-      'www.googletagmanager.com',
-      'storage.googleapis.com',
-      '*.openstreetmap.org',
-    ].concat(trusted),
-    mediaSrc: [
-      'storage.googleapis.com',
-    ].concat(trusted),
-    connectSrc: [
-      'www.google-analytics.com',
-    ].concat(trusted),
-  },
-}));
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: trusted,
+      scriptSrc: [
+        "'unsafe-inline'",
+        'https://www.googletagmanager.com',
+        '*.googletagmanager.com',
+        'unpkg.com',
+      ].concat(trusted),
+      styleSrc: [
+        "'unsafe-inline'",
+        '*.w3schools.com',
+        'cdnjs.cloudflare.com',
+        'unpkg.com',
+      ].concat(trusted),
+      imgSrc: [
+        'data:',
+        'www.googletagmanager.com',
+        'storage.googleapis.com',
+        '*.openstreetmap.org',
+      ].concat(trusted),
+      mediaSrc: ['storage.googleapis.com'].concat(trusted),
+      connectSrc: ['www.google-analytics.com'].concat(trusted),
+    },
+  })
+);
 // allow non-CORS sites
-app.use(helmet.crossOriginEmbedderPolicy({policy: "credentialless"}));
+app.use(helmet.crossOriginEmbedderPolicy({ policy: 'credentialless' }));
 
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Redirect http to https
-app.use(function(req: Request, res: Response, next: NextFunction) {
-  if(req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === "http") {
+app.use(function (req: Request, res: Response, next: NextFunction) {
+  if (
+    req.headers['x-forwarded-proto'] &&
+    req.headers['x-forwarded-proto'] === 'http'
+  ) {
     return res.redirect(['https://', req.get('Host'), req.url].join(''));
   }
   next();
@@ -116,7 +118,7 @@ services.initServices(app, () => {
   app.listen(PORT, () => {
     logger.info(`WildfireCheck back listening on port ${PORT}`);
     logger.info('Press Ctrl+C to quit.');
-    app.emit('app_ready', null)
+    app.emit('app_ready', null);
   });
 });
 

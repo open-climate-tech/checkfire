@@ -23,6 +23,6 @@
  * @returns {string} A unique camera ID suitable for React keys and the like.
  */
 export default function getCameraKey(fireEvent) {
-  const {cameraID, timestamp} = fireEvent
-  return `${cameraID}:${timestamp}`
+  const { cameraID, timestamp } = fireEvent;
+  return `${cameraID}:${timestamp}`;
 }

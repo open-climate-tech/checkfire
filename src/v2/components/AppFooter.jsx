@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
 /**
  * Provides a simple footer for the main app layout.
@@ -27,8 +27,8 @@ export default function AppFooter(props) {
   //   - Section links (About, Privacy, Terms)
   //   - Social media links
   //   - Donation link
-  return 0,
-  <div className="c7e-app-footer">
-    Open Climate Tech › Wildfire Check
-  </div>
+  return (
+    0,
+    (<div className="c7e-app-footer">Open Climate Tech › Wildfire Check</div>)
+  );
 }

@@ -17,17 +17,17 @@
 
 // Prototype pages still under development
 
-import React, { Component } from "react";
-import {Link} from "react-router-dom";
+import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 
 class Prototypes extends Component {
   render() {
     return (
       <div>
-        <h1>
-          Prototypes
-        </h1>
-        <Link to='/confirmed'><li>Confirmed Fires</li></Link>
+        <h1>Prototypes</h1>
+        <Link to="/confirmed">
+          <li>Confirmed Fires</li>
+        </Link>
       </div>
     );
   }

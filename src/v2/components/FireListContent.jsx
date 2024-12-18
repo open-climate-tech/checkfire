@@ -14,12 +14,12 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import Button from './Button.jsx'
-import Fire from './Fire.jsx'
+import Button from './Button.jsx';
+import Fire from './Fire.jsx';
 
-import getCameraKey from '../modules/getCameraKey.mjs'
+import getCameraKey from '../modules/getCameraKey.mjs';
 
 /**
  * Provides a container for the list of fires, displaying a message in the event
@@ -36,33 +36,51 @@ import getCameraKey from '../modules/getCameraKey.mjs'
  * @returns {React.Element}
  */
 export default function FireListContent(props) {
-  const {fires, indexOfOldFires, nOldFires, onToggleAllFires, ...other} = props
+  const { fires, indexOfOldFires, nOldFires, onToggleAllFires, ...other } =
+    props;
 
-  const oldFires = indexOfOldFires > -1 ? fires.slice(indexOfOldFires) : []
-  const nFires = fires.length - oldFires.length
+  const oldFires = indexOfOldFires > -1 ? fires.slice(indexOfOldFires) : [];
+  const nFires = fires.length - oldFires.length;
 
-  return 0,
-  <div className="c7e-fire-list--content">
-    { nFires > 0 &&
-      fires.slice(0, nFires).map((x, i) =>
-        <Fire key={getCameraKey(x)} fire={x} index={i} {...other}/>)
-    }
+  return (
+    0,
+    (
+      <div className="c7e-fire-list--content">
+        {nFires > 0 &&
+          fires
+            .slice(0, nFires)
+            .map((x, i) => (
+              <Fire key={getCameraKey(x)} fire={x} index={i} {...other} />
+            ))}
 
-    <div className="c7e-fire-list--empty">
-      { nOldFires < 1 && nFires < 1 &&
-        <Button disabled label="There are no recent fires"/>
-      }
-      { nOldFires > 0 && indexOfOldFires < 0 &&
-        <Button label={`Show ${nOldFires} older fires`} onClick={onToggleAllFires}/>
-      }
-      { nOldFires > 0 && indexOfOldFires > -1 &&
-        <Button label={`Hide ${nOldFires} older fires`} onClick={onToggleAllFires}/>
-      }
-    </div>
+        <div className="c7e-fire-list--empty">
+          {nOldFires < 1 && nFires < 1 && (
+            <Button disabled label="There are no recent fires" />
+          )}
+          {nOldFires > 0 && indexOfOldFires < 0 && (
+            <Button
+              label={`Show ${nOldFires} older fires`}
+              onClick={onToggleAllFires}
+            />
+          )}
+          {nOldFires > 0 && indexOfOldFires > -1 && (
+            <Button
+              label={`Hide ${nOldFires} older fires`}
+              onClick={onToggleAllFires}
+            />
+          )}
+        </div>
 
-    { oldFires.length > 0 > 0 &&
-      oldFires.map((x, i) =>
-        <Fire key={getCameraKey(x)} fire={x} index={indexOfOldFires + i} {...other}/>)
-    }
-  </div>
+        {oldFires.length > 0 > 0 &&
+          oldFires.map((x, i) => (
+            <Fire
+              key={getCameraKey(x)}
+              fire={x}
+              index={indexOfOldFires + i}
+              {...other}
+            />
+          ))}
+      </div>
+    )
+  );
 }

@@ -14,8 +14,8 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import arePolygonsEqual from './arePolygonsEqual.mjs'
-import getCameraKey from './getCameraKey.mjs'
+import arePolygonsEqual from './arePolygonsEqual.mjs';
+import getCameraKey from './getCameraKey.mjs';
 
 /**
  * Determines whether the polygon camera angles of fire event `a` are a strict
@@ -31,36 +31,36 @@ import getCameraKey from './getCameraKey.mjs'
  */
 export default function hasAngleOfFire(a, b) {
   if (a._anglesByKey == null) {
-    a._anglesByKey = {}
+    a._anglesByKey = {};
   }
 
   if (b._anglesByKey == null) {
-    b._anglesByKey = {}
+    b._anglesByKey = {};
   }
 
   // XXX: Check both directions because fire events are not guaranteed to
   // arrive in order so `a` might be a subset of `b`, or vice versa.
-  const has1 = _hasAngleOfFire(a, b)
-  const has2 = _hasAngleOfFire(b, a)
+  const has1 = _hasAngleOfFire(a, b);
+  const has2 = _hasAngleOfFire(b, a);
 
-  return has1 || has2
+  return has1 || has2;
 }
 
 function _hasAngleOfFire(a, b) {
-  const key = getCameraKey(a)
+  const key = getCameraKey(a);
 
   if (a !== b && b._anglesByKey[key] == null) {
     if (a.sourcePolygons.length < b.sourcePolygons.length) {
       const found = a.sourcePolygons.every((a) => {
-        return b.sourcePolygons.find((b) => arePolygonsEqual(a, b))
-      })
+        return b.sourcePolygons.find((b) => arePolygonsEqual(a, b));
+      });
 
       if (found === true) {
-        a._anglesByKey[getCameraKey(b)] = b.sortId
-        b._anglesByKey[key] = a.sortId
+        a._anglesByKey[getCameraKey(b)] = b.sortId;
+        b._anglesByKey[key] = a.sortId;
       }
     }
   }
 
-  return b._anglesByKey[key] != null
+  return b._anglesByKey[key] != null;
 }

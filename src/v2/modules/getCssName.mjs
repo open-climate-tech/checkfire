@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-const caseSeparatorRegExp = /([a-z])([A-Z])/g
+const caseSeparatorRegExp = /([a-z])([A-Z])/g;
 
 /**
  * Formats `key` (e.g., `'camelCase'`) as a CSS name (e.g., `'camel-case'`).
@@ -24,5 +24,5 @@ const caseSeparatorRegExp = /([a-z])([A-Z])/g
  * @returns {string} A lowercase dashed CSS name.
  */
 export default function getCssName(key) {
-  return key.replace(caseSeparatorRegExp, '$1-$2').toLowerCase()
+  return key.replace(caseSeparatorRegExp, '$1-$2').toLowerCase();
 }

@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import Duration from '../modules/Duration.mjs'
+import Duration from '../modules/Duration.mjs';
 
 // TODO: Replace with Intl.DateTimeFormat()?
 
@@ -26,75 +26,77 @@ import Duration from '../modules/Duration.mjs'
  * @returns {React.Element}
  */
 export default function DateTime(props) {
-  const {date: startDate} = props
-  const endDate = new Date()
+  const { date: startDate } = props;
+  const endDate = new Date();
 
-  return <span className="c7e-date-time-distance">{ago(startDate, endDate)}</span>
+  return (
+    <span className="c7e-date-time-distance">{ago(startDate, endDate)}</span>
+  );
 }
 
 // -----------------------------------------------------------------------------
 
 function ago(startDate, endDate) {
-  const {years, months, weeks, days, hours, minutes, seconds} =
-    Duration.calculateCalendarDistance(startDate, endDate)
+  const { years, months, weeks, days, hours, minutes, seconds } =
+    Duration.calculateCalendarDistance(startDate, endDate);
 
   if (years > 1) {
-    return `about ${years} years ago`
+    return `about ${years} years ago`;
   }
 
   if (years === 1) {
     if (months > 0) {
-      return 'over a year ago'
+      return 'over a year ago';
     }
 
-    return 'about a year ago'
+    return 'about a year ago';
   }
 
   if (months > 1) {
-    return `about ${months} months ago`
+    return `about ${months} months ago`;
   }
 
   if (months === 1) {
     if (weeks > 0) {
-      return 'over a month ago'
+      return 'over a month ago';
     }
 
-    return 'about a month ago'
+    return 'about a month ago';
   }
 
   if (weeks > 1) {
-    return `about ${weeks} weeks ago`
+    return `about ${weeks} weeks ago`;
   }
 
   if (weeks === 1) {
-    return 'about a week ago'
+    return 'about a week ago';
   }
 
   if (days > 1) {
-    return `about ${days} days ago`
+    return `about ${days} days ago`;
   }
 
   if (days === 1) {
-    return 'about a day ago'
+    return 'about a day ago';
   }
 
   if (hours > 1) {
-    return `about ${hours} hours ago`
+    return `about ${hours} hours ago`;
   }
 
   if (hours === 1) {
-    return 'about an hour ago'
+    return 'about an hour ago';
   }
 
   if (minutes > 1) {
-    return `${minutes} minutes ago`
+    return `${minutes} minutes ago`;
   }
 
   if (minutes === 1) {
-    return 'a minute ago'
+    return 'a minute ago';
   }
 
   if (seconds < 60) {
-    return 'less than a minute ago'
+    return 'less than a minute ago';
   }
 }

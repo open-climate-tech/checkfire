@@ -18,16 +18,15 @@
 'use strict';
 // Dyanmic services for UI backend server
 
-import {Application, Request, Response} from "express";
+import { Application, Request, Response } from 'express';
 
-import {DbMgr} from "./db_mgr";
+import { DbMgr } from './db_mgr';
 import * as apis from './apis';
 import * as sse from './sse';
 import * as pubsub from './pubsub_pull';
 import * as oct_utils from './oct_utils';
 
 const logger = oct_utils.getLogger('services');
-
 
 /**
  * Initialize all the dyanmic services for this server and then call done()
@@ -41,15 +40,29 @@ export async function initServices(app: Application, done: () => void) {
   await pubsub.initPubSub(config, updateFromDetect);
   // detectMgr.initMgr(config);
 
-  const redirects = ['/authenticated', '/prototypes', '/preferences', '/confirmed', '/labelImage', '/selected', '/detected', '/login', '/register', '/v2/wildfirecheck', '/v2/wildfirecheck/preferences'];
-  redirects.forEach(redirectUrl => {
+  const redirects = [
+    '/authenticated',
+    '/prototypes',
+    '/preferences',
+    '/confirmed',
+    '/labelImage',
+    '/selected',
+    '/detected',
+    '/login',
+    '/register',
+    '/v2/wildfirecheck',
+    '/v2/wildfirecheck/preferences',
+  ];
+  redirects.forEach((redirectUrl) => {
     app.get(redirectUrl, (req: Request, res: Response) => {
-      let params: string[] = [];
-      Object.keys(req.query).forEach(key => {
-        params.push(`${key}=${req.query[key]}`)
+      const params: string[] = [];
+      Object.keys(req.query).forEach((key) => {
+        params.push(`${key}=${req.query[key]}`);
       });
       const paramsStr = params.length ? `?${params.join('&')}` : '';
-      const newUrl = `/wildfirecheck/?redirect=${redirectUrl}${encodeURIComponent(paramsStr)}`;
+      const newUrl = `/wildfirecheck/?redirect=${redirectUrl}${encodeURIComponent(
+        paramsStr
+      )}`;
       res.redirect(newUrl);
     });
   });

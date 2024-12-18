@@ -14,9 +14,9 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React from 'react'
+import React from 'react';
 
-import concatClassNames from '../modules/concatClassNames.mjs'
+import concatClassNames from '../modules/concatClassNames.mjs';
 
 /**
  * Provides a styled container for two or more buttons.
@@ -27,11 +27,8 @@ import concatClassNames from '../modules/concatClassNames.mjs'
  * @returns {React.Element}
  */
 export default function ButtonGroup(props) {
-  const {children, className} = props
-  const classNames = concatClassNames('c7e-button-group', className)
+  const { children, className } = props;
+  const classNames = concatClassNames('c7e-button-group', className);
 
-  return 0,
-  <div className={classNames}>
-    {children}
-  </div>
+  return 0, (<div className={classNames}>{children}</div>);
 }

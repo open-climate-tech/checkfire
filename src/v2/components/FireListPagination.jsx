@@ -14,11 +14,11 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import React, {useCallback} from 'react'
+import React, { useCallback } from 'react';
 
-import Button from './Button.jsx'
-import ButtonGroup from './ButtonGroup.jsx'
-import ButtonOutput from './ButtonOutput.jsx'
+import Button from './Button.jsx';
+import ButtonGroup from './ButtonGroup.jsx';
+import ButtonOutput from './ButtonOutput.jsx';
 
 /**
  * Provides a pagination button group for flipping back and forth between each
@@ -33,28 +33,50 @@ import ButtonOutput from './ButtonOutput.jsx'
  * @returns {React.Element}
  */
 export default function FireListPagination(props) {
-  const {fires: {length: nFires}, onScrollToFire, selectedIndex} = props
+  const {
+    fires: { length: nFires },
+    onScrollToFire,
+    selectedIndex,
+  } = props;
 
   const handleNext = useCallback(() => {
-    onScrollToFire(selectedIndex + 1)
-  }, [selectedIndex, onScrollToFire])
+    onScrollToFire(selectedIndex + 1);
+  }, [selectedIndex, onScrollToFire]);
 
   const handlePrev = useCallback(() => {
-    onScrollToFire(selectedIndex - 1)
-  }, [selectedIndex, onScrollToFire])
+    onScrollToFire(selectedIndex - 1);
+  }, [selectedIndex, onScrollToFire]);
 
-  const pagination = nFires > 0 ? `Fire ${selectedIndex + 1} of ${nFires}` : '…'
-  const disabledNext = nFires < 2 || selectedIndex === nFires - 1
-  const disabledPrev = nFires < 2 || selectedIndex === 0
+  const pagination =
+    nFires > 0 ? `Fire ${selectedIndex + 1} of ${nFires}` : '…';
+  const disabledNext = nFires < 2 || selectedIndex === nFires - 1;
+  const disabledPrev = nFires < 2 || selectedIndex === 0;
 
   // TODO: Animate transition when `nFires` changes, possibly whenever `fires` changes.
 
-  return 0,
-  <div className="c7e-fire-list--pagination">
-    <ButtonGroup>
-      <Button disabled={disabledPrev} aria-label="Previous fire" icon="c7e-icon--prev" onClick={handlePrev}/>
-      <ButtonOutput disabled={disabledPrev && disabledNext} label={pagination}/>
-      <Button disabled={disabledNext} aria-label="Next fire" icon="c7e-icon--next" onClick={handleNext}/>
-    </ButtonGroup>
-  </div>
+  return (
+    0,
+    (
+      <div className="c7e-fire-list--pagination">
+        <ButtonGroup>
+          <Button
+            disabled={disabledPrev}
+            aria-label="Previous fire"
+            icon="c7e-icon--prev"
+            onClick={handlePrev}
+          />
+          <ButtonOutput
+            disabled={disabledPrev && disabledNext}
+            label={pagination}
+          />
+          <Button
+            disabled={disabledNext}
+            aria-label="Next fire"
+            icon="c7e-icon--next"
+            onClick={handleNext}
+          />
+        </ButtonGroup>
+      </div>
+    )
+  );
 }

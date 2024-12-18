@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import getUrl from './getUrl.mjs'
+import getUrl from './getUrl.mjs';
 
 /**
  * Constructs a server-sent events source for `endpoint` URL.
@@ -26,8 +26,8 @@ import getUrl from './getUrl.mjs'
  */
 export default function getEventSource(endpoint, options = {}) {
   if (process.env.NODE_ENV === 'development') {
-    options.withCredentials = true // Allow cross-origin requests.
+    options.withCredentials = true; // Allow cross-origin requests.
   }
 
-  return new EventSource(getUrl(endpoint), options)
+  return new EventSource(getUrl(endpoint), options);
 }

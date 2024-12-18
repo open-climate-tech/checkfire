@@ -14,11 +14,11 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import PropTypes from 'prop-types'
-import React from 'react'
+import PropTypes from 'prop-types';
+import React from 'react';
 
-import concatClassNames from '../modules/concatClassNames.mjs'
-import renderStyles from '../modules/renderStyles.mjs'
+import concatClassNames from '../modules/concatClassNames.mjs';
+import renderStyles from '../modules/renderStyles.mjs';
 
 /**
  * Provides a renderer for SVG icons stored in a single SVG spritesheet file,
@@ -34,17 +34,21 @@ import renderStyles from '../modules/renderStyles.mjs'
  * @returns {React.Element}
  */
 export default function Icon(props) {
-  const {className, icon, size = Icon.Size.STANDARD, style} = props
+  const { className, icon, size = Icon.Size.STANDARD, style } = props;
 
-  const classNames = concatClassNames('c7e-icon', className)
-  const styles = {...style, height: size, width: size}
+  const classNames = concatClassNames('c7e-icon', className);
+  const styles = { ...style, height: size, width: size };
 
-  return 0,
-  <span icon={icon} className={classNames} style={styles}>
-    <svg width={size} height={size}>
-      <use xlinkHref={`/img/spritesheet.svg#${icon}`}></use>
-    </svg>
-  </span>
+  return (
+    0,
+    (
+      <span icon={icon} className={classNames} style={styles}>
+        <svg width={size} height={size}>
+          <use xlinkHref={`/img/spritesheet.svg#${icon}`}></use>
+        </svg>
+      </span>
+    )
+  );
 }
 
 /**
@@ -54,10 +58,10 @@ export default function Icon(props) {
  * @see Icon
  */
 Icon.render = function (props) {
-  const {className, icon, size = Icon.Size.STANDARD, style} = props
+  const { className, icon, size = Icon.Size.STANDARD, style } = props;
 
-  const classNames = concatClassNames('c7e-icon', className)
-  const styles = renderStyles({...style, height: size, width: size})
+  const classNames = concatClassNames('c7e-icon', className);
+  const styles = renderStyles({ ...style, height: size, width: size });
 
   // TODO: Add test to compare rendered string value to element instance.
 
@@ -66,24 +70,24 @@ Icon.render = function (props) {
   <svg width="${size}" height="${size}">
     <use xlink:Href="${`/img/spritesheet.svg#${icon}`}"></use>
   </svg>
-</span>`
-}
+</span>`;
+};
 
 Icon.propTypes = {
   className: PropTypes.string,
   icon: PropTypes.string.isRequired,
   size: PropTypes.number,
-  style: PropTypes.object
-}
+  style: PropTypes.object,
+};
 
 // -----------------------------------------------------------------------------
 
 Icon.Size = {
   DENSE: 20,
-  STANDARD: 24
-}
+  STANDARD: 24,
+};
 
 // -----------------------------------------------------------------------------
 
-Icon.Fire = (props) => <Icon icon="c7e-icon--fire" {...props}/>
-Icon.FIRE = <Icon.Fire/>
+Icon.Fire = (props) => <Icon icon="c7e-icon--fire" {...props} />;
+Icon.FIRE = <Icon.Fire />;

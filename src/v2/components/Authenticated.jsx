@@ -14,14 +14,14 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import {useEffect} from 'react'
+import { useEffect } from 'react';
 
 export default function Authenticated() {
   useEffect(() => {
-    const callback = window.opener.c7e.authnCallback
-    delete window.opener.c7e.authnCallback
-    callback()
-  })
+    const callback = window.opener.c7e.authnCallback;
+    delete window.opener.c7e.authnCallback;
+    callback();
+  });
 
-  return ''
+  return '';
 }

@@ -14,7 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import trapEvent from '../modules/trapEvent.mjs'
+import trapEvent from '../modules/trapEvent.mjs';
 
 /**
  * @param {Object} props
@@ -25,11 +25,17 @@ import trapEvent from '../modules/trapEvent.mjs'
  * @returns {React.Element}
  */
 export default function Overlay(props) {
-  const {children, onClick} = props
+  const { children, onClick } = props;
 
-  return 0,
-  <div className="c7e-overlay" onClick={onClick}>
-    <div className="c7e-overlay--background"/>
-    <div className="c7e-overlay--content" onClick={trapEvent}>{children}</div>
-  </div>
+  return (
+    0,
+    (
+      <div className="c7e-overlay" onClick={onClick}>
+        <div className="c7e-overlay--background" />
+        <div className="c7e-overlay--content" onClick={trapEvent}>
+          {children}
+        </div>
+      </div>
+    )
+  );
 }

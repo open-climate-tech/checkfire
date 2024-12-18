@@ -14,28 +14,34 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import {expect} from 'chai'
+import { expect } from 'chai';
 
-import isLineWithinLongitudes from '../../../src/v2/modules/isLineWithinLongitudes.mjs'
+import isLineWithinLongitudes from '../../../src/v2/modules/isLineWithinLongitudes.mjs';
 
 describe('isLineWithinLongitudes()', () => {
-  it("should return true", () => {
-    const line = [[33.2, -116.8], [32.6, -117.0]]
-    const east = -116.6
-    const west = -117.1
-    const latitude = 33
+  it('should return true', () => {
+    const line = [
+      [33.2, -116.8],
+      [32.6, -117.0],
+    ];
+    const east = -116.6;
+    const west = -117.1;
+    const latitude = 33;
 
-    const actual = isLineWithinLongitudes(line, east, west, latitude)
-    expect(actual).to.be.true
-  })
+    const actual = isLineWithinLongitudes(line, east, west, latitude);
+    expect(actual).to.be.true;
+  });
 
-  it("should return false", () => {
-    const line = [[33.1, -116.6], [33.0, -116.5]]
-    const east = -116.6
-    const west = -117.1
-    const latitude = 33
+  it('should return false', () => {
+    const line = [
+      [33.1, -116.6],
+      [33.0, -116.5],
+    ];
+    const east = -116.6;
+    const west = -117.1;
+    const latitude = 33;
 
-    const actual = isLineWithinLongitudes(line, east, west, latitude)
-    expect(actual).to.be.false
-  })
-})
+    const actual = isLineWithinLongitudes(line, east, west, latitude);
+    expect(actual).to.be.false;
+  });
+});

@@ -14,44 +14,45 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import parseRegion from '../modules/parseRegion.mjs'
-import query from '../modules/query.mjs'
+import parseRegion from '../modules/parseRegion.mjs';
+import query from '../modules/query.mjs';
 
-const {error: report} = console
+const { error: report } = console;
 
-const endpoint = '/api/getPreferences'
+const endpoint = '/api/getPreferences';
 
 export default function getPreferences() {
-  return query.get(endpoint)
-    .then(({data}) => handleData(data))
+  return query
+    .get(endpoint)
+    .then(({ data }) => handleData(data))
     .catch((error) => {
       if (error.status !== 401) {
-        throw error
+        throw error;
       }
 
-      return handleData()
-    })
+      return handleData();
+    });
 }
 
 // -----------------------------------------------------------------------------
 
 function handleData(data) {
-  const searchParams = new URLSearchParams(window.location.search)
-  const notifyParam = searchParams.get('notify')
-  const regionParam = searchParams.get('latLong')
-  const prefs = {region: null, shouldNotify: null}
+  const searchParams = new URLSearchParams(window.location.search);
+  const notifyParam = searchParams.get('notify');
+  const regionParam = searchParams.get('latLong');
+  const prefs = { region: null, shouldNotify: null };
 
   if (regionParam != null) {
     try {
-      prefs.region = parseRegion(regionParam)
+      prefs.region = parseRegion(regionParam);
     } catch (error) {
-      report(error)
+      report(error);
     }
   }
 
   if (notifyParam != null) {
     if (/true|false/.test(notifyParam)) {
-      prefs.shouldNotify = notifyParam === 'true'
+      prefs.shouldNotify = notifyParam === 'true';
     }
   }
 
@@ -61,23 +62,26 @@ function handleData(data) {
         north: data.region.topLat,
         south: data.region.bottomLat,
         west: data.region.leftLong,
-        east: data.region.rightLong
-      }
+        east: data.region.rightLong,
+      };
     }
 
     if (prefs.shouldNotify == null) {
-      prefs.shouldNotify = data.webNotify
+      prefs.shouldNotify = data.webNotify;
     }
   }
 
   if (prefs.region != null) {
-    const isEmpty = prefs.region.north === 0 && prefs.region.south === 0 &&
-      prefs.region.east === 0 && prefs.region.west === 0
+    const isEmpty =
+      prefs.region.north === 0 &&
+      prefs.region.south === 0 &&
+      prefs.region.east === 0 &&
+      prefs.region.west === 0;
 
     if (isEmpty) {
-      prefs.region = null
+      prefs.region = null;
     }
   }
 
-  return prefs
+  return prefs;
 }

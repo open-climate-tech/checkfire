@@ -28,24 +28,24 @@
  *     longitudes; otherwise, `false`.
  */
 export default function isLineWithinLongitudes(line, east, west, latitude) {
-  const [[lat1, long1], [lat2, long2]] = line
-  const deltaHorizontal = lat2 - lat1
+  const [[lat1, long1], [lat2, long2]] = line;
+  const deltaHorizontal = lat2 - lat1;
 
   if (Math.abs(deltaHorizontal) < 0.01) {
     // Too close to horizontal.
-    return false
+    return false;
   }
 
   // Parameterized value on line segment where 0 represents `[lat1, long1]` and
   // 1 represents `[lat2, long2]`.
-  const point = (latitude - lat1) / deltaHorizontal
+  const point = (latitude - lat1) / deltaHorizontal;
 
   if (point >= 0 && point <= 1) {
     // `latitude` is between the two endpoints. Check if intersection point is
     // within `west` and `east`.
-    const intersection = (long2 - long1) * point + long1
-    return intersection >= west && intersection <= east
+    const intersection = (long2 - long1) * point + long1;
+    return intersection >= west && intersection <= east;
   }
 
-  return false
+  return false;
 }

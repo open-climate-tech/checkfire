@@ -14,15 +14,15 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import {expect} from 'chai'
+import { expect } from 'chai';
 
-import concatClassNames from '../../../src/v2/modules/concatClassNames.mjs'
+import concatClassNames from '../../../src/v2/modules/concatClassNames.mjs';
 
 describe('concatClassNames()', () => {
   it("should return 'a b c x y z'", () => {
-    const classNames = ['x y', 'z']
-    const actual = concatClassNames('a', 'b c', null && 'l m n', ...classNames)
+    const classNames = ['x y', 'z'];
+    const actual = concatClassNames('a', 'b c', null && 'l m n', ...classNames);
 
-    expect(actual).to.equal('a b c x y z')
-  })
-})
+    expect(actual).to.equal('a b c x y z');
+  });
+});

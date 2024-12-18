@@ -14,8 +14,8 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
-import getCssName from './getCssName.mjs'
-import getCssValue from './getCssValue.mjs'
+import getCssName from './getCssName.mjs';
+import getCssValue from './getCssValue.mjs';
 
 /**
  * Formats `styles` (e.g., `{paddingBottom: 24}`) as a valid style attribute
@@ -26,6 +26,7 @@ import getCssValue from './getCssValue.mjs'
  * @returns {string} A valid style attribute value.
  */
 export default function renderStyles(styles) {
-  return Object.entries(styles).map(([k, v]) =>
-    `${getCssName(k)}: ${getCssValue(v)}`).join('; ')
+  return Object.entries(styles)
+    .map(([k, v]) => `${getCssName(k)}: ${getCssValue(v)}`)
+    .join('; ');
 }

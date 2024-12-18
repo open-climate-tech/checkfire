@@ -16,14 +16,14 @@
 
 export default function arePolygonsEqual(a, b) {
   if (a == null || b == null || a.length !== b.length) {
-    return false
+    return false;
   }
 
   for (let i = 0, n = a.length; i < n; ++i) {
     if (a[i][0] !== b[i][0] || a[i][1] !== b[i][1]) {
-      return false
+      return false;
     }
   }
 
-  return true
+  return true;
 }

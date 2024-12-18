@@ -17,20 +17,30 @@
 // TODO: Replace with Intl.DateTimeFormat()?
 
 const months = [
-  'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December'
-]
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export default function renderDateTimeString(datetime) {
-  const month = months[datetime.getMonth()]
-  const date = datetime.getDate()
-  const year = datetime.getFullYear()
-  const hours24 = datetime.getHours()
-  const hours12 = hours24 - (hours24 < 13 ? 0 : 12)
-  const hours = `${hours12}`.padStart(2, '0')
-  const xm = hours24 < 13 ? 'AM' : 'PM'
-  const minutes = `${datetime.getMinutes()}`.padStart(2, '0')
-  const seconds = `${datetime.getSeconds()}`.padStart(2, '0')
+  const month = months[datetime.getMonth()];
+  const date = datetime.getDate();
+  const year = datetime.getFullYear();
+  const hours24 = datetime.getHours();
+  const hours12 = hours24 - (hours24 < 13 ? 0 : 12);
+  const hours = `${hours12}`.padStart(2, '0');
+  const xm = hours24 < 13 ? 'AM' : 'PM';
+  const minutes = `${datetime.getMinutes()}`.padStart(2, '0');
+  const seconds = `${datetime.getSeconds()}`.padStart(2, '0');
 
-  return `${month} ${date}, ${year} at ${hours}:${minutes}:${seconds} ${xm}`
+  return `${month} ${date}, ${year} at ${hours}:${minutes}:${seconds} ${xm}`;
 }
