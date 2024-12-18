@@ -14,6 +14,7 @@
 // limitations under the License.
 // -----------------------------------------------------------------------------
 
+import React from 'react';
 import trapEvent from '../modules/trapEvent.mjs';
 
 /**

@@ -68,8 +68,8 @@ export default function App(props) {
     (function check() {
       /complete/.test(document.readyState)
         ? // XXX: Set scroll position asynchronously; otherwise, as observed,
-          // scroll position setting isn’t guaranteed to take effect.
-          requestAnimationFrame(() => window.scrollTo(0, 0))
+      // scroll position setting isn’t guaranteed to take effect.
+        requestAnimationFrame(() => window.scrollTo(0, 0))
         : setTimeout(check);
     })();
   }, [updateAuthentication]);

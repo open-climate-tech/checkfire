@@ -366,32 +366,32 @@ function calculateRadius(map, origin) {
   const { east, north, south, west } = Object.entries(DegreesOffet).reduce(
     (points, [direction, offset]) => {
       switch (direction) {
-        case 'EAST':
-          points.east = projection.latLngToPoint(
-            L.latLng(lat, lng + offset),
-            zoom
-          );
-          break;
-        case 'NORTH':
-          points.north = projection.latLngToPoint(
-            L.latLng(lat + offset, lng),
-            zoom
-          );
-          break;
-        case 'SOUTH':
-          points.south = projection.latLngToPoint(
-            L.latLng(lat + offset, lng),
-            zoom
-          );
-          break;
-        case 'WEST':
-          points.west = projection.latLngToPoint(
-            L.latLng(lat, lng + offset),
-            zoom
-          );
-          break;
-        default:
-          throw new Error(`Unexpected direction: ${direction}`);
+      case 'EAST':
+        points.east = projection.latLngToPoint(
+          L.latLng(lat, lng + offset),
+          zoom
+        );
+        break;
+      case 'NORTH':
+        points.north = projection.latLngToPoint(
+          L.latLng(lat + offset, lng),
+          zoom
+        );
+        break;
+      case 'SOUTH':
+        points.south = projection.latLngToPoint(
+          L.latLng(lat + offset, lng),
+          zoom
+        );
+        break;
+      case 'WEST':
+        points.west = projection.latLngToPoint(
+          L.latLng(lat, lng + offset),
+          zoom
+        );
+        break;
+      default:
+        throw new Error(`Unexpected direction: ${direction}`);
       }
 
       return points;

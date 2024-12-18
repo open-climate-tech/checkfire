@@ -89,5 +89,6 @@ Icon.Size = {
 
 // -----------------------------------------------------------------------------
 
+// eslint-disable-next-line react/display-name
 Icon.Fire = (props) => <Icon icon="c7e-icon--fire" {...props} />;
 Icon.FIRE = <Icon.Fire />;

@@ -47,14 +47,14 @@ export default function Authentication(props) {
 
   const handleChange = useCallback(({ target: { name, value } }) => {
     switch (name) {
-      case 'email':
-        return setEmail(value);
-      case 'password':
-        return setPassword(value);
-      case 'username':
-        return setUsername(value);
-      default:
-        throw new Error(`Unexpected input: ${name}`);
+    case 'email':
+      return setEmail(value);
+    case 'password':
+      return setPassword(value);
+    case 'username':
+      return setUsername(value);
+    default:
+      throw new Error(`Unexpected input: ${name}`);
     }
   }, []);
 
@@ -78,7 +78,7 @@ export default function Authentication(props) {
   );
 
   const handleFacebook = useCallback(() => {
-    const oauthUrl = getUrl(`/api/oauthFbUrl?path=%2Fauthenticated`);
+    const oauthUrl = getUrl('/api/oauthFbUrl?path=%2Fauthenticated');
     const w = window.open(oauthUrl, 'c7e.authentication');
     window.c7e = window.c7e || {};
     window.c7e.authnCallback = () => {

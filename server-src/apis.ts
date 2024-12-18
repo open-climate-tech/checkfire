@@ -623,7 +623,7 @@ export function initApis(config: OCT_Config, app: Application, db: DbMgr) {
     apiWrapper(req, res, config, 'GET listCameras', async (decoded) => {
       const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
       assert(isLabeler);
-      const sqlStr = `select name from sources order by name`;
+      const sqlStr = 'select name from sources order by name';
       const dbRes = await db.query(sqlStr);
       const cameraIDs = dbRes.map(
         (dbEntry: Record<string, any>) => dbEntry.name

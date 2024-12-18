@@ -120,36 +120,36 @@ export default function RegionMask(props) {
       const { current: ref } = xRef;
 
       switch (handle) {
-        case 'north':
-          updateNorth();
-          break;
-        case 'northeast':
-          updateNorth();
-          updateEast();
-          break;
-        case 'east':
-          updateEast();
-          break;
-        case 'southeast':
-          updateSouth();
-          updateEast();
-          break;
-        case 'south':
-          updateSouth();
-          break;
-        case 'southwest':
-          updateSouth();
-          updateWest();
-          break;
-        case 'west':
-          updateWest();
-          break;
-        case 'northwest':
-          updateNorth();
-          updateWest();
-          break;
-        default:
-          break;
+      case 'north':
+        updateNorth();
+        break;
+      case 'northeast':
+        updateNorth();
+        updateEast();
+        break;
+      case 'east':
+        updateEast();
+        break;
+      case 'southeast':
+        updateSouth();
+        updateEast();
+        break;
+      case 'south':
+        updateSouth();
+        break;
+      case 'southwest':
+        updateSouth();
+        updateWest();
+        break;
+      case 'west':
+        updateWest();
+        break;
+      case 'northwest':
+        updateNorth();
+        updateWest();
+        break;
+      default:
+        break;
       }
 
       // `clientX` and `clientY` jump immediately before the drag ends so we’re
@@ -208,6 +208,7 @@ export default function RegionMask(props) {
     const { current: ref } = xRef;
 
     if (bounds != null && map != null) {
+      // eslint-disable-next-line no-inner-declarations
       function update() {
         const [[south, west], [north, east]] =
           live != null && live.bounds != null ? live.bounds : bounds;

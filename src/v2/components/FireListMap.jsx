@@ -112,9 +112,9 @@ export default function FireMap(props) {
   const bounds = useMemo(() => {
     return region != null
       ? [
-          [region.west, region.north],
-          [region.east, region.south],
-        ]
+        [region.west, region.north],
+        [region.east, region.south],
+      ]
       : Props.BOUNDS;
   }, [region]);
 
@@ -526,8 +526,8 @@ function renderFireTooltip(fire) {
 <div class="c7e-fire--location">
   <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
   <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render(
-    { date }
-  )}</time>
+  { date }
+)}</time>
 </div>`;
 }
 
@@ -545,8 +545,8 @@ function renderStackTooltip(stack) {
   <strong class="c7e-fire--city-name">${cityName}</strong> · ${cameraName}<br/>
   <span>${size} ${size !== 1 ? 'fires' : 'fire'} detected since \
     <time datetime="${date.toISOString()}" class="c7e-fire--date-time">${DateTime.render(
-    { date }
-  )}</time>
+  { date }
+)}</time>
   </span>
 </div>`;
 }
