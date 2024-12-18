@@ -96,7 +96,7 @@ export class DbMgr {
   async insert(tableName: string, keys: string[], values: string[]) {
     const sqlCmd = `INSERT INTO ${tableName} (${keys.join(
       ','
-    )}) VALUES (${values.map((x) => "'" + x + "'").join(',')})`;
+    )}) VALUES (${values.map((x) => '\'' + x + '\'').join(',')})`;
     // console.log('sqlC', sqlCmd);
     if (this.dbType === 'sqlite' && this.sqlite) {
       const dbRunP = util.promisify(this.sqlite.run).bind(this.sqlite);

@@ -17,6 +17,7 @@
 
 'use strict';
 // UI backend server
+/* eslint quotes: 0 */ // --> OFF
 
 import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';

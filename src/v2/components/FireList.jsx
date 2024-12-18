@@ -115,6 +115,7 @@ export default function FireList(props) {
   const handleVoteForFire = useCallback(
     (index, decision) => {
       if (index > -1 && index < nFires) {
+        // eslint-disable-next-line no-inner-declarations
         function call() {
           const fire = fires[index];
           const keys = Object.keys(fire._anglesByKey);
@@ -124,6 +125,7 @@ export default function FireList(props) {
           return Promise.all(requests);
         }
 
+        // eslint-disable-next-line no-inner-declarations
         function callback() {
           updateFires(indexOfOldFires > -1);
         }
