@@ -43,8 +43,8 @@ export default function vote(decision, maximumTimestamp, fires) {
     const undo =
       hasVote && !isUndo
         ? query
-            .post(endpoint, { cameraID, timestamp })
-            .then(() => delete fire.voted)
+          .post(endpoint, { cameraID, timestamp })
+          .then(() => delete fire.voted)
         : Promise.resolve();
 
     const isRealFire = isUndo ? undefined : decision === 'yes';

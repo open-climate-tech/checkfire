@@ -24,7 +24,7 @@
  * @param {number} west - The western longitudinal boundary.
  * @param {number} latitude - A northern or southern boundary.
  *
- * @returns {boolean} `true` if `line` has a point within `west` and `east`
+ * @returns {boolean} `true` if `line` has a point within `west` and `east`
  *     longitudes; otherwise, `false`.
  */
 export default function isLineWithinLongitudes(line, east, west, latitude) {
