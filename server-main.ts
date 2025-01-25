@@ -104,7 +104,8 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
 });
 
 // static webpage for /
-const projRootDir = path.dirname(__dirname);
+// const projRootDir = path.dirname(__dirname); this no longer works
+const projRootDir = __dirname;
 
 app.use('/', express.static(path.join(projRootDir, 'webroot')));
 // react app for /wildfirecheck
