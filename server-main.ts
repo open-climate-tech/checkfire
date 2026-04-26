@@ -26,7 +26,10 @@ require('source-map-support').install();
 
 const dev = process.env.NODE_ENV !== 'production';
 const PORT = parseInt(process.env.PORT || '3141', 10);
-const projRootDir = __dirname;
+// Next.js needs the project root (where .next/ and pages/ live). When this
+// file is compiled to dist/, __dirname points to dist/, so use cwd instead
+// (npm start / npm run dev both run from project root).
+const projRootDir = process.cwd();
 
 const nextApp = next({ dev, dir: projRootDir });
 const nextHandler = nextApp.getRequestHandler();

@@ -4,11 +4,21 @@
   "engines": {
     "node": "20.x || 22.x"
   },
-  "gcp-build": "",
   "dependencies": {
     "@google-cloud/compute": "^3.7.0",
     "@google-cloud/pubsub": "^3.2.1",
     "@google-cloud/storage": "^6.9.0",
+    "@types/chai": "^4.3.0",
+    "@types/express": "^4.17.15",
+    "@types/node": "^20.0.0",
+    "@types/passport": "^1.0.11",
+    "@types/passport-facebook": "^2.1.11",
+    "@types/passport-google-oauth20": "^2.0.11",
+    "@types/passport-local": "^1.0.35",
+    "@types/pg": "^8.6.6",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/sqlite3": "^3.1.8",
     "body-parser": "^1.20.1",
     "chai": "^4.3.7",
     "cookie-parser": "^1.4.6",
@@ -33,14 +43,17 @@
     "react-resize-observer": "^1.1.1",
     "react-responsive": "^9.0.2",
     "react-web-notification": "^0.8.0",
+    "sharp": "^0.33.0",
     "source-map-support": "^0.5.21",
     "sqlite3": "^5.1.4",
+    "typescript": "^5.3.0",
     "winston": "^3.8.2"
   },
   "scripts": {
-    "start": "node dist/server-main.js",
+    "start": "npm run build && node dist/server-main.js",
     "dev": "NODE_ENV=development ts-node --project tsconfig.server.json server-main.ts",
     "build": "tsc -p tsconfig.server.json && next build",
+    "gcp-build": "tsc -p tsconfig.server.json && next build",
     "lint": "next lint",
     "format": "prettier --write .",
     "test": "cross-env CI=true NODE_ENV=development npm run test-server",
@@ -57,16 +70,6 @@
     "arrowParens": "always"
   },
   "devDependencies": {
-    "@types/express": "^4.17.15",
-    "@types/node": "^20.0.0",
-    "@types/passport": "^1.0.11",
-    "@types/passport-facebook": "^2.1.11",
-    "@types/passport-google-oauth20": "^2.0.11",
-    "@types/passport-local": "^1.0.35",
-    "@types/pg": "^8.6.6",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@types/sqlite3": "^3.1.8",
     "chai-http": "^4.3.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.38.0",
@@ -74,7 +77,6 @@
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "prettier": "^2.8.8",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.0"
+    "ts-node": "^10.9.2"
   }
 }

@@ -1,0 +1,14 @@
+.gcloudignore
+.git
+.gitignore
+node_modules
+build
+.next
+dist
+cypress
+test
+.vscode
+*.log
+.env
+.env.local
+
