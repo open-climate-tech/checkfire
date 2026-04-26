@@ -7,7 +7,7 @@ env: flex
 # According to https://cloud.google.com/appengine/docs/flexible/nodejs/runtime,
 runtime_config:
   operating_system: 'ubuntu22'
-  runtime_version: '20'
+  runtime_version: '22'
 
 # https://cloud.google.com/appengine/docs/flexible/nodejs/configuring-your-app-with-app-yaml
 # Minimal sizing for dev/test
