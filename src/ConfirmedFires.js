@@ -18,7 +18,7 @@
 // Confirmed Fires
 
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { getServerUrl, serverGet, FirePreview } from './OctReactUtils';
 
 /**
@@ -53,7 +53,7 @@ class ConfirmedFires extends Component {
           majority of the voting users. There is an inherent delay in waiting
           for someone to vote and confirm a fire, so this page will never
           display events as quickly as the{' '}
-          <Link to="/wildfirecheck">Potential Fires</Link> page. This page also
+          <Link href="/wildfirecheck">Potential Fires</Link> page. This page also
           does not check potential fire locations against the your preferred
           region of interest, but instead shows fires from all cameras. Finally,
           this page also does does not automatically refresh on new detections.

@@ -20,7 +20,7 @@
 import React, { useState } from 'react';
 import { getServerUrl, serverPost } from './OctReactUtils';
 
-import { useLocation } from 'react-router-dom';
+import { useRouter } from 'next/router';
 
 export default function Register(props) {
   const [username, setUsername] = useState('');
@@ -28,8 +28,8 @@ export default function Register(props) {
   const [email, setEmail] = useState('');
   const [errMessage, setErrMessage] = useState('');
 
-  const location = useLocation();
-  const fwdPath = (location.query && location.query.fwdPath) || '/';
+  const router = useRouter();
+  const fwdPath = (router.query && router.query.fwdPath) || '/';
   // console.log('Register fwdPath', fwdPath);
 
   const registerSubmit = async (event) => {

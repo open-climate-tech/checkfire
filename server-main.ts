@@ -1,127 +1,135 @@
 /*
 # Copyright 2020 Open Climate Tech Contributors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+# Licensed under the Apache License, Version 2.0
 */
 
 'use strict';
-// UI backend server
-/* eslint quotes: 0 */ // --> OFF
+// Custom Next.js + Express server.
+//
+// Express handles middleware (helmet, cookies, body parsing) and the routes that
+// require Express-specific features (passport OAuth, SSE). Everything else
+// (pages, pages/api/*, static assets) is handled by the Next.js request handler.
+/* eslint quotes: 0 */
 
 import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import helmet from 'helmet';
 import path from 'path';
+import next from 'next';
 
 const cookieParser = require('cookie-parser');
 const oct_utils = require('./server-src/oct_utils');
 import * as services from './server-src/services';
 
 const logger = oct_utils.getLogger('main');
-
 require('source-map-support').install();
-const app = express();
 
-// Setup express middle-ware to log requests and allow CORS for dev environments
-app.use(function (req: Request, res: Response, next: NextFunction) {
-  const headers = Object.assign({}, req.headers);
-  headers.url = req.originalUrl || req.url;
-  logger.info('request Headers: %s', JSON.stringify(headers));
-  if (process.env.NODE_ENV === 'development') {
-    // Permissive CORS to allow for testing with server on differnt port
-    if (req.header('origin')) {
-      res.setHeader('Access-Control-Allow-Origin', req.header('origin') || '');
-    }
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader(
-      'Access-Control-Allow-Headers',
-      'origin, content-type, accept'
-    );
-  }
-  next();
-});
-
-app.use(helmet());
-// setup CSP
-const trusted = ["'self'"];
-if (process.env.NODE_ENV === 'development') {
-  trusted.push('http://localhost:*');
-}
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: trusted,
-      scriptSrc: [
-        "'unsafe-inline'",
-        'https://www.googletagmanager.com',
-        '*.googletagmanager.com',
-        'unpkg.com',
-      ].concat(trusted),
-      styleSrc: [
-        "'unsafe-inline'",
-        '*.w3schools.com',
-        'cdnjs.cloudflare.com',
-        'unpkg.com',
-      ].concat(trusted),
-      imgSrc: [
-        'data:',
-        'www.googletagmanager.com',
-        'storage.googleapis.com',
-        '*.openstreetmap.org',
-      ].concat(trusted),
-      mediaSrc: ['storage.googleapis.com'].concat(trusted),
-      connectSrc: ['www.google-analytics.com'].concat(trusted),
-    },
-  })
-);
-// allow non-CORS sites
-app.use(helmet.crossOriginEmbedderPolicy({ policy: 'credentialless' }));
-
-app.use(cookieParser());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
-// Redirect http to https
-app.use(function (req: Request, res: Response, next: NextFunction) {
-  if (
-    req.headers['x-forwarded-proto'] &&
-    req.headers['x-forwarded-proto'] === 'http'
-  ) {
-    return res.redirect(['https://', req.get('Host'), req.url].join(''));
-  }
-  next();
-});
-
-// static webpage for /
-// const projRootDir = path.dirname(__dirname); this no longer works
+const dev = process.env.NODE_ENV !== 'production';
+const PORT = parseInt(process.env.PORT || '3141', 10);
 const projRootDir = __dirname;
 
-app.use('/', express.static(path.join(projRootDir, 'webroot')));
-// react app for /wildfirecheck
-app.use('/wildfirecheck', express.static(path.join(projRootDir, 'build')));
-app.use('/static', express.static(path.join(projRootDir, 'build/static')));
-app.use('/img', express.static(path.join(projRootDir, 'build/img')));
+const nextApp = next({ dev, dir: projRootDir });
+const nextHandler = nextApp.getRequestHandler();
 
-// initialize dyanmic services
-services.initServices(app, () => {
-  // Start the server
-  const PORT = process.env.PORT || 3141;
-  app.listen(PORT, () => {
-    logger.info(`WildfireCheck back listening on port ${PORT}`);
-    logger.info('Press Ctrl+C to quit.');
-    app.emit('app_ready', null);
+async function main() {
+  await nextApp.prepare();
+
+  const app = express();
+
+  // ---------------------------------------------------------------------------
+  // Logging + dev CORS
+  // ---------------------------------------------------------------------------
+  app.use(function (req: Request, res: Response, next: NextFunction) {
+    const headers = Object.assign({}, req.headers);
+    headers.url = req.originalUrl || req.url;
+    logger.info('request Headers: %s', JSON.stringify(headers));
+    if (process.env.NODE_ENV === 'development') {
+      if (req.header('origin')) {
+        res.setHeader('Access-Control-Allow-Origin', req.header('origin') || '');
+      }
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
+    }
+    next();
   });
-});
 
-module.exports = app;
+  // ---------------------------------------------------------------------------
+  // Security headers (CSP relaxed in dev for Next.js HMR)
+  // ---------------------------------------------------------------------------
+  app.use(helmet());
+  const trusted = ["'self'"];
+  if (process.env.NODE_ENV === 'development') {
+    trusted.push('http://localhost:*');
+  }
+  app.use(
+    helmet.contentSecurityPolicy({
+      directives: {
+        defaultSrc: trusted,
+        scriptSrc: [
+          "'unsafe-inline'",
+          "'unsafe-eval'", // required by Next.js dev mode
+          'https://www.googletagmanager.com',
+          '*.googletagmanager.com',
+          'unpkg.com',
+        ].concat(trusted),
+        styleSrc: [
+          "'unsafe-inline'",
+          '*.w3schools.com',
+          'cdnjs.cloudflare.com',
+          'unpkg.com',
+        ].concat(trusted),
+        imgSrc: [
+          'data:',
+          'blob:',
+          'www.googletagmanager.com',
+          'storage.googleapis.com',
+          '*.openstreetmap.org',
+        ].concat(trusted),
+        mediaSrc: ['storage.googleapis.com'].concat(trusted),
+        connectSrc: ['www.google-analytics.com'].concat(trusted),
+      },
+    })
+  );
+  app.use(helmet.crossOriginEmbedderPolicy({ policy: 'credentialless' }));
+
+  // ---------------------------------------------------------------------------
+  // Body / cookies / https redirect
+  // ---------------------------------------------------------------------------
+  app.use(cookieParser());
+  app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(bodyParser.json());
+
+  app.use(function (req: Request, res: Response, next: NextFunction) {
+    if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === 'http') {
+      return res.redirect(['https://', req.get('Host'), req.url].join(''));
+    }
+    next();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Static webroot pages (terms.html, privacy.html, disclaimer.html, ...)
+  // ---------------------------------------------------------------------------
+  app.use('/legal', express.static(path.join(projRootDir, 'webroot')));
+
+  // ---------------------------------------------------------------------------
+  // Initialize services: db, passport, pubsub, sse + Express-only API routes.
+  // ---------------------------------------------------------------------------
+  await services.initServices(app);
+
+  // ---------------------------------------------------------------------------
+  // Hand everything else off to Next.js (pages + pages/api + static assets).
+  // ---------------------------------------------------------------------------
+  app.all('*', (req: Request, res: Response) => {
+    return nextHandler(req, res);
+  });
+
+  app.listen(PORT, () => {
+    logger.info(`WildfireCheck listening on port ${PORT}`);
+    logger.info('Press Ctrl+C to quit.');
+  });
+}
+
+main().catch((err) => {
+  logger.error('Fatal startup error: %s', err && err.stack ? err.stack : err);
+  process.exit(1);
+});

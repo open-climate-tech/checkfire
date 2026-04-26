@@ -18,7 +18,7 @@
 // Display live feed of recent potential fires with option to vote
 
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import Notification from 'react-web-notification';
 
 import {
@@ -502,20 +502,20 @@ class VoteFires extends Component {
           <h5>
             Only potential fires in selected region are being shown. To see
             potential fires across all cameras, remove the selection in the{' '}
-            <Link to="/preferences">Preferences</Link> page.
+            <Link href="/preferences">Preferences</Link> page.
           </h5>
         ) : (
           <p>
             Potential fires across all areas are being shown. Users can restrict
             potential fires to their specified region of interest on the{' '}
-            <Link to="/preferences">Preferences</Link> page
+            <Link href="/preferences">Preferences</Link> page
           </p>
         )}
         {!this.state.webNotify && (
           <p>
             Users can choose to get notifications in real-time as new potential
             fire events are detected by selecting the option in the{' '}
-            <Link to="/preferences">Preferences</Link> page.
+            <Link href="/preferences">Preferences</Link> page.
           </p>
         )}
         {this.state.webNotify && (
