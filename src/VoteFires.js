@@ -144,7 +144,7 @@ class VoteFires extends Component {
 
     // update recent vs. old fires periodically
     setInterval(() => {
-      this.updateRecentCounts(this.state.potentialFires);
+      this.updateRecentCounts();
     }, 30 * 60 * 1000); // check every 30 minutes (long period to reduce energy usage and we don't need high precision)
   }
 
@@ -295,41 +295,58 @@ class VoteFires extends Component {
       return;
     }
 
-    // check for duplicates, updates to existing fires, or new fires
-    const alreadyExists = this.state.potentialFires.find(
-      (i) => i.timestamp === parsed.timestamp && i.cameraID === parsed.cameraID
-    );
-    if (alreadyExists) {
-      if (alreadyExists.croppedUrl === parsed.croppedUrl) {
-        // exact same, so ignore
-        return;
-      } else {
-        // new video on existing fire, so update existing entry
-        alreadyExists.croppedUrl = parsed.croppedUrl;
-        console.log('newPotentialFire: diff cropped', parsed.croppedUrl);
-        this.updateFiresAndCounts(this.state.potentialFires);
-      }
-    } else {
-      // new fire
-      // now insert new fires at right timeslot and remove old fires
-      const updatedFires = [parsed]
-        .concat(this.state.potentialFires)
-        .sort((a, b) => b.sortId - a.sortId) // sort by sortId descending
-        .slice(0, 20); // limit to most recent 20
+    // Use functional setState so rapid SSE bursts (e.g. the ~100-event
+    // backlog replay on connect) don't observe stale `this.state` due to
+    // React 18 automatic batching of async/microtask setState calls.
+    this.setState((prevState) => {
+      const prevFires = prevState.potentialFires;
+      const alreadyExists = prevFires.find(
+        (i) =>
+          i.timestamp === parsed.timestamp && i.cameraID === parsed.cameraID
+      );
 
-      // if this is a new real-time fire, and notifications are enabled, trigger notification
-      const newTop = updatedFires.length ? updatedFires[0] : {};
-      if (
-        newTop &&
-        newTop.isRealTime &&
-        this.state.webNotify &&
-        newTop.timestamp === parsed.timestamp &&
-        newTop.cameraID === parsed.cameraID
-      ) {
-        this.notify(updatedFires);
+      let updatedFires;
+      if (alreadyExists) {
+        if (alreadyExists.croppedUrl === parsed.croppedUrl) {
+          // exact same, so ignore
+          return null;
+        }
+        // new video on existing fire, so update existing entry immutably
+        updatedFires = prevFires.map((f) =>
+          f.timestamp === parsed.timestamp && f.cameraID === parsed.cameraID
+            ? Object.assign({}, f, { croppedUrl: parsed.croppedUrl })
+            : f
+        );
+        console.log('newPotentialFire: diff cropped', parsed.croppedUrl);
+      } else {
+        // new fire — insert and keep top 20 by sortId
+        updatedFires = [parsed]
+          .concat(prevFires)
+          .sort((a, b) => b.sortId - a.sortId)
+          .slice(0, 20);
+
+        // trigger notification only if this insert produced a new top
+        // real-time fire matching the incoming event
+        const newTop = updatedFires[0];
+        if (
+          newTop &&
+          newTop.isRealTime &&
+          prevState.webNotify &&
+          newTop.timestamp === parsed.timestamp &&
+          newTop.cameraID === parsed.cameraID
+        ) {
+          // setState is in progress; defer the notification side effect
+          setTimeout(() => this.notify(updatedFires), 0);
+        }
       }
-      this.updateFiresAndCounts(updatedFires);
-    }
+
+      const counts = this.calculateRecentCounts(updatedFires);
+      return {
+        potentialFires: updatedFires,
+        numRecentFires: counts.numRecentFires,
+        numOldFires: counts.numOldFires,
+      };
+    });
   }
 
   calculateRecentCounts(potentialFires) {
@@ -345,15 +362,17 @@ class VoteFires extends Component {
     return counts;
   }
 
-  updateRecentCounts(potentialFires) {
-    const newState = this.calculateRecentCounts(potentialFires);
-    this.setState(newState);
+  updateRecentCounts() {
+    this.setState((prevState) => this.calculateRecentCounts(prevState.potentialFires));
   }
 
   updateFiresAndCounts(potentialFires) {
-    const newState = this.calculateRecentCounts(potentialFires);
-    newState.potentialFires = potentialFires;
-    this.setState(newState);
+    const counts = this.calculateRecentCounts(potentialFires);
+    this.setState({
+      potentialFires: potentialFires,
+      numRecentFires: counts.numRecentFires,
+      numOldFires: counts.numOldFires,
+    });
   }
 
   toggleOldFires() {

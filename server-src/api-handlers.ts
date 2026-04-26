@@ -77,7 +77,7 @@ async function apiWrapper(
     await cb(decoded);
   } catch (err) {
     logger.error('%s failure: %s', apiDesc, err);
-    res.status(401).send('Unauthorized').end();
+    res.status(401).send('Unauthorized');
   }
 }
 
@@ -87,17 +87,17 @@ async function apiWrapper(
 
 export async function testGetHandler(_db: DbMgr, _config: OCT_Config, _req: Request, res: Response) {
   logger.info('GET testGet');
-  res.status(200).send('Hello, m24.1610 world!').end();
+  res.status(200).send('Hello, m24.1610 world!');
 }
 
 export async function testPostHandler(_db: DbMgr, _config: OCT_Config, _req: Request, res: Response) {
   logger.info('POST testPost');
-  res.status(200).send('success').end();
+  res.status(200).send('success');
 }
 
 export async function checkAuthHandler(_db: DbMgr, config: OCT_Config, req: Request, res: Response) {
   await apiWrapper(req, res, config, 'GET checkAuth', () => {
-    res.status(200).send('success').end();
+    res.status(200).send('success');
   });
 }
 
@@ -106,7 +106,7 @@ export async function logoutHandler(_db: DbMgr, _config: OCT_Config, _req: Reque
     'Set-Cookie',
     'cf_token=; Path=/; HttpOnly; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
   );
-  res.status(200).send('success').end();
+  res.status(200).send('success');
 }
 
 export async function registerHandler(db: DbMgr, config: OCT_Config, req: Request, res: Response) {
@@ -115,7 +115,7 @@ export async function registerHandler(db: DbMgr, config: OCT_Config, req: Reques
     const authQueryRes = await oct_utils.getUserAuth(db, req.body.username, 'local');
     if (authQueryRes.length !== 0) {
       logger.error('POST Register err', new Error(`username exists: ${req.body.username}`));
-      return res.status(409).send('Conflict').end();
+      return res.status(409).send('Conflict');
     }
     const crypto = require('crypto');
     const salt = crypto.randomBytes(16);
@@ -127,7 +127,7 @@ export async function registerHandler(db: DbMgr, config: OCT_Config, req: Reques
       'sha256',
       async function (err: any, hashedPassword: Buffer) {
         if (err) {
-          res.status(500).send('Internal Server Error').end();
+          res.status(500).send('Internal Server Error');
           return;
         }
         const saltHex = salt.toString('hex');
@@ -138,12 +138,12 @@ export async function registerHandler(db: DbMgr, config: OCT_Config, req: Reques
           [req.body.username, 'local', passwordHex, saltHex, req.body.email]
         );
         setJwtCookie(res, config, getUserId('local', req.body.username));
-        res.status(200).send('success').end();
+        res.status(200).send('success');
       }
     );
   } catch (err) {
     logger.error('POST Register err', err);
-    res.status(500).send('Internal Server Error').end();
+    res.status(500).send('Internal Server Error');
   }
 }
 
@@ -169,7 +169,7 @@ export async function voteFireHandler(db: DbMgr, config: OCT_Config, req: Reques
       queryKeys,
       queryValues
     );
-    res.status(200).send('success').end();
+    res.status(200).send('success');
   });
 }
 
@@ -189,12 +189,12 @@ export async function undoVoteFireHandler(db: DbMgr, config: OCT_Config, req: Re
     );
     if (!existingVotesByUser || existingVotesByUser.length === 0) {
       logger.warn('No votes to undo %s', existingVotesByUser);
-      res.status(400).send('Bad Request').end();
+      res.status(400).send('Bad Request');
       return;
     }
     const sqlStr = `delete from votes where cameraname='${req.body.cameraID}' and timestamp=${req.body.timestamp} and userid='${decoded.email}'`;
     await db.query(sqlStr);
-    res.status(200).send('success').end();
+    res.status(200).send('success');
   });
 }
 
@@ -206,7 +206,7 @@ export async function getPreferencesHandler(db: DbMgr, config: OCT_Config, req: 
       webNotify: preferences.webNotify,
       showProto: preferences.showProto,
     };
-    res.status(200).send(result).end();
+    res.status(200).send(result);
   });
 }
 
@@ -231,7 +231,7 @@ export async function setRegionHandler(db: DbMgr, config: OCT_Config, req: Reque
       ['userid'],
       [decoded.email]
     );
-    res.status(200).send('success').end();
+    res.status(200).send('success');
   });
 }
 
@@ -245,7 +245,7 @@ export async function setWebNotifyHandler(db: DbMgr, config: OCT_Config, req: Re
       ['userid'],
       [decoded.email]
     );
-    res.status(200).send('success').end();
+    res.status(200).send('success');
   });
 }
 
@@ -284,7 +284,7 @@ export async function confirmedFiresHandler(db: DbMgr, config: OCT_Config, req: 
       return await oct_utils.augmentCameraInfo(db, config, fireEvent);
     })
   );
-  res.status(200).send(fireEvents).end();
+  res.status(200).send(fireEvents);
 }
 
 export async function selectedFiresHandler(db: DbMgr, config: OCT_Config, req: Request, res: Response) {
@@ -310,7 +310,7 @@ export async function selectedFiresHandler(db: DbMgr, config: OCT_Config, req: R
       return await oct_utils.augmentCameraInfo(db, config, fireEvent);
     })
   );
-  res.status(200).send(fireEvents).end();
+  res.status(200).send(fireEvents);
 }
 
 export async function detectedFiresHandler(db: DbMgr, config: OCT_Config, req: Request, res: Response) {
@@ -332,7 +332,7 @@ export async function detectedFiresHandler(db: DbMgr, config: OCT_Config, req: R
         return await oct_utils.augmentVotes(db, fireEvent, decoded.email);
       })
     );
-    res.status(200).send(fireEvents).end();
+    res.status(200).send(fireEvents);
   });
 }
 
@@ -343,7 +343,7 @@ export async function listCamerasHandler(db: DbMgr, config: OCT_Config, req: Req
     const sqlStr = 'select name from sources order by name';
     const dbRes = await db.query(sqlStr);
     const cameraIDs = dbRes.map((dbEntry: Record<string, any>) => dbEntry.name);
-    res.status(200).send(cameraIDs).end();
+    res.status(200).send(cameraIDs);
   });
 }
 
@@ -360,7 +360,7 @@ export async function monitoredCamerasHandler(db: DbMgr, config: OCT_Config, _re
     latitude: dbEntry['latitude'] || dbEntry['Latitude'],
     longitude: dbEntry['longitude'] || dbEntry['Longitude'],
   }));
-  res.status(200).send(monitoredCameras).end();
+  res.status(200).send(monitoredCameras);
 }
 
 export async function fetchImageHandler(db: DbMgr, config: OCT_Config, req: Request, res: Response) {
@@ -383,7 +383,7 @@ export async function fetchImageHandler(db: DbMgr, config: OCT_Config, req: Requ
     const isLabeler = await oct_utils.isUserLabeler(db, decoded.email);
     assert(isLabeler);
     if (typeof req.query.cameraID !== 'string') {
-      res.status(400).send('Bad request').end();
+      res.status(400).send('Bad request');
       return;
     }
     assert(cameraHpwrenRegex.test(req.query.cameraID));
@@ -435,7 +435,7 @@ export async function fetchImageHandler(db: DbMgr, config: OCT_Config, req: Requ
         closestDate.second.toString().padStart(2, '0') +
         '.jpg';
     }
-    res.status(200).send(JSON.stringify(result)).end();
+    res.status(200).send(JSON.stringify(result));
   });
 }
 
@@ -474,7 +474,7 @@ export async function setBboxHandler(db: DbMgr, config: OCT_Config, req: Request
       req.body.notes,
     ];
     await db.insert('bbox', bboxKeys, bboxVals);
-    res.status(200).send('success').end();
+    res.status(200).send('success');
   });
 }
 
@@ -486,8 +486,8 @@ export async function activeRxBurnsHandler(db: DbMgr, _config: OCT_Config, _req:
   if (dbRes && dbRes.length === 1) {
     const info = dbRes[0].Info || dbRes[0].info;
     const activeBurnLocations = JSON.parse(info);
-    res.status(200).send(activeBurnLocations).end();
+    res.status(200).send(activeBurnLocations);
   } else {
-    res.status(200).send([]).end();
+    res.status(200).send([]);
   }
 }

@@ -27,11 +27,8 @@ import { useMediaQuery } from 'react-responsive';
  * @param {string} path
  */
 export function getServerUrl(path) {
-  const serverPrefix =
-    process.env.NODE_ENV === 'development'
-      ? `http://localhost:${process.env.REACT_APP_BE_PORT}`
-      : '';
-  return serverPrefix + path;
+  // With Next.js custom server, frontend and backend share the same origin
+  return path;
 }
 
 /**
@@ -39,13 +36,9 @@ export function getServerUrl(path) {
  * @param {string} serverUrl
  */
 export async function serverGet(serverUrl) {
-  const getParams = {};
-  if (process.env.NODE_ENV === 'development') {
-    getParams.credentials = 'include'; //send cookies to dev server on separate port
-  }
   let retval = {};
   try {
-    retval = await fetch(serverUrl, getParams);
+    retval = await fetch(serverUrl, { credentials: 'same-origin' });
   } catch (err) {
     console.log('serverGet err', err);
   }
@@ -65,10 +58,8 @@ export async function serverPost(serverUrl, body) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
+    credentials: 'same-origin',
   };
-  if (process.env.NODE_ENV === 'development') {
-    postParams.credentials = 'include'; //send cookies to dev server on separate port
-  }
   const resp = await fetch(serverUrl, postParams);
   return await resp.text();
 }
@@ -259,8 +250,7 @@ export function FirePreview(props) {
  * @param {*} props
  */
 export function VoteButtons(props) {
-  const myLoc = useRouter();
-  const myPath = myLoc.pathname;
+  const myPath = useRouter().pathname;
   if (!props.validCookie) {
     return (
       <div>
