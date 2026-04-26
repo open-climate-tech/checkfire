@@ -38,9 +38,6 @@ import Register from './Register';
 
 import Prototypes from './Prototypes';
 
-import Authenticated from './v2/components/Authenticated.jsx';
-import V2 from './v2/App.jsx';
-
 import { getServerUrl, Legalese, serverGet } from './OctReactUtils';
 
 const qs = require('qs');
@@ -168,16 +165,8 @@ export default function App(props) {
               element={<FirePagesHeader validCookie={validCookie} />}
             />
           ))}
-          <Route path="/v2/*" exact element={<span />} />
         </Routes>
         <Routes>
-          <Route path="/v2/wildfirecheck" exact element={<V2 />} />
-          <Route
-            path="/v2/wildfirecheck/preferences"
-            exact
-            element={<V2 prefs={true} />}
-          />
-          <Route path="/authenticated" exact element={<Authenticated />} />
           <Route path="/prototypes" exact element={<Prototypes />} />
           <Route path="/login" exact element={<Login />} />
           <Route path="/register" exact element={<Register />} />
@@ -219,7 +208,6 @@ export default function App(props) {
           {LEGACY_PATHS.map((p) => (
             <Route path={p} exact key={p} element={<Legalese />} />
           ))}
-          <Route path="/v2/*" exact element={<span />} />
         </Routes>
       </Router>
     </div>
