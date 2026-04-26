@@ -41,7 +41,7 @@
   "scripts": {
     "gcp-build": "",
     "start": "node dist/server-main.js",
-    "dev": "npm run dev-server & ; npm run dev-client",
+    "dev": "npm run dev-server & npm run dev-client",
     "npx dev-client": "REACT_APP_BE_PORT=3141 npx react-scripts -r @cypress/instrument-cra start",
     "dev-client": "REACT_APP_BE_PORT=3141 react-scripts -r @cypress/instrument-cra start",
     "dev-server": "NODE_ENV=development ts-node server-main.ts",
@@ -66,16 +66,6 @@
         ],
         "rules": {
           "no-sequences": "off"
-        }
-      },
-      {
-        "files": [
-          "src/v2/**/*.js",
-          "src/v2/**/*.jsx",
-          "src/v2/**/*.mjs"
-        ],
-        "rules": {
-          "no-console": "warn"
         }
       }
     ]
@@ -120,11 +110,11 @@
     "chai-http": "^4.3.0",
     "cross-env": "^7.0.3",
     "cypress": "^12.9.0",
+    "eslint": "^8.38.0",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
-    "source-map-support": "^0.5.21",
-    "typescript": "^4.9.4",
     "prettier": "^2.8.8",
-    "eslint": "^8.38.0"
+    "source-map-support": "^0.5.21",
+    "typescript": "^4.9.4"
   }
 }
