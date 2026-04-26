@@ -18,7 +18,7 @@
 // Selected Fires
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useRouter } from 'next/router';
 import { getServerUrl, serverGet, FirePreview } from './OctReactUtils';
 
 /**
@@ -33,8 +33,8 @@ function VoteStats(props) {
 
 export default function SelectedFires(props) {
   const [selectedFires, setSelectedFires] = useState([]);
-  const [searchParams] = useSearchParams();
-  const fireName = searchParams.get('fireName') || 'comet';
+  const router = useRouter();
+  const fireName = router.query.fireName || 'comet';
 
   useEffect(() => {
     async function fetchSelectedFires() {

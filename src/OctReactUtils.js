@@ -18,7 +18,8 @@
 // Utility functions for react code
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useMediaQuery } from 'react-responsive';
 
 /**
@@ -258,13 +259,13 @@ export function FirePreview(props) {
  * @param {*} props
  */
 export function VoteButtons(props) {
-  const myLoc = useLocation();
+  const myLoc = useRouter();
   const myPath = myLoc.pathname;
   if (!props.validCookie) {
     return (
       <div>
         <p style={{ margin: 0 }}>
-          <Link to={{ pathname: '/login', query: { fwdPath: myPath } }}>
+          <Link href={{ pathname: '/login', query: { fwdPath: myPath } }}>
             Sign in
           </Link>{' '}
           to vote if this is a fire

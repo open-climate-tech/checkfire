@@ -17,21 +17,23 @@
 
 // Login page
 
-import './Login.css';
 import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { getServerUrl, serverPost } from './OctReactUtils';
 
-import googleSigninImg from './btn_google_signin_dark_normal_web.png';
-import googleSigninImgFocus from './btn_google_signin_dark_focus_web.png';
+import googleSigninImgImport from './btn_google_signin_dark_normal_web.png';
+const googleSigninImg = typeof googleSigninImgImport === 'string' ? googleSigninImgImport : googleSigninImgImport.src;
+import googleSigninImgFocusImport from './btn_google_signin_dark_focus_web.png';
+const googleSigninImgFocus = typeof googleSigninImgFocusImport === 'string' ? googleSigninImgFocusImport : googleSigninImgFocusImport.src;
 
 export default function Login(props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errMessage, setErrMessage] = useState('');
 
-  const [searchParams] = useSearchParams();
-  const fwdPath = searchParams.get('fwdPath') || '/';
+  const router = useRouter();
+  const fwdPath = router.query.fwdPath || '/';
   console.log('Login fwdPath', fwdPath);
 
   async function loginPassword(event) {
@@ -147,7 +149,7 @@ export default function Login(props) {
               <input type="submit" value="Login" />
               {errMessage || <span>&nbsp;</span>}
             </form>
-            <Link to={{ pathname: '/register', query: { fwdPath: fwdPath } }}>
+            <Link href={{ pathname: '/register', query: { fwdPath: fwdPath } }}>
               Sign up
             </Link>
           </div>

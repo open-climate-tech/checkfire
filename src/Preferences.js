@@ -22,10 +22,14 @@ import ResizeObserver from 'react-resize-observer';
 import Notification from 'react-web-notification';
 
 import { getServerUrl, serverPost, getUserPreferences } from './OctReactUtils';
-import cams1320 from './midsocalCams-1320x1150.jpg';
-import cams1110 from './midsocalCams-1110x960.jpg';
-import cams930 from './midsocalCams-930x810.jpg';
-import cams780 from './midsocalCams-780x680.jpg';
+import cams1320Img from './midsocalCams-1320x1150.jpg';
+const cams1320 = typeof cams1320Img === 'string' ? cams1320Img : cams1320Img.src;
+import cams1110Img from './midsocalCams-1110x960.jpg';
+const cams1110 = typeof cams1110Img === 'string' ? cams1110Img : cams1110Img.src;
+import cams930Img from './midsocalCams-930x810.jpg';
+const cams930 = typeof cams930Img === 'string' ? cams930Img : cams930Img.src;
+import cams780Img from './midsocalCams-780x680.jpg';
+const cams780 = typeof cams780Img === 'string' ? cams780Img : cams780Img.src;
 // import hpwren1078 from './hpwren-1078x638.jpg';
 // import hpwren1290 from './hpwren-1290x762.jpg';
 // import hpwren1492 from './hpwren-1492x870.jpg';
