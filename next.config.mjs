@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   // Custom server handles port and routing; build static assets only.
+  // Note: Next.js 16 uses Turbopack by default. Because we keep a custom
+  // webpack rule below, the build script passes `--webpack` to opt out
+  // of Turbopack for `next build`.
   webpack: (config) => {
     // Allow .mjs extension imports
     config.module.rules.push({
@@ -17,10 +20,6 @@ const nextConfig = {
         hostname: 'storage.googleapis.com',
       },
     ],
-  },
-  eslint: {
-    // Lint only the standard Next.js source dirs; ignore legacy paths.
-    dirs: ['pages', 'src'],
   },
 };
 
