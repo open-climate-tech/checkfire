@@ -21,7 +21,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ResizeObserver from 'react-resize-observer';
 import DateTimePicker from 'react-datetime-picker';
 import Select from 'react-dropdown-select';
-import ReactDOM from 'react-dom';
 
 import { getServerUrl, serverGet, serverPost } from './OctReactUtils';
 
@@ -283,21 +282,18 @@ function LabelImage(props) {
   // Install keyboard shortcuts on mount; load camera list
   useEffect(() => {
     const keyDown = (e) => {
-      const refs = eltRefs.current;
-      if (!refs.cameraPicker || !refs.dateTimePicker || !refs.notes) {
-        return;
-      }
-      const cpDom = ReactDOM.findDOMNode(refs.cameraPicker);
-      const dtpDom = ReactDOM.findDOMNode(refs.dateTimePicker);
-      const notesDom = ReactDOM.findDOMNode(refs.notes);
-      if (!cpDom || !dtpDom || !notesDom) {
-        return;
-      }
-      const inputsInFocus =
-        cpDom.contains(document.activeElement) ||
-        dtpDom.contains(document.activeElement) ||
-        notesDom.contains(document.activeElement);
-      if (inputsInFocus) {
+      // Skip arrow/'s' shortcuts when the user is typing inside the camera
+      // picker, date-time picker, or notes input. Detected by inspecting
+      // document.activeElement (works without ReactDOM.findDOMNode, which
+      // was removed in React 19).
+      const ae = document.activeElement;
+      if (
+        ae &&
+        (ae.tagName === 'INPUT' ||
+          ae.tagName === 'TEXTAREA' ||
+          ae.tagName === 'SELECT' ||
+          ae.isContentEditable)
+      ) {
         return;
       }
       const keyCodeToOffset = {
