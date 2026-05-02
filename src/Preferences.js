@@ -430,7 +430,7 @@ function Preferences(props) {
           <p>
             The red dots show the location of the cameras, and partially
             shaded red circles around each dot represent a 20 mile radius
-            circlular region that should be visible from each camera location.
+            circular region that should be visible from each camera location.
             Actual visible area depends on terrain occlusions and atmospheric
             visibility conditions.
           </p>
@@ -508,12 +508,12 @@ function Preferences(props) {
               className="w3-button w3-border w3-round-large w3-black"
               onClick={() => savePreferences()}
             >
-              Save prefernces
+              Save preferences
             </button>
           ) : (
             <div>
               <p>
-                You are currently not signed in. To save your prefernces on
+                You are currently not signed in. To save your preferences on
                 the server, you must sign in using the button at the top of
                 the page.
               </p>
@@ -530,7 +530,7 @@ function Preferences(props) {
                 }
                 onClick={() => savePreferences()}
               >
-                Save prefernces
+                Save preferences
               </button>
               <a
                 className="w3-button w3-border w3-round-large w3-black"

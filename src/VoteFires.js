@@ -361,22 +361,27 @@ function VoteFires(props) {
           : preferences.webNotify || Boolean(initialLocationID)
       );
       setShowProto(preferences.showProto);
-      // re-filter existing fires based on new region
-      if (
-        regionToUse &&
-        regionToUse.topLat &&
-        potentialFiresRef.current &&
-        potentialFiresRef.current.length
-      ) {
-        const selectedFires = potentialFiresRef.current.filter((potFire) =>
-          isFireInRegion(potFire, regionToUse, initialLocationID)
-        );
-        if (selectedFires.length !== potentialFiresRef.current.length) {
+      // re-filter existing fires based on new region. Use a functional
+      // setState updater to read the latest fires committed so far,
+      // avoiding races with SSE events that may have arrived before
+      // getUserPreferences() resolved (potentialFiresRef may not yet
+      // reflect those state updates).
+      if (regionToUse && regionToUse.topLat) {
+        setPotentialFires((prevFires) => {
+          if (!prevFires || !prevFires.length) {
+            return prevFires;
+          }
+          const selectedFires = prevFires.filter((potFire) =>
+            isFireInRegion(potFire, regionToUse, initialLocationID)
+          );
+          if (selectedFires.length === prevFires.length) {
+            return prevFires;
+          }
           const counts = calculateRecentCounts(selectedFires, HOURS_LIMIT);
-          setPotentialFires(selectedFires);
           setNumRecentFires(counts.numRecentFires);
           setNumOldFires(counts.numOldFires);
-        }
+          return selectedFires;
+        });
       }
     });
 

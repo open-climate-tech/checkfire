@@ -87,7 +87,7 @@ function DetectedFires() {
     <div>
       <h1 className="w3-padding-32 w3-row-padding">Detected Fires</h1>
       <p>
-        This page shows detected fires that did not made it to alerts due to
+        This page shows detected fires that did not make it to alerts due to
         low scores or prototype status
       </p>
       {detectedFires &&
