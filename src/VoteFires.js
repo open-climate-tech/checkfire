@@ -17,7 +17,7 @@
 
 // Display live feed of recent potential fires with option to vote
 
-import React, { Component } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Notification from 'react-web-notification';
 
@@ -29,365 +29,156 @@ import {
   VoteButtons,
 } from './OctReactUtils';
 
-class VoteFires extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      potentialFires: [],
-      hoursLimit: 2, // 2 hours
-      numRecentFires: 0,
-      numOldFires: 0,
-      showOldFires: false,
-      showDetails: false,
-      webNotify: false,
-      notifyTitle: '',
-      notifyOptions: '',
-      locationID: null,
-    };
-    this.sseVersion = null;
+const HOURS_LIMIT = 2;
+
+function isHorizIntersection(commonLat, leftLong, rightLong, vertices) {
+  if (Math.abs(vertices[1][0] - vertices[0][0]) < 0.01) {
+    return false;
   }
-
-  componentDidMount() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const locationID = queryParams.get('locID');
-    const latLongStr = queryParams.get('latLong');
-    const notifyStr = queryParams.get('notify');
-    // lat/long for northern (> 10 latitude) and western (<-100) longitude
-    const twoPointOne = '([0-9]{2}(?:\\.[0-9])?)';
-    const negThreePointOne = '(-[0-9]{3}(?:\\.[0-9])?)';
-    const regexLatLong = RegExp(
-      '^' +
-        twoPointOne +
-        ',' +
-        twoPointOne +
-        ',' +
-        negThreePointOne +
-        ',' +
-        negThreePointOne +
-        '$'
-    );
-    const latLongParsed = regexLatLong.exec(latLongStr);
-    let userRegion = null;
-    if (latLongParsed) {
-      userRegion = {
-        bottomLat: parseFloat(latLongParsed[1]),
-        topLat: parseFloat(latLongParsed[2]),
-        leftLong: parseFloat(latLongParsed[3]),
-        rightLong: parseFloat(latLongParsed[4]),
-      };
-      // basic lat/long verification for northern and western hemispheres
-      // also verify degree difference of at least 0.3
-      if (
-        userRegion.topLat > 90 ||
-        userRegion.bottomLat > 90 ||
-        userRegion.topLat < userRegion.bottomLat + 0.3 ||
-        userRegion.leftLong < -180 ||
-        userRegion.rightLong < -180 ||
-        userRegion.rightLong < userRegion.leftLong + 0.3
-      ) {
-        userRegion = null;
-      }
-    }
-    let webNotifyQP = false;
-    if (notifyStr && (notifyStr === 'true' || notifyStr === 'false')) {
-      webNotifyQP = notifyStr === 'true';
-    }
-    this.setState({
-      locationID: locationID,
-      userRegion: userRegion,
-      webNotify: webNotifyQP || Boolean(locationID), // locationID queryParams automatically enable notifications
-    });
-
-    // setup SSE connection with backend to get updates on new detections
-    const sseConfig = {};
-    if (process.env.NODE_ENV === 'development') {
-      sseConfig.withCredentials = true; //send cookies to dev server on separate port
-    }
-    const eventsUrl = getServerUrl('/fireEvents');
-    this.eventSource = new EventSource(eventsUrl, sseConfig);
-    this.eventSource.addEventListener('newPotentialFire', (e) => {
-      // console.log('UpdateLEID', e.lastEventId);
-      this.newPotentialFire(e);
-    });
-    this.eventSource.addEventListener('closedConnection', (e) =>
-      this.stopUpdates(e)
-    );
-
-    // filter potential fires with user specified region of interest
-    getUserPreferences().then((preferences) => {
-      // console.log('preferences', preferences);
-      if (!userRegion || !latLongStr) {
-        userRegion = preferences.region;
-      }
-      this.setState({
-        userRegion: userRegion,
-        webNotify: notifyStr
-          ? webNotifyQP
-          : preferences.webNotify || Boolean(locationID),
-        showProto: preferences.showProto,
-      });
-      // check existing potentialFires to see if they are within limits
-      if (
-        userRegion &&
-        userRegion.topLat &&
-        this.state.potentialFires &&
-        this.state.potentialFires.length
-      ) {
-        const selectedFires = this.state.potentialFires.filter((potFire) =>
-          this.isFireInRegion(potFire, userRegion)
-        );
-        if (selectedFires.length !== this.state.potentialFires.length) {
-          this.updateFiresAndCounts(selectedFires);
-        }
-      }
-    });
-
-    // update recent vs. old fires periodically
-    setInterval(() => {
-      this.updateRecentCounts();
-    }, 30 * 60 * 1000); // check every 30 minutes (long period to reduce energy usage and we don't need high precision)
+  const t1 = (commonLat - vertices[0][0]) / (vertices[1][0] - vertices[0][0]);
+  if (t1 >= 0 && t1 <= 1) {
+    const intersectionLong =
+      (vertices[1][1] - vertices[0][1]) * t1 + vertices[0][1];
+    return intersectionLong >= leftLong && intersectionLong <= rightLong;
   }
+  return false;
+}
 
-  stopUpdates(e) {
-    console.log('stopUpdates', e);
-    this.eventSource.close();
+function isVertIntersection(commonLong, bottomLat, topLat, vertices) {
+  if (Math.abs(vertices[1][1] - vertices[0][1]) < 0.01) {
+    return false;
   }
-
-  componentWillUnmount() {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = null;
-    }
+  const t1 =
+    (commonLong - vertices[0][1]) / (vertices[1][1] - vertices[0][1]);
+  if (t1 >= 0 && t1 <= 1) {
+    const intersectionLat =
+      (vertices[1][0] - vertices[0][0]) * t1 + vertices[0][0];
+    return intersectionLat >= bottomLat && intersectionLat <= topLat;
   }
+  return false;
+}
 
-  isHorizIntersection(commonLat, leftLong, rightLong, vertices) {
-    if (Math.abs(vertices[1][0] - vertices[0][0]) < 0.01) {
-      return false; // too close to horizontal -- ignore this segment and see if other segments intersect
-    }
-    // t1 is parameterized value on line segment where 0 represents vertices[0] and 1 represents vertices[1]
-    const t1 = (commonLat - vertices[0][0]) / (vertices[1][0] - vertices[0][0]);
-    if (t1 >= 0 && t1 <= 1) {
-      // commonLat is between the two vertices
-      // now check if intersection point is within leftLong and rightLong
-      const intersectionLong =
-        (vertices[1][1] - vertices[0][1]) * t1 + vertices[0][1];
-      return intersectionLong >= leftLong && intersectionLong <= rightLong;
-    }
+function isFireInRegion(potFire, userRegion, locationID) {
+  if (locationID && !potFire.cameraID.startsWith(locationID + '-')) {
     return false;
   }
 
-  isVertIntersection(commonLong, bottomLat, topLat, vertices) {
-    if (Math.abs(vertices[1][1] - vertices[0][1]) < 0.01) {
-      return false; // too close to vertical -- ignore this segment and see if other segments intersect
+  if (!userRegion || !userRegion.topLat || !potFire.polygon) {
+    return true;
+  }
+  let minLat = 90;
+  let maxLat = 0;
+  let minLong = 0;
+  let maxLong = -180;
+  let vertexInRegion = false;
+  potFire.polygon.forEach((vertex) => {
+    minLat = Math.min(minLat, vertex[0]);
+    maxLat = Math.max(maxLat, vertex[0]);
+    minLong = Math.min(minLong, vertex[1]);
+    maxLong = Math.max(maxLong, vertex[1]);
+    if (!vertexInRegion) {
+      vertexInRegion =
+        vertex[0] >= userRegion.bottomLat &&
+        vertex[0] <= userRegion.topLat &&
+        vertex[1] >= userRegion.leftLong &&
+        vertex[1] <= userRegion.rightLong;
     }
-    const t1 =
-      (commonLong - vertices[0][1]) / (vertices[1][1] - vertices[0][1]);
-    if (t1 >= 0 && t1 <= 1) {
-      // commonLong is between the two vertices
-      // now check if intersection point is within bottomLat and topLat
-      const intersectionLat =
-        (vertices[1][0] - vertices[0][0]) * t1 + vertices[0][0];
-      return intersectionLat >= bottomLat && intersectionLat <= topLat;
-    }
+  });
+  if (vertexInRegion) {
+    return true;
+  }
+  if (
+    minLat > userRegion.topLat ||
+    maxLat < userRegion.bottomLat ||
+    minLong > userRegion.rightLong ||
+    maxLong < userRegion.leftLong
+  ) {
     return false;
   }
+  const intersect = potFire.polygon.find((vertex, i) => {
+    const nextVertex = potFire.polygon[(i + 1) % potFire.polygon.length];
+    return (
+      isHorizIntersection(
+        userRegion.topLat,
+        userRegion.leftLong,
+        userRegion.rightLong,
+        [vertex, nextVertex]
+      ) ||
+      isHorizIntersection(
+        userRegion.bottomLat,
+        userRegion.leftLong,
+        userRegion.rightLong,
+        [vertex, nextVertex]
+      ) ||
+      isVertIntersection(
+        userRegion.leftLong,
+        userRegion.bottomLat,
+        userRegion.topLat,
+        [vertex, nextVertex]
+      ) ||
+      isVertIntersection(
+        userRegion.rightLong,
+        userRegion.bottomLat,
+        userRegion.topLat,
+        [vertex, nextVertex]
+      )
+    );
+  });
+  return intersect;
+}
 
-  isFireInRegion(potFire, userRegion) {
-    if (
-      this.state.locationID &&
-      !potFire.cameraID.startsWith(this.state.locationID + '-')
-    ) {
-      return false;
-    }
+function calculateRecentCounts(potentialFires, hoursLimit) {
+  const nowSeconds = Math.round(new Date().valueOf() / 1000);
+  const earliestTimestamp = nowSeconds - 3600 * hoursLimit;
+  return {
+    numRecentFires: potentialFires.filter(
+      (f) => f.timestamp >= earliestTimestamp
+    ).length,
+    numOldFires: potentialFires.filter((f) => f.timestamp < earliestTimestamp)
+      .length,
+  };
+}
 
-    if (!userRegion || !userRegion.topLat || !potFire.polygon) {
-      return true; // pass if coordinates are not available
-    }
-    // min/max lat/long for northern and western hemispheres
-    let minLat = 90;
-    let maxLat = 0;
-    let minLong = 0;
-    let maxLong = -180;
-    let vertexInRegion = false;
-    potFire.polygon.forEach((vertex) => {
-      minLat = Math.min(minLat, vertex[0]);
-      maxLat = Math.max(maxLat, vertex[0]);
-      minLong = Math.min(minLong, vertex[1]);
-      maxLong = Math.max(maxLong, vertex[1]);
-      if (!vertexInRegion) {
-        vertexInRegion =
-          vertex[0] >= userRegion.bottomLat &&
-          vertex[0] <= userRegion.topLat &&
-          vertex[1] >= userRegion.leftLong &&
-          vertex[1] <= userRegion.rightLong;
-      }
-    });
-    if (vertexInRegion) {
-      // at least one vertex is inside userRegion
-      // console.log('ifir vInR', potFire.cameraID, potFire.polygon);
-      return true;
-    }
-    if (
-      minLat > userRegion.topLat ||
-      maxLat < userRegion.bottomLat ||
-      minLong > userRegion.rightLong ||
-      maxLong < userRegion.leftLong
-    ) {
-      // console.log('ifir out', potFire.cameraID, potFire.polygon);
-      return false; // every vertex is on the outside of one edge of userRegion
-    }
-    // The remaining polygons may have a diagonal edge crossing a corner of the userRegion.
-    // Check for intersection between every line segment of polygon with userRegion rectangle
-    const intersect = potFire.polygon.find((vertex, i) => {
-      const nextVertex = potFire.polygon[(i + 1) % potFire.polygon.length];
-      return (
-        this.isHorizIntersection(
-          userRegion.topLat,
-          userRegion.leftLong,
-          userRegion.rightLong,
-          [vertex, nextVertex]
-        ) ||
-        this.isHorizIntersection(
-          userRegion.bottomLat,
-          userRegion.leftLong,
-          userRegion.rightLong,
-          [vertex, nextVertex]
-        ) ||
-        this.isVertIntersection(
-          userRegion.leftLong,
-          userRegion.bottomLat,
-          userRegion.topLat,
-          [vertex, nextVertex]
-        ) ||
-        this.isVertIntersection(
-          userRegion.rightLong,
-          userRegion.bottomLat,
-          userRegion.topLat,
-          [vertex, nextVertex]
-        )
-      );
-    });
-    // console.log('ifir mid', potFire.cameraID, intersect, potFire.polygon);
+function VoteFires(props) {
+  const [potentialFires, setPotentialFires] = useState([]);
+  const [numRecentFires, setNumRecentFires] = useState(0);
+  const [numOldFires, setNumOldFires] = useState(0);
+  const [showOldFires, setShowOldFires] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [webNotify, setWebNotify] = useState(false);
+  const [notifyTitle, setNotifyTitle] = useState('');
+  const [notifyOptions, setNotifyOptions] = useState('');
+  const [locationID, setLocationID] = useState(null);
+  const [userRegion, setUserRegion] = useState(null);
+  const [showProto, setShowProto] = useState(false);
 
-    // TODO: Even without intersection of line segments, the regions may overlap if polygon completely
-    // encapsulates userRegion, but ignoring this possibility for now because assumption is most users
-    // select regions at least 10 miles x 10 miles.
-    return intersect;
-  }
+  // Refs for values consumed inside SSE handlers (to avoid stale closures
+  // and unnecessary handler reattachment).
+  const sseVersionRef = useRef(null);
+  const eventSourceRef = useRef(null);
+  const userRegionRef = useRef(null);
+  const locationIDRef = useRef(null);
+  const webNotifyRef = useRef(false);
+  const potentialFiresRef = useRef([]);
 
-  newPotentialFire(e) {
-    this.clearNotification();
-    // console.log('newPotentialFire', e);
-    const parsed = JSON.parse(e.data);
-    // first check version number
-    if (!this.sseVersion) {
-      // record version number on first response
-      this.sseVersion = parsed.version;
-      console.log('Checkfire SSE version', this.sseVersion);
-    }
-    if (this.sseVersion !== parsed.version) {
-      // reload page on version mismatch
-      console.log('Checkfire SSE mismatch', this.sseVersion, parsed.version);
-      window.location.reload();
-    }
+  useEffect(() => {
+    userRegionRef.current = userRegion;
+  }, [userRegion]);
+  useEffect(() => {
+    locationIDRef.current = locationID;
+  }, [locationID]);
+  useEffect(() => {
+    webNotifyRef.current = webNotify;
+  }, [webNotify]);
+  useEffect(() => {
+    potentialFiresRef.current = potentialFires;
+  }, [potentialFires]);
 
-    if (!this.isFireInRegion(parsed, this.state.userRegion)) {
-      return;
-    }
+  const clearNotification = useCallback(() => {
+    setNotifyTitle('');
+  }, []);
 
-    // Use functional setState so rapid SSE bursts (e.g. the ~100-event
-    // backlog replay on connect) don't observe stale `this.state` due to
-    // React 18 automatic batching of async/microtask setState calls.
-    this.setState((prevState) => {
-      const prevFires = prevState.potentialFires;
-      const alreadyExists = prevFires.find(
-        (i) =>
-          i.timestamp === parsed.timestamp && i.cameraID === parsed.cameraID
-      );
-
-      let updatedFires;
-      if (alreadyExists) {
-        if (alreadyExists.croppedUrl === parsed.croppedUrl) {
-          // exact same, so ignore
-          return null;
-        }
-        // new video on existing fire, so update existing entry immutably
-        updatedFires = prevFires.map((f) =>
-          f.timestamp === parsed.timestamp && f.cameraID === parsed.cameraID
-            ? Object.assign({}, f, { croppedUrl: parsed.croppedUrl })
-            : f
-        );
-        console.log('newPotentialFire: diff cropped', parsed.croppedUrl);
-      } else {
-        // new fire — insert and keep top 20 by sortId
-        updatedFires = [parsed]
-          .concat(prevFires)
-          .sort((a, b) => b.sortId - a.sortId)
-          .slice(0, 20);
-
-        // trigger notification only if this insert produced a new top
-        // real-time fire matching the incoming event
-        const newTop = updatedFires[0];
-        if (
-          newTop &&
-          newTop.isRealTime &&
-          prevState.webNotify &&
-          newTop.timestamp === parsed.timestamp &&
-          newTop.cameraID === parsed.cameraID
-        ) {
-          // setState is in progress; defer the notification side effect
-          setTimeout(() => this.notify(updatedFires), 0);
-        }
-      }
-
-      const counts = this.calculateRecentCounts(updatedFires);
-      return {
-        potentialFires: updatedFires,
-        numRecentFires: counts.numRecentFires,
-        numOldFires: counts.numOldFires,
-      };
-    });
-  }
-
-  calculateRecentCounts(potentialFires) {
-    const nowSeconds = Math.round(new Date().valueOf() / 1000);
-    const earliestTimestamp = nowSeconds - 3600 * this.state.hoursLimit;
-    const counts = {
-      numRecentFires: potentialFires.filter(
-        (f) => f.timestamp >= earliestTimestamp
-      ).length,
-      numOldFires: potentialFires.filter((f) => f.timestamp < earliestTimestamp)
-        .length,
-    };
-    return counts;
-  }
-
-  updateRecentCounts() {
-    this.setState((prevState) => this.calculateRecentCounts(prevState.potentialFires));
-  }
-
-  updateFiresAndCounts(potentialFires) {
-    const counts = this.calculateRecentCounts(potentialFires);
-    this.setState({
-      potentialFires: potentialFires,
-      numRecentFires: counts.numRecentFires,
-      numOldFires: counts.numOldFires,
-    });
-  }
-
-  toggleOldFires() {
-    this.setState({ showOldFires: !this.state.showOldFires });
-  }
-
-  toggleDetails() {
-    this.setState({ showDetails: !this.state.showDetails });
-  }
-
-  clearNotification() {
-    this.setState({ notifyTitle: '' });
-  }
-
-  notify(updatedFires) {
+  const notify = useCallback((updatedFires) => {
     const newFire = updatedFires[0];
     if (newFire.notified || !newFire.isRealTime) {
       console.log(
@@ -404,12 +195,9 @@ class VoteFires extends Component {
     const mostRecentNotification = notifiedFires[0]
       ? notifiedFires[0].timestamp
       : 0;
-    // prevent spam with frequency thresholds
-    // at leaset NOTIFY_GAP_MIN_SECONDS seconds between notifications
     if (newFire.timestamp - mostRecentNotification < NOTIFY_GAP_MIN_SECONDS) {
       return;
     }
-    // at most NOTIFY_MAX_FIRES every NOTIFY_MAX_MINUTES minutes
     const timeThreshold = newFire.timestamp - NOTIFY_MAX_RECENT_MINUTES * 60;
     const recentNotifiedFires = notifiedFires.filter(
       (x) => x.timestamp > timeThreshold
@@ -418,18 +206,208 @@ class VoteFires extends Component {
       return;
     }
     newFire.notified = true;
-    this.setState({
-      notifyTitle: 'Potential fire',
-      notifyOptions: {
-        tag: newFire.timestamp.toString(),
-        body: `Camera ${newFire.camInfo.cameraName} facing ${newFire.camInfo.cameraDir}`,
-        icon: '/wildfirecheck/checkfire192.png',
-        lang: 'en',
-      },
+    setNotifyTitle('Potential fire');
+    setNotifyOptions({
+      tag: newFire.timestamp.toString(),
+      body: `Camera ${newFire.camInfo.cameraName} facing ${newFire.camInfo.cameraDir}`,
+      icon: '/wildfirecheck/checkfire192.png',
+      lang: 'en',
     });
-  }
+  }, []);
 
-  async vote(potFire, voteType) {
+  const newPotentialFire = useCallback(
+    (e) => {
+      clearNotification();
+      const parsed = JSON.parse(e.data);
+      if (!sseVersionRef.current) {
+        sseVersionRef.current = parsed.version;
+        console.log('Checkfire SSE version', sseVersionRef.current);
+      }
+      if (sseVersionRef.current !== parsed.version) {
+        console.log(
+          'Checkfire SSE mismatch',
+          sseVersionRef.current,
+          parsed.version
+        );
+        window.location.reload();
+      }
+
+      if (
+        !isFireInRegion(parsed, userRegionRef.current, locationIDRef.current)
+      ) {
+        return;
+      }
+
+      setPotentialFires((prevFires) => {
+        const alreadyExists = prevFires.find(
+          (i) =>
+            i.timestamp === parsed.timestamp && i.cameraID === parsed.cameraID
+        );
+
+        let updatedFires;
+        if (alreadyExists) {
+          if (alreadyExists.croppedUrl === parsed.croppedUrl) {
+            return prevFires;
+          }
+          updatedFires = prevFires.map((f) =>
+            f.timestamp === parsed.timestamp && f.cameraID === parsed.cameraID
+              ? Object.assign({}, f, { croppedUrl: parsed.croppedUrl })
+              : f
+          );
+          console.log('newPotentialFire: diff cropped', parsed.croppedUrl);
+        } else {
+          updatedFires = [parsed]
+            .concat(prevFires)
+            .sort((a, b) => b.sortId - a.sortId)
+            .slice(0, 20);
+
+          const newTop = updatedFires[0];
+          if (
+            newTop &&
+            newTop.isRealTime &&
+            webNotifyRef.current &&
+            newTop.timestamp === parsed.timestamp &&
+            newTop.cameraID === parsed.cameraID
+          ) {
+            setTimeout(() => notify(updatedFires), 0);
+          }
+        }
+
+        const counts = calculateRecentCounts(updatedFires, HOURS_LIMIT);
+        setNumRecentFires(counts.numRecentFires);
+        setNumOldFires(counts.numOldFires);
+        return updatedFires;
+      });
+    },
+    [clearNotification, notify]
+  );
+
+  const stopUpdates = useCallback((e) => {
+    console.log('stopUpdates', e);
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+  }, []);
+
+  // Mount-time setup: parse query string, open SSE, fetch preferences,
+  // and start periodic recent-count refresh.
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const initialLocationID = queryParams.get('locID');
+    const latLongStr = queryParams.get('latLong');
+    const notifyStr = queryParams.get('notify');
+    const twoPointOne = '([0-9]{2}(?:\\.[0-9])?)';
+    const negThreePointOne = '(-[0-9]{3}(?:\\.[0-9])?)';
+    const regexLatLong = RegExp(
+      '^' +
+        twoPointOne +
+        ',' +
+        twoPointOne +
+        ',' +
+        negThreePointOne +
+        ',' +
+        negThreePointOne +
+        '$'
+    );
+    const latLongParsed = regexLatLong.exec(latLongStr);
+    let parsedRegion = null;
+    if (latLongParsed) {
+      parsedRegion = {
+        bottomLat: parseFloat(latLongParsed[1]),
+        topLat: parseFloat(latLongParsed[2]),
+        leftLong: parseFloat(latLongParsed[3]),
+        rightLong: parseFloat(latLongParsed[4]),
+      };
+      if (
+        parsedRegion.topLat > 90 ||
+        parsedRegion.bottomLat > 90 ||
+        parsedRegion.topLat < parsedRegion.bottomLat + 0.3 ||
+        parsedRegion.leftLong < -180 ||
+        parsedRegion.rightLong < -180 ||
+        parsedRegion.rightLong < parsedRegion.leftLong + 0.3
+      ) {
+        parsedRegion = null;
+      }
+    }
+    let webNotifyQP = false;
+    if (notifyStr && (notifyStr === 'true' || notifyStr === 'false')) {
+      webNotifyQP = notifyStr === 'true';
+    }
+    setLocationID(initialLocationID);
+    setUserRegion(parsedRegion);
+    setWebNotify(webNotifyQP || Boolean(initialLocationID));
+
+    // Setup SSE connection
+    const sseConfig = {};
+    if (process.env.NODE_ENV === 'development') {
+      sseConfig.withCredentials = true;
+    }
+    const eventsUrl = getServerUrl('/fireEvents');
+    const es = new EventSource(eventsUrl, sseConfig);
+    eventSourceRef.current = es;
+    es.addEventListener('newPotentialFire', newPotentialFire);
+    es.addEventListener('closedConnection', stopUpdates);
+
+    // Apply user preferences (may override URL params)
+    getUserPreferences().then((preferences) => {
+      let regionToUse = parsedRegion;
+      if (!parsedRegion || !latLongStr) {
+        regionToUse = preferences.region;
+      }
+      setUserRegion(regionToUse);
+      setWebNotify(
+        notifyStr
+          ? webNotifyQP
+          : preferences.webNotify || Boolean(initialLocationID)
+      );
+      setShowProto(preferences.showProto);
+      // re-filter existing fires based on new region
+      if (
+        regionToUse &&
+        regionToUse.topLat &&
+        potentialFiresRef.current &&
+        potentialFiresRef.current.length
+      ) {
+        const selectedFires = potentialFiresRef.current.filter((potFire) =>
+          isFireInRegion(potFire, regionToUse, initialLocationID)
+        );
+        if (selectedFires.length !== potentialFiresRef.current.length) {
+          const counts = calculateRecentCounts(selectedFires, HOURS_LIMIT);
+          setPotentialFires(selectedFires);
+          setNumRecentFires(counts.numRecentFires);
+          setNumOldFires(counts.numOldFires);
+        }
+      }
+    });
+
+    // Periodic recent-vs-old refresh
+    const intervalId = setInterval(() => {
+      const counts = calculateRecentCounts(
+        potentialFiresRef.current,
+        HOURS_LIMIT
+      );
+      setNumRecentFires(counts.numRecentFires);
+      setNumOldFires(counts.numOldFires);
+    }, 30 * 60 * 1000);
+
+    return () => {
+      clearInterval(intervalId);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [newPotentialFire, stopUpdates]);
+
+  const toggleOldFires = useCallback(() => {
+    setShowOldFires((v) => !v);
+  }, []);
+
+  const toggleDetails = useCallback(() => {
+    setShowDetails((v) => !v);
+  }, []);
+
+  const vote = useCallback(async (potFire, voteType) => {
     const serverUrl = getServerUrl(
       voteType === 'undo' ? '/api/undoVoteFire' : '/api/voteFire'
     );
@@ -440,167 +418,162 @@ class VoteFires extends Component {
     });
     console.log('post res', serverRes);
     if (serverRes === 'success') {
-      const potentialFires = this.state.potentialFires.map((pFire) => {
-        if (
-          pFire.cameraID !== potFire.cameraID ||
-          pFire.timestamp !== potFire.timestamp
-        ) {
-          return pFire;
-        }
-        const updatedFire = Object.assign({}, pFire);
-        if (voteType === 'undo') {
-          delete updatedFire.voted;
-        } else {
-          updatedFire.voted = voteType === 'yes';
-        }
-        return updatedFire;
-      });
-      this.setState({ potentialFires: potentialFires });
+      setPotentialFires((prev) =>
+        prev.map((pFire) => {
+          if (
+            pFire.cameraID !== potFire.cameraID ||
+            pFire.timestamp !== potFire.timestamp
+          ) {
+            return pFire;
+          }
+          const updatedFire = Object.assign({}, pFire);
+          if (voteType === 'undo') {
+            delete updatedFire.voted;
+          } else {
+            updatedFire.voted = voteType === 'yes';
+          }
+          return updatedFire;
+        })
+      );
     } else {
       window.location.reload();
     }
-  }
+  }, []);
 
-  render() {
-    return (
-      <div>
-        <span>
-          <h1>WildfireCheck: Potential fires</h1>
+  return (
+    <div>
+      <span>
+        <h1>WildfireCheck: Potential fires</h1>
+        <p>
+          Please note that this site does not alert the fire authorities
+          directly. If you discover a real fire that recently ignited,
+          consider informing the fire department to take appropriate action.
+        </p>
+        <button
+          className="w3-button w3-border w3-round-large w3-black"
+          onClick={toggleDetails}
+        >
+          {showDetails ? 'Hide description' : 'Show description'}
+        </button>
+      </span>
+      {showDetails && (
+        <div>
           <p>
-            Please note that this site does not alert the fire authorities
-            directly. If you discover a real fire that recently ignited,
-            consider informing the fire department to take appropriate action.
+            There is no need to refresh this page to see new fires because it
+            automatically updates to display new detections. Note that the
+            real-time detection is only active during daylight hours in
+            California.
           </p>
+          <p>
+            This page shows recent potential fires as detected by the
+            automated system. Each event displays a time-lapse video starting
+            a few minutes prior to the detection. The video updates
+            automatically for a few minutes after. The video shows a portion
+            of the images near the suspected location of fire smoke
+            (highlighted by a rectangle). The rectangle is colored yellow on
+            images prior to the detection and colored red afterwards. To see a
+            broader view for more context, click on the `&quot;`Full
+            image`&quot;` link above the video.
+          </p>
+          <p>
+            Each potential fire event display also includes a map showing the
+            view area visible from the time-lapse video highlighted by a red
+            triangle. When multiple cameras detect the same event, the
+            intersection of all the triangles is highlighted in purple. The
+            map also depicts any known prescribed burns using an icon with
+            flames and a red cross.
+          </p>
+          <p>
+            The system does generate false notifications, and signed-in users
+            can vote whether system was correct or not. These votes help
+            improve the system over time, so please consider voting.
+          </p>
+        </div>
+      )}
+      {locationID ? (
+        <h5>
+          Only potential fires from camera location{' '}
+          <strong>{locationID}</strong> are being shown.
+        </h5>
+      ) : userRegion && userRegion.topLat ? (
+        <h5>
+          Only potential fires in selected region are being shown. To see
+          potential fires across all cameras, remove the selection in the{' '}
+          <Link href="/preferences">Preferences</Link> page.
+        </h5>
+      ) : (
+        <p>
+          Potential fires across all areas are being shown. Users can restrict
+          potential fires to their specified region of interest on the{' '}
+          <Link href="/preferences">Preferences</Link> page
+        </p>
+      )}
+      {!webNotify && (
+        <p>
+          Users can choose to get notifications in real-time as new potential
+          fire events are detected by selecting the option in the{' '}
+          <Link href="/preferences">Preferences</Link> page.
+        </p>
+      )}
+      {webNotify && (
+        <Notification
+          ignore={notifyTitle === ''}
+          disableActiveWindow={true}
+          title={notifyTitle}
+          options={notifyOptions}
+        />
+      )}
+      {numRecentFires > 0 ? (
+        potentialFires.slice(0, numRecentFires).map((potFire) => (
+          <FirePreview
+            key={potFire.annotatedUrl}
+            potFire={potFire}
+            showProto={showProto}
+            childComponent={
+              <VoteButtons
+                validCookie={props.validCookie}
+                potFire={potFire}
+                onVote={(f, v) => vote(f, v)}
+              />
+            }
+          />
+        ))
+      ) : (
+        <p>No fire starts detected in last {HOURS_LIMIT} hours.</p>
+      )}
+      {numOldFires > 0 && (
+        <div>
           <button
             className="w3-button w3-border w3-round-large w3-black"
-            onClick={() => this.toggleDetails()}
+            data-cy="toggleOldFires"
+            onClick={toggleOldFires}
           >
-            {this.state.showDetails ? 'Hide description' : 'Show description'}
+            {showOldFires ? 'Hide old fires' : 'Show old fires'}
           </button>
-        </span>
-        {this.state.showDetails && (
-          <div>
-            <p>
-              There is no need to refresh this page to see new fires because it
-              automatically updates to display new detections. Note that the
-              real-time detection is only active during daylight hours in
-              California.
-            </p>
-            <p>
-              This page shows recent potential fires as detected by the
-              automated system. Each event displays a time-lapse video starting
-              a few minutes prior to the detection. The video updates
-              automatically for a few minutes after. The video shows a portion
-              of the images near the suspected location of fire smoke
-              (highlighted by a rectangle). The rectangle is colored yellow on
-              images prior to the detection and colored red afterwards. To see a
-              broader view for more context, click on the `&quot;`Full
-              image`&quot;` link above the video.
-            </p>
-            <p>
-              Each potential fire event display also includes a map showing the
-              view area visible from the time-lapse video highlighted by a red
-              triangle. When multiple cameras detect the same event, the
-              intersection of all the triangles is highlighted in purple. The
-              map also depicts any known prescribed burns using an icon with
-              flames and a red cross.
-            </p>
-            <p>
-              The system does generate false notifications, and signed-in users
-              can vote whether system was correct or not. These votes help
-              improve the system over time, so please consider voting.
-            </p>
-          </div>
-        )}
-        {this.state.locationID ? (
-          <h5>
-            Only potential fires from camera location{' '}
-            <strong>{this.state.locationID}</strong> are being shown.
-          </h5>
-        ) : this.state.userRegion && this.state.userRegion.topLat ? (
-          <h5>
-            Only potential fires in selected region are being shown. To see
-            potential fires across all cameras, remove the selection in the{' '}
-            <Link href="/preferences">Preferences</Link> page.
-          </h5>
-        ) : (
-          <p>
-            Potential fires across all areas are being shown. Users can restrict
-            potential fires to their specified region of interest on the{' '}
-            <Link href="/preferences">Preferences</Link> page
-          </p>
-        )}
-        {!this.state.webNotify && (
-          <p>
-            Users can choose to get notifications in real-time as new potential
-            fire events are detected by selecting the option in the{' '}
-            <Link href="/preferences">Preferences</Link> page.
-          </p>
-        )}
-        {this.state.webNotify && (
-          <Notification
-            ignore={this.state.notifyTitle === ''}
-            disableActiveWindow={true}
-            title={this.state.notifyTitle}
-            options={this.state.notifyOptions}
-          />
-        )}
-        {this.state.numRecentFires > 0 ? (
-          this.state.potentialFires
-            .slice(0, this.state.numRecentFires)
-            .map((potFire) => (
-              <FirePreview
-                key={potFire.annotatedUrl}
-                potFire={potFire}
-                showProto={this.state.showProto}
-                childComponent={
-                  <VoteButtons
-                    validCookie={this.props.validCookie}
-                    potFire={potFire}
-                    onVote={(f, v) => this.vote(f, v)}
-                  />
-                }
-              />
-            ))
-        ) : (
-          <p>No fire starts detected in last {this.state.hoursLimit} hours.</p>
-        )}
-        {this.state.numOldFires > 0 && (
-          <div>
-            <button
-              className="w3-button w3-border w3-round-large w3-black"
-              data-cy="toggleOldFires"
-              onClick={() => this.toggleOldFires()}
-            >
-              {this.state.showOldFires ? 'Hide old fires' : 'Show old fires'}
-            </button>
-            <div className="w3-padding"></div>
-            {this.state.showOldFires && (
-              <div>
-                <p>Potential fires older than {this.state.hoursLimit} hours</p>
-                {this.state.potentialFires
-                  .slice(this.state.numRecentFires)
-                  .map((potFire) => (
-                    <FirePreview
-                      key={potFire.annotatedUrl}
+          <div className="w3-padding"></div>
+          {showOldFires && (
+            <div>
+              <p>Potential fires older than {HOURS_LIMIT} hours</p>
+              {potentialFires.slice(numRecentFires).map((potFire) => (
+                <FirePreview
+                  key={potFire.annotatedUrl}
+                  potFire={potFire}
+                  showProto={showProto}
+                  childComponent={
+                    <VoteButtons
+                      validCookie={props.validCookie}
                       potFire={potFire}
-                      showProto={this.state.showProto}
-                      childComponent={
-                        <VoteButtons
-                          validCookie={this.props.validCookie}
-                          potFire={potFire}
-                          onVote={(f, v) => this.vote(f, v)}
-                        />
-                      }
+                      onVote={(f, v) => vote(f, v)}
                     />
-                  ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default VoteFires;

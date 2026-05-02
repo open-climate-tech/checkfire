@@ -17,7 +17,7 @@
 
 // Detected Fires
 
-import React, { Component } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   getServerUrl,
   serverGet,
@@ -26,30 +26,31 @@ import {
   VoteButtons,
 } from './OctReactUtils';
 
-class DetectedFires extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      detectedFires: [],
+function DetectedFires() {
+  const [detectedFires, setDetectedFires] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const queryParams = new URLSearchParams(window.location.search);
+      const weatherFilterStr = queryParams.get('weatherFilter');
+      const weatherFilter = weatherFilterStr && weatherFilterStr === 'true';
+      const serverUrl = getServerUrl('/api/detectedFires');
+      const resp = await serverGet(serverUrl);
+      let fires = await resp.json();
+      if (weatherFilter) {
+        fires = fires.filter((potFire) => potFire.weatherScore > 0.3);
+      }
+      if (!cancelled) {
+        setDetectedFires(fires);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
-  }
+  }, []);
 
-  async componentDidMount() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const weatherFilterStr = queryParams.get('weatherFilter');
-    const weatherFilter = weatherFilterStr && weatherFilterStr === 'true';
-    const serverUrl = getServerUrl('/api/detectedFires');
-    const resp = await serverGet(serverUrl);
-    let detectedFires = await resp.json();
-    if (weatherFilter) {
-      detectedFires = detectedFires.filter(
-        (potFire) => potFire.weatherScore > 0.3
-      );
-    }
-    this.setState({ detectedFires: detectedFires });
-  }
-
-  async vote(potFire, voteType) {
+  const vote = useCallback(async (potFire, voteType) => {
     const serverUrl = getServerUrl(
       voteType === 'undo' ? '/api/undoVoteFire' : '/api/voteFire'
     );
@@ -60,53 +61,52 @@ class DetectedFires extends Component {
     });
     console.log('post res', serverRes);
     if (serverRes === 'success') {
-      const detectedFires = this.state.detectedFires.map((pFire) => {
-        if (
-          pFire.cameraID !== potFire.cameraID ||
-          pFire.timestamp !== potFire.timestamp
-        ) {
-          return pFire;
-        }
-        const updatedFire = Object.assign({}, pFire);
-        if (voteType === 'undo') {
-          delete updatedFire.voted;
-        } else {
-          updatedFire.voted = voteType === 'yes';
-        }
-        return updatedFire;
-      });
-      this.setState({ detectedFires: detectedFires });
+      setDetectedFires((prev) =>
+        prev.map((pFire) => {
+          if (
+            pFire.cameraID !== potFire.cameraID ||
+            pFire.timestamp !== potFire.timestamp
+          ) {
+            return pFire;
+          }
+          const updatedFire = Object.assign({}, pFire);
+          if (voteType === 'undo') {
+            delete updatedFire.voted;
+          } else {
+            updatedFire.voted = voteType === 'yes';
+          }
+          return updatedFire;
+        })
+      );
     } else {
       window.location.reload();
     }
-  }
+  }, []);
 
-  render() {
-    return (
-      <div>
-        <h1 className="w3-padding-32 w3-row-padding">Detected Fires</h1>
-        <p>
-          This page shows detected fires that did not made it to alerts due to
-          low scores or prototype status
-        </p>
-        {this.state.detectedFires &&
-          this.state.detectedFires.map((potFire) => (
-            <FirePreview
-              key={potFire.annotatedUrl}
-              potFire={potFire}
-              showProto={true}
-              childComponent={
-                <VoteButtons
-                  potFire={potFire}
-                  validCookie={true}
-                  onVote={(f, v) => this.vote(f, v)}
-                />
-              }
-            />
-          ))}
-      </div>
-    );
-  }
+  return (
+    <div>
+      <h1 className="w3-padding-32 w3-row-padding">Detected Fires</h1>
+      <p>
+        This page shows detected fires that did not made it to alerts due to
+        low scores or prototype status
+      </p>
+      {detectedFires &&
+        detectedFires.map((potFire) => (
+          <FirePreview
+            key={potFire.annotatedUrl}
+            potFire={potFire}
+            showProto={true}
+            childComponent={
+              <VoteButtons
+                potFire={potFire}
+                validCookie={true}
+                onVote={(f, v) => vote(f, v)}
+              />
+            }
+          />
+        ))}
+    </div>
+  );
 }
 
 export default DetectedFires;

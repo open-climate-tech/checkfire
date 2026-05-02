@@ -17,7 +17,7 @@
 
 // User preferences (Notifications and Choose area of interest by dragging a rectangle over map)
 
-import React, { Component } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ResizeObserver from 'react-resize-observer';
 import Notification from 'react-web-notification';
 
@@ -30,12 +30,6 @@ import cams930Img from './midsocalCams-930x810.jpg';
 const cams930 = typeof cams930Img === 'string' ? cams930Img : cams930Img.src;
 import cams780Img from './midsocalCams-780x680.jpg';
 const cams780 = typeof cams780Img === 'string' ? cams780Img : cams780Img.src;
-// import hpwren1078 from './hpwren-1078x638.jpg';
-// import hpwren1290 from './hpwren-1290x762.jpg';
-// import hpwren1492 from './hpwren-1492x870.jpg';
-// import cams1078 from './cams-socal-1078x638.jpg';
-// import cams1290 from './cams-socal-1290x762.jpg';
-// import cams1492 from './cams-socal-1492x870.jpg';
 
 const maps = [
   {
@@ -74,9 +68,6 @@ const maps = [
     pixelWidth: 780,
     pixelHeight: 680,
   },
-  // {name: cams1492, topLat: 34.79, leftLong: -120.59, bottomLat: 32.42, rightLong: -115.72, pixelWidth: 1492, pixelHeight: 870},
-  // {name: cams1290, topLat: 34.81, leftLong: -120.58, bottomLat: 32.43, rightLong: -115.72, pixelWidth: 1290, pixelHeight: 762},
-  // {name: cams1078, topLat: 34.82, leftLong: -120.60, bottomLat: 32.41, rightLong: -115.72, pixelWidth: 1078, pixelHeight: 638},
 ];
 maps.forEach((mapInfo) => {
   mapInfo.longWidth = mapInfo.rightLong - mapInfo.leftLong;
@@ -101,44 +92,52 @@ function generateStatelessUrl(region, webNotify) {
   return url;
 }
 
-class Preferences extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      mapIndex: 1,
-      webNotify: false,
-      notifBlocked: false,
-      statelessUrl: generateStatelessUrl(null, false),
-    };
-  }
+function Preferences(props) {
+  const [mapIndex, setMapIndex] = useState(1);
+  const [webNotify, setWebNotify] = useState(false);
+  const [notifBlocked, setNotifBlocked] = useState(false);
+  const [statelessUrl, setStatelessUrl] = useState(
+    generateStatelessUrl(null, false)
+  );
+  const [savedRegion, setSavedRegion] = useState(null);
+  const [currentRegion, setCurrentRegion] = useState(null);
+  const [startX, setStartX] = useState(null);
+  const [startY, setStartY] = useState(null);
+  const [minX, setMinX] = useState(null);
+  const [minY, setMinY] = useState(null);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
 
-  async componentDidMount() {
-    // Load and display any earlier saved region from backend
-    const preferences = await getUserPreferences();
-    this.setState({
-      savedRegion: preferences.region,
-      webNotify: preferences.webNotify,
-      statelessUrl: generateStatelessUrl(
-        preferences.region,
-        preferences.webNotify
-      ),
-    });
-    if (!this.state.startX && !this.state.minX) {
-      this.showRegion(preferences.region);
-    }
-  }
+  const imgEltRef = useRef(null);
+  const imgGeom = useRef({ left: null, top: null, right: null, bottom: null });
+
+  // Snapshot of state for use inside callbacks/effects to avoid stale closures
+  const stateRef = useRef({});
+  stateRef.current = {
+    mapIndex,
+    webNotify,
+    startX,
+    startY,
+    minX,
+    minY,
+    width,
+    height,
+    currentRegion,
+    savedRegion,
+  };
 
   /**
-   * Display the given geogrpahicsl region on the map
-   * @param {*} region
+   * Display the given geographical region on the map
    */
-  showRegion(region) {
-    const mapInfo = maps[this.state.mapIndex];
+  const showRegion = useCallback((region) => {
+    const s = stateRef.current;
+    const mapInfo = maps[s.mapIndex];
+    const g = imgGeom.current;
     if (
       region &&
       region.topLat &&
-      this.imgElt &&
-      typeof this.imgLeft === 'number'
+      imgEltRef.current &&
+      typeof g.left === 'number'
     ) {
       const topLat = Math.min(
         Math.max(region.topLat, mapInfo.bottomLat),
@@ -156,142 +155,109 @@ class Preferences extends Component {
         Math.max(region.rightLong, mapInfo.leftLong),
         mapInfo.rightLong
       );
-      const newState = {
-        minX:
-          ((leftLong - mapInfo.leftLong) / mapInfo.longWidth) *
-            mapInfo.pixelWidth +
-          this.imgLeft,
-        minY:
-          ((mapInfo.topLat - topLat) / mapInfo.latHeight) *
-            mapInfo.pixelHeight +
-          this.imgTop,
-        width:
-          ((rightLong - leftLong) / mapInfo.longWidth) * mapInfo.pixelWidth,
-        height:
-          ((topLat - bottomLat) / mapInfo.latHeight) * mapInfo.pixelHeight,
-        startX: null,
-        currentRegion: region,
-        statelessUrl: generateStatelessUrl(region, this.state.webNotify),
-      };
-      this.setState(newState);
+      setMinX(
+        ((leftLong - mapInfo.leftLong) / mapInfo.longWidth) *
+          mapInfo.pixelWidth +
+          g.left
+      );
+      setMinY(
+        ((mapInfo.topLat - topLat) / mapInfo.latHeight) * mapInfo.pixelHeight +
+          g.top
+      );
+      setWidth(
+        ((rightLong - leftLong) / mapInfo.longWidth) * mapInfo.pixelWidth
+      );
+      setHeight(
+        ((topLat - bottomLat) / mapInfo.latHeight) * mapInfo.pixelHeight
+      );
+      setStartX(null);
+      setCurrentRegion(region);
+      setStatelessUrl(generateStatelessUrl(region, s.webNotify));
     }
-  }
+  }, []);
 
-  /**
-   * Save the reference to given DOM element for <img> in order to collect location and size
-   * @param {*} e
-   */
-  saveImgRef(e) {
-    if (e) {
-      this.imgElt = e;
-      this.checkImgLocation();
-    }
-  }
-
-  /**
-   * Find the absolute location and size of the <img> DOM element
-   */
-  checkImgLocation() {
-    if (!this.imgElt) {
+  const checkImgLocation = useCallback(() => {
+    if (!imgEltRef.current) {
       return;
     }
-    const bcr = this.imgElt.getBoundingClientRect();
+    const bcr = imgEltRef.current.getBoundingClientRect();
     const left = Math.round(bcr.left + window.scrollX);
     const top = Math.round(bcr.top + window.scrollY);
     const right = Math.round(bcr.right + window.scrollX);
     const bottom = Math.round(bcr.bottom + window.scrollY);
+    const g = imgGeom.current;
     if (
-      this.imgLeft !== left ||
-      this.imgTop !== top ||
-      this.imgRight !== right ||
-      this.imgBottom !== bottom
+      g.left !== left ||
+      g.top !== top ||
+      g.right !== right ||
+      g.bottom !== bottom
     ) {
-      this.imgLeft = left;
-      this.imgTop = top;
-      this.imgRight = right;
-      this.imgBottom = bottom;
-      // console.log('img l,t,r,b', left, top, right, bottom);
-      if (this.state.currentRegion) {
-        this.showRegion(this.state.currentRegion);
+      g.left = left;
+      g.top = top;
+      g.right = right;
+      g.bottom = bottom;
+      if (stateRef.current.currentRegion) {
+        showRegion(stateRef.current.currentRegion);
       }
     }
-  }
+  }, [showRegion]);
 
-  /**
-   * Mouse was clicked, so record the starting point and clear out any old rectangle
-   * @param {*} e
-   */
-  handleMouseDown(e) {
-    // console.log('hm down', e.nativeEvent.pageX, e.nativeEvent.pageY);
+  const saveImgRef = useCallback(
+    (e) => {
+      if (e) {
+        imgEltRef.current = e;
+        checkImgLocation();
+      }
+    },
+    [checkImgLocation]
+  );
+
+  const handleMouseDown = useCallback((e) => {
+    const g = imgGeom.current;
     if (
-      e.nativeEvent.pageX > this.imgLeft &&
-      e.nativeEvent.pageY > this.imgTop &&
-      e.nativeEvent.pageX < this.imgRight &&
-      e.nativeEvent.pageY < this.imgBottom
+      e.nativeEvent.pageX > g.left &&
+      e.nativeEvent.pageY > g.top &&
+      e.nativeEvent.pageX < g.right &&
+      e.nativeEvent.pageY < g.bottom
     ) {
-      this.setState({
-        startX: e.nativeEvent.pageX,
-        startY: e.nativeEvent.pageY,
-        minX: null,
-      });
+      setStartX(e.nativeEvent.pageX);
+      setStartY(e.nativeEvent.pageY);
+      setMinX(null);
     }
-  }
+  }, []);
 
-  /**
-   * Mouse drag, so set the locatoin and size of the selected rectangle to match the mouse location
-   * @param {*} e
-   */
-  handleMouseMove(e) {
-    if (typeof this.state.startX !== 'number') {
+  const handleMouseMove = useCallback((e) => {
+    const s = stateRef.current;
+    if (typeof s.startX !== 'number') {
       return;
     }
-    // console.log('hm move', e.nativeEvent.pageX, e.nativeEvent.pageY);
-    const eventX = Math.min(
-      Math.max(e.nativeEvent.pageX, this.imgLeft),
-      this.imgRight
-    );
-    const eventY = Math.min(
-      Math.max(e.nativeEvent.pageY, this.imgTop),
-      this.imgBottom
-    );
-    const newState = {
-      minX: Math.min(this.state.startX, eventX),
-      minY: Math.min(this.state.startY, eventY),
-    };
-    newState.width = Math.max(
-      Math.max(this.state.startX, eventX) - newState.minX,
-      20
-    );
-    newState.height = Math.max(
-      Math.max(this.state.startY, eventY) - newState.minY,
-      20
-    );
-    this.setState(newState);
-  }
+    const g = imgGeom.current;
+    const eventX = Math.min(Math.max(e.nativeEvent.pageX, g.left), g.right);
+    const eventY = Math.min(Math.max(e.nativeEvent.pageY, g.top), g.bottom);
+    const newMinX = Math.min(s.startX, eventX);
+    const newMinY = Math.min(s.startY, eventY);
+    setMinX(newMinX);
+    setMinY(newMinY);
+    setWidth(Math.max(Math.max(s.startX, eventX) - newMinX, 20));
+    setHeight(Math.max(Math.max(s.startY, eventY) - newMinY, 20));
+  }, []);
 
-  /**
-   * Mouse drag stopped, so mark it such that mouse moves no longer update selected rectangle
-   * @param {*} e
-   */
-  handleMouseUp(e) {
-    // console.log('hm up', e.nativeEvent.pageX, e.nativeEvent.pageY);
-    const mapInfo = maps[this.state.mapIndex];
+  const handleMouseUp = useCallback(() => {
+    const s = stateRef.current;
+    const mapInfo = maps[s.mapIndex];
     const region = {};
     region.topLat =
       mapInfo.topLat -
-      ((this.state.minY - this.imgTop) / mapInfo.pixelHeight) *
+      ((s.minY - imgGeom.current.top) / mapInfo.pixelHeight) *
         mapInfo.latHeight;
     region.bottomLat =
-      region.topLat -
-      (this.state.height / mapInfo.pixelHeight) * mapInfo.latHeight;
+      region.topLat - (s.height / mapInfo.pixelHeight) * mapInfo.latHeight;
     region.leftLong =
       mapInfo.leftLong +
-      ((this.state.minX - this.imgLeft) / mapInfo.pixelWidth) *
+      ((s.minX - imgGeom.current.left) / mapInfo.pixelWidth) *
         mapInfo.longWidth;
     region.rightLong =
-      region.leftLong +
-      (this.state.width / mapInfo.pixelWidth) * mapInfo.longWidth;
-    // TODO: ensure box is at least few miles in each dimension
+      region.leftLong + (s.width / mapInfo.pixelWidth) * mapInfo.longWidth;
     console.log(
       'box',
       region.topLat,
@@ -299,37 +265,32 @@ class Preferences extends Component {
       region.bottomLat,
       region.rightLong
     );
-    this.setState({
-      startX: null,
-      currentRegion: region,
-      statelessUrl: generateStatelessUrl(region, this.state.webNotify),
-    });
-  }
+    setStartX(null);
+    setCurrentRegion(region);
+    setStatelessUrl(generateStatelessUrl(region, s.webNotify));
+  }, []);
 
   /**
-   * Convert the currently selected rectangle from pixel coordinates to lat/long and
-   * make a POST call to backend to save the lat/long coordinates
+   * Save preferences to backend
    */
-  async savePreferences() {
-    if (this.props.validCookie) {
-      if (this.state.currentRegion && this.state.currentRegion.topLat) {
+  const savePreferences = useCallback(async () => {
+    const s = stateRef.current;
+    if (props.validCookie) {
+      if (s.currentRegion && s.currentRegion.topLat) {
         const serverUrl = getServerUrl('/api/setRegion');
-        const serverRes = await serverPost(serverUrl, this.state.currentRegion);
+        const serverRes = await serverPost(serverUrl, s.currentRegion);
         console.log('post region res', serverRes);
-        this.setState({ savedRegion: this.state.currentRegion });
+        setSavedRegion(s.currentRegion);
       }
       const serverUrl = getServerUrl('/api/setWebNotify');
       const serverRes = await serverPost(serverUrl, {
-        webNotify: this.state.webNotify,
+        webNotify: s.webNotify,
       });
       console.log('post notify res', serverRes);
     }
-  }
+  }, [props.validCookie]);
 
-  /**
-   * Make a POST call to backend to erase saved rectangle.  Also throw out any rectangle on screen
-   */
-  async removeSelection() {
+  const removeSelection = useCallback(async () => {
     const serverUrl = getServerUrl('/api/setRegion');
     const serverRes = await serverPost(serverUrl, {
       topLat: 0,
@@ -338,254 +299,254 @@ class Preferences extends Component {
       rightLong: 0,
     });
     console.log('post res', serverRes);
-    this.setState({
-      startX: null,
-      minX: null,
-      currentRegion: null,
-      savedRegion: null,
-      statelessUrl: generateStatelessUrl(null, this.state.webNotify),
-    });
-  }
+    setStartX(null);
+    setMinX(null);
+    setCurrentRegion(null);
+    setSavedRegion(null);
+    setStatelessUrl(generateStatelessUrl(null, stateRef.current.webNotify));
+  }, []);
 
-  zoomIn() {
-    if (this.state.mapIndex > 0) {
-      this.setState({ mapIndex: this.state.mapIndex - 1 });
-    }
-  }
-  zoomOut() {
-    if (this.state.mapIndex < maps.length - 1) {
-      this.setState({ mapIndex: this.state.mapIndex + 1 });
-    }
-  }
+  const zoomIn = useCallback(() => {
+    setMapIndex((m) => (m > 0 ? m - 1 : m));
+  }, []);
+  const zoomOut = useCallback(() => {
+    setMapIndex((m) => (m < maps.length - 1 ? m + 1 : m));
+  }, []);
 
-  // change handler for notifications checkbox
-  async handleNotifyChange(event) {
-    const target = event.target;
-    this.setState({
-      webNotify: target.checked,
-      statelessUrl: generateStatelessUrl(
-        this.state.currentRegion,
-        target.checked
-      ),
-    });
-    if (this.props.validCookie) {
-      const serverUrl = getServerUrl('/api/setWebNotify');
-      const serverRes = await serverPost(serverUrl, {
-        webNotify: target.checked,
-      });
-      console.log('post notify res', serverRes);
-    }
-  }
+  const handleNotifyChange = useCallback(
+    async (event) => {
+      const checked = event.target.checked;
+      setWebNotify(checked);
+      setStatelessUrl(
+        generateStatelessUrl(stateRef.current.currentRegion, checked)
+      );
+      if (props.validCookie) {
+        const serverUrl = getServerUrl('/api/setWebNotify');
+        const serverRes = await serverPost(serverUrl, { webNotify: checked });
+        console.log('post notify res', serverRes);
+      }
+    },
+    [props.validCookie]
+  );
 
-  // notifications permission granted by user
-  notifGranted() {
-    this.setState({ notifBlocked: false });
-  }
-  // notifications permission denied by user
-  notifDenied() {
-    this.setState({ notifBlocked: true });
-  }
+  const notifGranted = useCallback(() => setNotifBlocked(false), []);
+  const notifDenied = useCallback(() => setNotifBlocked(true), []);
 
-  render() {
-    return (
+  // Load saved preferences on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const preferences = await getUserPreferences();
+      if (cancelled) return;
+      setSavedRegion(preferences.region);
+      setWebNotify(preferences.webNotify);
+      setStatelessUrl(
+        generateStatelessUrl(preferences.region, preferences.webNotify)
+      );
+      const s = stateRef.current;
+      if (!s.startX && !s.minX) {
+        showRegion(preferences.region);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showRegion]);
+
+  return (
+    <div>
+      <h1>Preferences</h1>
       <div>
-        <h1>Preferences</h1>
-        <div>
-          <h5>
-            This page allows you to enable or disable notification and specify
-            region of interest.
-          </h5>
-          {this.props.validCookie ? (
-            <span></span>
+        <h5>
+          This page allows you to enable or disable notification and specify
+          region of interest.
+        </h5>
+        {props.validCookie ? (
+          <span></span>
+        ) : (
+          <div>
+            There are two ways to remember these preferences.
+            <ol className="w3-left-align">
+              <li>
+                Sign-in, save your preferences on the server, and stay
+                signed-in when checking potential fires.
+                {props.validCookie
+                  ? ' You are currently signed in.'
+                  : ' You are currently not signed in, but you can sign in using the button above.'}
+              </li>
+              <li>
+                Use a special URL (generated by this page) that encodes the
+                preferences. Note that the special URL must be used whenever
+                you are checking potential fires.
+              </li>
+            </ol>
+          </div>
+        )}
+      </div>
+      <div>
+        <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+          <h3>Notifications</h3>
+          <div>
+            <p>
+              Check the below if you want to see notifications on your device
+              whenever new potential fire events are discovered. Note the
+              browser may ask you to allow showing notifications. Also note
+              that the notifications are only shown when this site is not
+              running in the foreground.
+            </p>
+            Notifications{' '}
+            <input
+              type="checkbox"
+              id="webNotify"
+              name="webNotify"
+              checked={webNotify}
+              onChange={(e) => handleNotifyChange(e)}
+            ></input>
+            {webNotify && (
+              <Notification
+                onPermissionGranted={notifGranted}
+                onPermissionDenied={notifDenied}
+                title=""
+              />
+            )}
+            {webNotify && notifBlocked && (
+              <p>
+                Notifications are blocked by your browser. Please change
+                settings if you want notifications.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="w3-padding"></div>
+        <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+          <h3>Choose region of interest</h3>
+          <p>
+            Mark (click and drag) a rectangle on top of the map below to
+            select the geographical region where you are interested in
+            monitoring potential fires. You can restart anytime by marking a
+            new rectangle. When satisfied, click the Save button below the
+            map.
+          </p>
+          <p>
+            The red dots show the location of the cameras, and partially
+            shaded red circles around each dot represent a 20 mile radius
+            circlular region that should be visible from each camera location.
+            Actual visible area depends on terrain occlusions and atmospheric
+            visibility conditions.
+          </p>
+          <div
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+          >
+            <ResizeObserver onReflow={() => checkImgLocation()} />
+            <img
+              src={maps[mapIndex].name}
+              alt="Map"
+              draggable={false}
+              ref={(e) => saveImgRef(e)}
+            />
+            {minX && (
+              <div
+                style={{
+                  zIndex: 10,
+                  position: 'absolute',
+                  left: minX + 'px',
+                  top: minY + 'px',
+                  width: width + 'px',
+                  height: height + 'px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid blue',
+                }}
+              ></div>
+            )}
+          </div>
+          <div className="w3-padding">
+            <button
+              className={
+                'w3-button w3-border w3-round-large w3-black' +
+                (mapIndex === 0 ? ' w3-disabled' : '')
+              }
+              onClick={zoomIn}
+            >
+              Zoom in
+            </button>
+            <button
+              className={
+                'w3-button w3-border w3-round-large w3-black' +
+                (mapIndex === maps.length - 1 ? ' w3-disabled' : '')
+              }
+              onClick={zoomOut}
+            >
+              Zoom out
+            </button>
+          </div>
+          <div className="w3-padding">
+            <button
+              className={
+                'w3-button w3-border w3-round-large w3-black' +
+                (props.validCookie && savedRegion && savedRegion.topLat
+                  ? ''
+                  : ' w3-disabled')
+              }
+              onClick={() => showRegion(savedRegion)}
+            >
+              Restore saved region
+            </button>
+            <button
+              className="w3-button w3-border w3-round-large w3-black"
+              onClick={() => removeSelection()}
+            >
+              Remove selection
+            </button>
+          </div>
+        </div>
+        <div className="w3-padding"></div>
+        <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
+          {props.validCookie ? (
+            <button
+              className="w3-button w3-border w3-round-large w3-black"
+              onClick={() => savePreferences()}
+            >
+              Save prefernces
+            </button>
           ) : (
             <div>
-              There are two ways to remember these preferences.
-              <ol className="w3-left-align">
-                <li>
-                  Sign-in, save your preferences on the server, and stay
-                  signed-in when checking potential fires.
-                  {this.props.validCookie
-                    ? ' You are currently signed in.'
-                    : ' You are currently not signed in, but you can sign in using the button above.'}
-                </li>
-                <li>
-                  Use a special URL (generated by this page) that encodes the
-                  preferences. Note that the special URL must be used whenever
-                  you are checking potential fires.
-                </li>
-              </ol>
-            </div>
-          )}
-        </div>
-        <div>
-          <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
-            <h3>Notifications</h3>
-            <div>
               <p>
-                Check the below if you want to see notifications on your device
-                whenever new potential fire events are discovered. Note the
-                browser may ask you to allow showing notifications. Also note
-                that the notifications are only shown when this site is not
-                running in the foreground.
+                You are currently not signed in. To save your prefernces on
+                the server, you must sign in using the button at the top of
+                the page.
               </p>
-              Notifications{' '}
-              <input
-                type="checkbox"
-                id="webNotify"
-                name="webNotify"
-                checked={this.state.webNotify}
-                onChange={(e) => this.handleNotifyChange(e)}
-              ></input>
-              {this.state.webNotify && (
-                <Notification
-                  onPermissionGranted={() => this.notifGranted()}
-                  onPermissionDenied={() => this.notifDenied()}
-                  title=""
-                />
-              )}
-              {this.state.webNotify && this.state.notifBlocked && (
-                <p>
-                  Notifications are blocked by your browser. Please change
-                  settings if you want notifications.
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="w3-padding"></div>
-          <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
-            <h3>Choose region of interest</h3>
-            <p>
-              Mark (click and drag) a rectangle on top of the map below to
-              select the geographical region where you are interested in
-              monitoring potential fires. You can restart anytime by marking a
-              new rectangle. When satisfied, click the Save button below the
-              map.
-            </p>
-            <p>
-              The red dots show the location of the cameras, and partially
-              shaded red circles around each dot represent a 20 mile radius
-              circlular region that should be visible from each camera location.
-              Actual visible area depends on terrain occlusions and atmospheric
-              visibility conditions.
-            </p>
-            <div
-              onMouseDown={(e) => this.handleMouseDown(e)}
-              onMouseUp={(e) => this.handleMouseUp(e)}
-              onMouseMove={(e) => this.handleMouseMove(e)}
-            >
-              <ResizeObserver onReflow={(r) => this.checkImgLocation(r)} />
-              <img
-                src={maps[this.state.mapIndex].name}
-                alt="Map"
-                draggable={false}
-                ref={(e) => this.saveImgRef(e)}
-              />
-              {this.state.minX && (
-                <div
-                  style={{
-                    zIndex: 10,
-                    position: 'absolute',
-                    left: this.state.minX + 'px',
-                    top: this.state.minY + 'px',
-                    width: this.state.width + 'px',
-                    height: this.state.height + 'px',
-                    backgroundColor: 'transparent',
-                    border: '1px solid blue',
-                  }}
-                ></div>
-              )}
-            </div>
-            <div className="w3-padding">
+              <p>
+                If you prefer to not sign-in, you can still encode your
+                preferences in a special URL using the `&quot;`Open new tab
+                with encoded URL`&quot;` button below. You may want to
+                bookmark the new tab for the future.
+              </p>
               <button
                 className={
                   'w3-button w3-border w3-round-large w3-black' +
-                  (this.state.mapIndex === 0 ? ' w3-disabled' : '')
+                  (props.validCookie ? '' : ' w3-disabled')
                 }
-                onClick={() => this.zoomIn()}
-              >
-                Zoom in
-              </button>
-              <button
-                className={
-                  'w3-button w3-border w3-round-large w3-black' +
-                  (this.state.mapIndex === maps.length - 1
-                    ? ' w3-disabled'
-                    : '')
-                }
-                onClick={() => this.zoomOut()}
-              >
-                Zoom out
-              </button>
-            </div>
-            <div className="w3-padding">
-              <button
-                className={
-                  'w3-button w3-border w3-round-large w3-black' +
-                  (this.props.validCookie &&
-                  this.state.savedRegion &&
-                  this.state.savedRegion.topLat
-                    ? ''
-                    : ' w3-disabled')
-                }
-                onClick={() => this.showRegion(this.state.savedRegion)}
-              >
-                Restore saved region
-              </button>
-              <button
-                className="w3-button w3-border w3-round-large w3-black"
-                onClick={() => this.removeSelection()}
-              >
-                Remove selection
-              </button>
-            </div>
-          </div>
-          <div className="w3-padding"></div>
-          <div className="w3-row-padding w3-padding-16 w3-container w3-light-grey">
-            {this.props.validCookie ? (
-              <button
-                className="w3-button w3-border w3-round-large w3-black"
-                onClick={() => this.savePreferences()}
+                onClick={() => savePreferences()}
               >
                 Save prefernces
               </button>
-            ) : (
-              <div>
-                <p>
-                  You are currently not signed in. To save your prefernces on
-                  the server, you must sign in using the button at the top of
-                  the page.
-                </p>
-                <p>
-                  If you prefer to not sign-in, you can still encode your
-                  preferences in a special URL using the `&quot;`Open new tab
-                  with encoded URL`&quot;` button below. You may want to
-                  bookmark the new tab for the future.
-                </p>
-                <button
-                  className={
-                    'w3-button w3-border w3-round-large w3-black' +
-                    (this.props.validCookie ? '' : ' w3-disabled')
-                  }
-                  onClick={() => this.savePreferences()}
-                >
-                  Save prefernces
-                </button>
-                <a
-                  className="w3-button w3-border w3-round-large w3-black"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={this.state.statelessUrl}
-                >
-                  Open new tab with encoded URL
-                </a>
-              </div>
-            )}
-          </div>
-          <div className="w3-padding"></div>
+              <a
+                className="w3-button w3-border w3-round-large w3-black"
+                target="_blank"
+                rel="noopener noreferrer"
+                href={statelessUrl}
+              >
+                Open new tab with encoded URL
+              </a>
+            </div>
+          )}
         </div>
+        <div className="w3-padding"></div>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default Preferences;
