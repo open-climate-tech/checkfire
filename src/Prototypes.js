@@ -17,20 +17,18 @@
 
 // Prototype pages still under development
 
-import React, { Component } from 'react';
+import React from 'react';
 import Link from 'next/link';
 
-class Prototypes extends Component {
-  render() {
-    return (
-      <div>
-        <h1>Prototypes</h1>
-        <Link href="/confirmed">
-          <li>Confirmed Fires</li>
-        </Link>
-      </div>
-    );
-  }
+function Prototypes() {
+  return (
+    <div>
+      <h1>Prototypes</h1>
+      <Link href="/confirmed">
+        <li>Confirmed Fires</li>
+      </Link>
+    </div>
+  );
 }
 
 export default Prototypes;

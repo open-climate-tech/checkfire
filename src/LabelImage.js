@@ -17,7 +17,7 @@
 
 // Label iamges with bounding boxes of smoke
 
-import React, { Component } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ResizeObserver from 'react-resize-observer';
 import DateTimePicker from 'react-datetime-picker';
 import Select from 'react-dropdown-select';
@@ -25,244 +25,200 @@ import ReactDOM from 'react-dom';
 
 import { getServerUrl, serverGet, serverPost } from './OctReactUtils';
 
-class LabelImage extends Component {
-  constructor(props) {
-    super(props);
-    this.eltRefs = {};
-    this.state = {
-      cameraOptions: [],
-      imageUrl: null,
-      imageMsg:
-        'Select camera, date, and time and push button to fetch an image with potential smoke',
-      cameraID: null,
-      dateTimeVal: null,
-      notes: '',
-    };
-  }
+function LabelImage(props) {
+  const [cameraOptions, setCameraOptions] = useState([]);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageName, setImageName] = useState(null);
+  const [imageMsg, setImageMsg] = useState(
+    'Select camera, date, and time and push button to fetch an image with potential smoke'
+  );
+  const [cameraID, setCameraID] = useState(null);
+  const [dateTimeVal, setDateTimeVal] = useState(null);
+  const [notes, setNotes] = useState('');
+  const [startX, setStartX] = useState(null);
+  const [startY, setStartY] = useState(null);
+  const [minX, setMinX] = useState(null);
+  const [minY, setMinY] = useState(null);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const [currentRegion, setCurrentRegion] = useState(null);
 
-  async componentDidMount() {
-    document.addEventListener('keydown', this.keyDown);
+  // Refs to DOM elements and image geometry
+  const eltRefs = useRef({});
+  const imgGeom = useRef({
+    naturalWidth: 0,
+    naturalHeight: 0,
+    left: null,
+    top: null,
+    right: null,
+    bottom: null,
+  });
 
-    const serverUrl = getServerUrl('/api/listCameras');
-    const serverRes = await serverGet(serverUrl);
-    if (serverRes.status === 200) {
-      const serverResJson = await serverRes.json();
-      console.log('List cameras', serverRes.status, serverResJson);
-      if (serverResJson) {
-        this.setState({
-          cameraOptions: serverResJson.map((cameraID) => ({
-            value: cameraID,
-            label: cameraID,
-          })),
-        });
-      } else {
-        this.setState({ imageMsg: 'Failed to get cameras.  Try reloading.' });
-      }
-    } else {
-      const serverResText = await serverRes.text();
-      console.log('ListCameras response', serverRes.status, serverResText);
-      this.setState({
-        imageMsg: 'Error: ' + serverRes.status + ': ' + serverResText,
-      });
-    }
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.keyDown);
-  }
-
-  /**
-   * Save the reference to given DOM element
-   * @param {string} type
-   * @param {*} element
-   */
-  saveRef(type, element) {
-    if (element) {
-      this.eltRefs[type] = element;
-      if (type === 'img') {
-        this.checkImgLocation();
-      }
-    }
-  }
+  // Refs to current state for use inside keydown handler (registered once)
+  const stateRef = useRef({});
+  stateRef.current = {
+    startX,
+    minX,
+    minY,
+    width,
+    height,
+    cameraID,
+    dateTimeVal,
+    imageUrl,
+    imageName,
+    notes,
+    currentRegion,
+  };
 
   /**
-   * Find the absolute location and size of the <img> DOM element
+   * Display the bounding box region on image
    */
-  checkImgLocation() {
-    if (!this.eltRefs['img']) {
+  const showRegion = useCallback((region) => {
+    const g = imgGeom.current;
+    if (
+      region &&
+      region.left &&
+      eltRefs.current['img'] &&
+      typeof g.left === 'number'
+    ) {
+      const imgWidth = g.right - g.left;
+      const imgHeight = g.bottom - g.top;
+      setMinX((region.left / g.naturalWidth) * imgWidth + g.left);
+      setMinY((region.top / g.naturalHeight) * imgHeight + g.top);
+      setWidth(((region.right - region.left) / g.naturalWidth) * imgWidth);
+      setHeight(((region.bottom - region.top) / g.naturalHeight) * imgHeight);
+      setStartX(null);
+      setCurrentRegion(region);
+    }
+  }, []);
+
+  const checkImgLocation = useCallback(() => {
+    if (!eltRefs.current['img']) {
       return;
     }
-    this.imgNaturalWidth = this.eltRefs['img'].naturalWidth;
-    this.imgNaturalHeight = this.eltRefs['img'].naturalHeight;
-    const bcr = this.eltRefs['img'].getBoundingClientRect();
+    const img = eltRefs.current['img'];
+    imgGeom.current.naturalWidth = img.naturalWidth;
+    imgGeom.current.naturalHeight = img.naturalHeight;
+    const bcr = img.getBoundingClientRect();
     const left = Math.round(bcr.left + window.scrollX);
     const top = Math.round(bcr.top + window.scrollY);
     const right = Math.round(bcr.right + window.scrollX);
     const bottom = Math.round(bcr.bottom + window.scrollY);
+    const g = imgGeom.current;
     if (
-      this.imgLeft !== left ||
-      this.imgTop !== top ||
-      this.imgRight !== right ||
-      this.imgBottom !== bottom
+      g.left !== left ||
+      g.top !== top ||
+      g.right !== right ||
+      g.bottom !== bottom
     ) {
-      this.imgLeft = left;
-      this.imgTop = top;
-      this.imgRight = right;
-      this.imgBottom = bottom;
-      // console.log('img l,t,r,b', left, top, right, bottom);
-      if (this.state.currentRegion) {
-        this.showRegion(this.state.currentRegion);
+      g.left = left;
+      g.top = top;
+      g.right = right;
+      g.bottom = bottom;
+      if (stateRef.current.currentRegion) {
+        showRegion(stateRef.current.currentRegion);
       }
     }
-  }
+  }, [showRegion]);
 
   /**
-   * Mouse was clicked, so record the starting point and clear out any old rectangle
-   * @param {*} e
+   * Save the reference to given DOM element
    */
-  handleMouseDown(e) {
-    // console.log('hm down', e.nativeEvent.pageX, e.nativeEvent.pageY);
+  const saveRef = useCallback(
+    (type, element) => {
+      if (element) {
+        eltRefs.current[type] = element;
+        if (type === 'img') {
+          checkImgLocation();
+        }
+      }
+    },
+    [checkImgLocation]
+  );
+
+  const handleMouseDown = useCallback((e) => {
+    const g = imgGeom.current;
     if (
-      e.nativeEvent.pageX > this.imgLeft &&
-      e.nativeEvent.pageY > this.imgTop &&
-      e.nativeEvent.pageX < this.imgRight &&
-      e.nativeEvent.pageY < this.imgBottom
+      e.nativeEvent.pageX > g.left &&
+      e.nativeEvent.pageY > g.top &&
+      e.nativeEvent.pageX < g.right &&
+      e.nativeEvent.pageY < g.bottom
     ) {
-      this.setState({
-        startX: e.nativeEvent.pageX,
-        startY: e.nativeEvent.pageY,
-        minX: null,
-      });
+      setStartX(e.nativeEvent.pageX);
+      setStartY(e.nativeEvent.pageY);
+      setMinX(null);
     }
-  }
+  }, []);
 
-  /**
-   * Mouse drag, so set the locatoin and size of the selected rectangle to match the mouse location
-   * @param {*} e
-   */
-  handleMouseMove(e) {
-    if (typeof this.state.startX !== 'number') {
+  const handleMouseMove = useCallback((e) => {
+    const sx = stateRef.current.startX;
+    const sy = stateRef.current.startY;
+    if (typeof sx !== 'number') {
       return;
     }
-    // console.log('hm move', e.nativeEvent.pageX, e.nativeEvent.pageY);
-    const eventX = Math.min(
-      Math.max(e.nativeEvent.pageX, this.imgLeft),
-      this.imgRight
-    );
-    const eventY = Math.min(
-      Math.max(e.nativeEvent.pageY, this.imgTop),
-      this.imgBottom
-    );
-    const newState = {
-      minX: Math.min(this.state.startX, eventX),
-      minY: Math.min(this.state.startY, eventY),
-    };
-    newState.width = Math.max(
-      Math.max(this.state.startX, eventX) - newState.minX,
-      5
-    );
-    newState.height = Math.max(
-      Math.max(this.state.startY, eventY) - newState.minY,
-      5
-    );
-    // console.log('hm move ns', newState);
-    this.setState(newState);
-  }
+    const g = imgGeom.current;
+    const eventX = Math.min(Math.max(e.nativeEvent.pageX, g.left), g.right);
+    const eventY = Math.min(Math.max(e.nativeEvent.pageY, g.top), g.bottom);
+    const newMinX = Math.min(sx, eventX);
+    const newMinY = Math.min(sy, eventY);
+    setMinX(newMinX);
+    setMinY(newMinY);
+    setWidth(Math.max(Math.max(sx, eventX) - newMinX, 5));
+    setHeight(Math.max(Math.max(sy, eventY) - newMinY, 5));
+  }, []);
 
-  /**
-   * Mouse drag stopped, so mark it such that mouse moves no longer update selected rectangle
-   * @param {*} e
-   */
-  handleMouseUp(e) {
-    // console.log('hm up', e.nativeEvent.pageX, e.nativeEvent.pageY);
-    const newState = {
-      startX: null,
-    };
-    if (this.state.minX) {
-      const imgWidth = this.imgRight - this.imgLeft;
-      const imgHeight = this.imgBottom - this.imgTop;
+  const handleMouseUp = useCallback(() => {
+    setStartX(null);
+    const s = stateRef.current;
+    const g = imgGeom.current;
+    if (s.minX) {
+      const imgWidth = g.right - g.left;
+      const imgHeight = g.bottom - g.top;
       const region = {
-        left: Math.round(
-          ((this.state.minX - this.imgLeft) / imgWidth) * this.imgNaturalWidth
-        ),
-        top: Math.round(
-          ((this.state.minY - this.imgTop) / imgHeight) * this.imgNaturalHeight
-        ),
+        left: Math.round(((s.minX - g.left) / imgWidth) * g.naturalWidth),
+        top: Math.round(((s.minY - g.top) / imgHeight) * g.naturalHeight),
       };
       region.right =
-        region.left +
-        Math.round((this.state.width / imgWidth) * this.imgNaturalWidth);
+        region.left + Math.round((s.width / imgWidth) * g.naturalWidth);
       region.bottom =
-        region.top +
-        Math.round((this.state.height / imgHeight) * this.imgNaturalHeight);
+        region.top + Math.round((s.height / imgHeight) * g.naturalHeight);
       console.log('box', region.left, region.top, region.right, region.bottom);
-      newState.currentRegion = region;
+      setCurrentRegion(region);
     }
-    this.setState(newState);
-  }
+  }, []);
 
-  /**
-   * Display the bounding box region on image
-   * @param {*} region
-   */
-  showRegion(region) {
-    if (
-      region &&
-      region.left &&
-      this.eltRefs['img'] &&
-      typeof this.imgLeft === 'number'
-    ) {
-      const imgWidth = this.imgRight - this.imgLeft;
-      const imgHeight = this.imgBottom - this.imgTop;
-      const newState = {
-        minX: (region.left / this.imgNaturalWidth) * imgWidth + this.imgLeft,
-        minY: (region.top / this.imgNaturalHeight) * imgHeight + this.imgTop,
-        width: ((region.right - region.left) / this.imgNaturalWidth) * imgWidth,
-        height:
-          ((region.bottom - region.top) / this.imgNaturalHeight) * imgHeight,
-        startX: null,
-        currentRegion: region,
-      };
-      this.setState(newState);
-    }
-  }
+  const startY_ = startY; // suppress unused warning if any
+  void startY_;
 
-  changeCameraID(value) {
-    this.setState({ cameraID: value });
-  }
+  const changeCameraID = useCallback((value) => {
+    setCameraID(value);
+  }, []);
 
-  changeDateTime(value) {
-    this.setState({ dateTimeVal: value });
-  }
+  const changeDateTime = useCallback((value) => {
+    setDateTimeVal(value);
+  }, []);
 
-  changeNotes(event) {
-    this.setState({ notes: event.target.value });
-  }
+  const changeNotes = useCallback((event) => {
+    setNotes(event.target.value);
+  }, []);
 
   /**
    * Fetch an image of currently selected camera and date/time after adding timeOffsetSec
-   * @param {Number} timeOffsetSec
    */
-  async fetchImage(timeOffsetSec = 0) {
-    if (
-      !this.state.dateTimeVal ||
-      !this.state.cameraID ||
-      !this.state.cameraID.length
-    ) {
+  const fetchImage = useCallback(async (timeOffsetSec = 0) => {
+    const s = stateRef.current;
+    if (!s.dateTimeVal || !s.cameraID || !s.cameraID.length) {
       return;
     }
-    const cameraID = this.state.cameraID[0].value;
-    const updatedTimeValue =
-      this.state.dateTimeVal.valueOf() + timeOffsetSec * 1000;
+    const camId = s.cameraID[0].value;
+    const updatedTimeValue = s.dateTimeVal.valueOf() + timeOffsetSec * 1000;
     const dateISO = new Date(updatedTimeValue).toISOString();
-    this.setState({
-      imageMsg: 'Fetching image.  Should appear soon if found',
-    });
-    console.log('Fetch', cameraID, dateISO);
+    setImageMsg('Fetching image.  Should appear soon if found');
+    console.log('Fetch', camId, dateISO);
     const direction =
       timeOffsetSec > 0 ? 'positive' : timeOffsetSec < 0 ? 'negative' : '';
     const urlComponents = [
-      'cameraID=' + encodeURIComponent(cameraID),
+      'cameraID=' + encodeURIComponent(camId),
       'dateTime=' + encodeURIComponent(dateISO),
       'direction=' + encodeURIComponent(direction),
     ];
@@ -273,217 +229,226 @@ class LabelImage extends Component {
       const serverResJson = await serverRes.json();
       console.log('FetchImage response', serverRes.status, serverResJson);
       if (serverResJson && serverResJson.imageUrl) {
-        this.setState({
-          imageUrl: serverResJson.imageUrl,
-          imageName: serverResJson.imageName,
-          dateTimeVal: new Date(serverResJson.imageTime),
-          imageMsg: null,
-          startX: null,
-          minX: null,
-          currentRegion: null,
-        });
+        setImageUrl(serverResJson.imageUrl);
+        setImageName(serverResJson.imageName);
+        setDateTimeVal(new Date(serverResJson.imageTime));
+        setImageMsg(null);
+        setStartX(null);
+        setMinX(null);
+        setCurrentRegion(null);
       } else {
-        this.setState({
-          imageUrl: null,
-          imageMsg:
-            'Image could not be found.  Select a different camera, date, or time.',
-        });
+        setImageUrl(null);
+        setImageMsg(
+          'Image could not be found.  Select a different camera, date, or time.'
+        );
       }
     } else {
       const serverResText = await serverRes.text();
       console.log('FetchImage response', serverRes.status, serverResText);
-      this.setState({
-        imageUrl: null,
-        imageMsg: 'Error: ' + serverRes.status + ': ' + serverResText,
-      });
+      setImageUrl(null);
+      setImageMsg('Error: ' + serverRes.status + ': ' + serverResText);
     }
-  }
-
-  /**
-   * Install keyboard shortcuts for directional arrow keys and 's' for saving bounding box
-   * @param {*} e
-   */
-  keyDown = (e) => {
-    if (
-      !this.eltRefs.cameraPicker ||
-      !this.eltRefs.dateTimePicker ||
-      !this.eltRefs.notes
-    ) {
-      return;
-    }
-    const cpDom = ReactDOM.findDOMNode(this.eltRefs.cameraPicker);
-    const dtpDom = ReactDOM.findDOMNode(this.eltRefs.dateTimePicker);
-    const notesDom = ReactDOM.findDOMNode(this.eltRefs.notes);
-    if (!cpDom || !dtpDom || !notesDom) {
-      return;
-    }
-    const inputsInFocus =
-      cpDom.contains(document.activeElement) ||
-      dtpDom.contains(document.activeElement) ||
-      notesDom.contains(document.activeElement);
-    // console.log('inputsInFocus', inputsInFocus);
-    if (inputsInFocus) {
-      // avoid interference with inputs and keyboard shortcuts
-      return;
-    }
-    const keyCodeToOffset = {
-      38: 10, // 'up'
-      40: -10, // 'down'
-      37: -1, // 'left'
-      39: 1, // 'right'
-    };
-    const timeOffsetMin = keyCodeToOffset[e.keyCode];
-    // console.log('key', e.keyCode, timeOffsetMin);
-    if (timeOffsetMin && this.state.imageUrl && this.state.dateTimeVal) {
-      this.fetchImage(timeOffsetMin * 60);
-    } else if (e.keyCode === 83) {
-      // 's' shortcut for save
-      this.saveAndAdvance();
-    }
-  };
+  }, []);
 
   /**
    * Save the currently selected bounding box and advance the image by 1 minute
    */
-  async saveAndAdvance() {
-    if (this.state.currentRegion && this.state.currentRegion.left) {
+  const saveAndAdvance = useCallback(async () => {
+    const s = stateRef.current;
+    if (s.currentRegion && s.currentRegion.left) {
       const postParams = {
-        fileName: this.state.imageName,
-        minX: this.state.currentRegion.left,
-        minY: this.state.currentRegion.top,
-        maxX: this.state.currentRegion.right,
-        maxY: this.state.currentRegion.bottom,
-        notes: this.state.notes,
+        fileName: s.imageName,
+        minX: s.currentRegion.left,
+        minY: s.currentRegion.top,
+        maxX: s.currentRegion.right,
+        maxY: s.currentRegion.bottom,
+        notes: s.notes,
       };
       const serverUrl = getServerUrl('/api/setBbox');
       const serverRes = await serverPost(serverUrl, postParams);
       console.log('setBbox respose', serverRes);
       if (serverRes === 'success') {
-        this.fetchImage(60);
+        fetchImage(60);
       } else {
-        this.setState({
-          imageMsg:
-            'Failed to save bounding box.  Please reload the page and retry. If the problem persits, notify administrator',
-        });
+        setImageMsg(
+          'Failed to save bounding box.  Please reload the page and retry. If the problem persits, notify administrator'
+        );
       }
     }
-  }
+  }, [fetchImage]);
 
-  render() {
-    return (
-      <div>
-        <h1>Label images</h1>
-        {this.props.validCookie ? (
-          <div>
-            <div className="">
-              <Select
-                ref={(e) => this.saveRef('cameraPicker', e)}
-                className="w3-col s4 w3-margin-left"
-                value={this.state.cameraID}
-                onChange={(v) => this.changeCameraID(v)}
-                options={this.state.cameraOptions}
-              />
-              <DateTimePicker
-                ref={(e) => this.saveRef('dateTimePicker', e)}
-                className="w3-col s4 w3-margin-left"
-                onChange={(v) => this.changeDateTime(v)}
-                value={this.state.dateTimeVal}
-              />
-              <button
-                className={
-                  'w3-button w3-border w3-round-large w3-black w3-margin-left' +
-                  (this.state.dateTimeVal && this.state.cameraID
-                    ? ''
-                    : ' w3-disabled')
-                }
-                onClick={() => this.fetchImage()}
-              >
-                Fetch image
-              </button>
-            </div>
-            <div className="w3-bar w3-padding">
-              {this.state.imageMsg ? this.state.imageMsg : <span>&nbsp;</span>}
-            </div>
-            {this.state.imageUrl && (
-              <div className="w3-bar w3-padding">
-                <p>
-                  Mark (click and drag) a rectangle on top of the image below to
-                  select the bounding box around the visible smoke in the image.
-                  You can restart anytime by marking a new rectangle. When
-                  satisfied, click the Save button below the image (or press 's'
-                  key). The arrow keys are keyboard shortcuts for moving image
-                  forward and backward in time. Left/Right arrow keys move time
-                  by 1 minute. Up/Down arrow keys move time by 10 minutes.
-                </p>
-                <div
-                  onMouseDown={(e) => this.handleMouseDown(e)}
-                  onMouseUp={(e) => this.handleMouseUp(e)}
-                  onMouseMove={(e) => this.handleMouseMove(e)}
-                >
-                  <ResizeObserver onReflow={(r) => this.checkImgLocation(r)} />
-                  <img
-                    src={this.state.imageUrl}
-                    alt="Scene with possible smoke"
-                    draggable={false}
-                    width="100%;"
-                    ref={(e) => this.saveRef('img', e)}
-                  />
-                  {this.state.minX && (
-                    <div
-                      style={{
-                        zIndex: 10,
-                        position: 'absolute',
-                        left: this.state.minX + 'px',
-                        top: this.state.minY + 'px',
-                        width: this.state.width + 'px',
-                        height: this.state.height + 'px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid blue',
-                      }}
-                    ></div>
-                  )}
-                </div>
-                <div className="w3-padding">
-                  <label>
-                    Notes (optional - please enter 'test' when testing):
-                    <input
-                      type="text"
-                      ref={(e) => this.saveRef('notes', e)}
-                      className="w3-margin-left"
-                      value={this.state.notes}
-                      onChange={(e) => this.changeNotes(e)}
-                    />
-                  </label>
-                </div>
-                <div className="w3-padding">
-                  <button
-                    className={
-                      'w3-button w3-border w3-round-large w3-black' +
-                      (this.state.minX ? '' : ' w3-disabled')
-                    }
-                    onClick={() => this.saveAndAdvance()}
-                  >
-                    Save smoke bounding box and advance to next image (keyboard
-                    shortcut 's')
-                  </button>
-                  <button
-                    className="w3-button w3-border w3-round-large w3-black"
-                    onClick={() => this.fetchImage(60)}
-                  >
-                    Discard bounding box (if any) and advance to next image
-                    (keyboard shortcut right arrow key)
-                  </button>
-                </div>
-                <div className="w3-padding"></div>
-              </div>
-            )}
+  // Install keyboard shortcuts on mount; load camera list
+  useEffect(() => {
+    const keyDown = (e) => {
+      const refs = eltRefs.current;
+      if (!refs.cameraPicker || !refs.dateTimePicker || !refs.notes) {
+        return;
+      }
+      const cpDom = ReactDOM.findDOMNode(refs.cameraPicker);
+      const dtpDom = ReactDOM.findDOMNode(refs.dateTimePicker);
+      const notesDom = ReactDOM.findDOMNode(refs.notes);
+      if (!cpDom || !dtpDom || !notesDom) {
+        return;
+      }
+      const inputsInFocus =
+        cpDom.contains(document.activeElement) ||
+        dtpDom.contains(document.activeElement) ||
+        notesDom.contains(document.activeElement);
+      if (inputsInFocus) {
+        return;
+      }
+      const keyCodeToOffset = {
+        38: 10,
+        40: -10,
+        37: -1,
+        39: 1,
+      };
+      const timeOffsetMin = keyCodeToOffset[e.keyCode];
+      const s = stateRef.current;
+      if (timeOffsetMin && s.imageUrl && s.dateTimeVal) {
+        fetchImage(timeOffsetMin * 60);
+      } else if (e.keyCode === 83) {
+        saveAndAdvance();
+      }
+    };
+    document.addEventListener('keydown', keyDown);
+
+    (async () => {
+      const serverUrl = getServerUrl('/api/listCameras');
+      const serverRes = await serverGet(serverUrl);
+      if (serverRes.status === 200) {
+        const serverResJson = await serverRes.json();
+        console.log('List cameras', serverRes.status, serverResJson);
+        if (serverResJson) {
+          setCameraOptions(
+            serverResJson.map((id) => ({ value: id, label: id }))
+          );
+        } else {
+          setImageMsg('Failed to get cameras.  Try reloading.');
+        }
+      } else {
+        const serverResText = await serverRes.text();
+        console.log('ListCameras response', serverRes.status, serverResText);
+        setImageMsg('Error: ' + serverRes.status + ': ' + serverResText);
+      }
+    })();
+
+    return () => {
+      document.removeEventListener('keydown', keyDown);
+    };
+  }, [fetchImage, saveAndAdvance]);
+
+  return (
+    <div>
+      <h1>Label images</h1>
+      {props.validCookie ? (
+        <div>
+          <div className="">
+            <Select
+              ref={(e) => saveRef('cameraPicker', e)}
+              className="w3-col s4 w3-margin-left"
+              value={cameraID}
+              onChange={(v) => changeCameraID(v)}
+              options={cameraOptions}
+            />
+            <DateTimePicker
+              ref={(e) => saveRef('dateTimePicker', e)}
+              className="w3-col s4 w3-margin-left"
+              onChange={(v) => changeDateTime(v)}
+              value={dateTimeVal}
+            />
+            <button
+              className={
+                'w3-button w3-border w3-round-large w3-black w3-margin-left' +
+                (dateTimeVal && cameraID ? '' : ' w3-disabled')
+              }
+              onClick={() => fetchImage()}
+            >
+              Fetch image
+            </button>
           </div>
-        ) : (
-          <p>Sign in above to store your preferred area.</p>
-        )}
-      </div>
-    );
-  }
+          <div className="w3-bar w3-padding">
+            {imageMsg ? imageMsg : <span>&nbsp;</span>}
+          </div>
+          {imageUrl && (
+            <div className="w3-bar w3-padding">
+              <p>
+                Mark (click and drag) a rectangle on top of the image below to
+                select the bounding box around the visible smoke in the image.
+                You can restart anytime by marking a new rectangle. When
+                satisfied, click the Save button below the image (or press 's'
+                key). The arrow keys are keyboard shortcuts for moving image
+                forward and backward in time. Left/Right arrow keys move time
+                by 1 minute. Up/Down arrow keys move time by 10 minutes.
+              </p>
+              <div
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+              >
+                <ResizeObserver onReflow={() => checkImgLocation()} />
+                <img
+                  src={imageUrl}
+                  alt="Scene with possible smoke"
+                  draggable={false}
+                  width="100%;"
+                  ref={(e) => saveRef('img', e)}
+                />
+                {minX && (
+                  <div
+                    style={{
+                      zIndex: 10,
+                      position: 'absolute',
+                      left: minX + 'px',
+                      top: minY + 'px',
+                      width: width + 'px',
+                      height: height + 'px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid blue',
+                    }}
+                  ></div>
+                )}
+              </div>
+              <div className="w3-padding">
+                <label>
+                  Notes (optional - please enter 'test' when testing):
+                  <input
+                    type="text"
+                    ref={(e) => saveRef('notes', e)}
+                    className="w3-margin-left"
+                    value={notes}
+                    onChange={(e) => changeNotes(e)}
+                  />
+                </label>
+              </div>
+              <div className="w3-padding">
+                <button
+                  className={
+                    'w3-button w3-border w3-round-large w3-black' +
+                    (minX ? '' : ' w3-disabled')
+                  }
+                  onClick={() => saveAndAdvance()}
+                >
+                  Save smoke bounding box and advance to next image (keyboard
+                  shortcut 's')
+                </button>
+                <button
+                  className="w3-button w3-border w3-round-large w3-black"
+                  onClick={() => fetchImage(60)}
+                >
+                  Discard bounding box (if any) and advance to next image
+                  (keyboard shortcut right arrow key)
+                </button>
+              </div>
+              <div className="w3-padding"></div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p>Sign in above to store your preferred area.</p>
+      )}
+    </div>
+  );
 }
 
 export default LabelImage;

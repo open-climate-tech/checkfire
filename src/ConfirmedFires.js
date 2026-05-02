@@ -17,7 +17,7 @@
 
 // Confirmed Fires
 
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getServerUrl, serverGet, FirePreview } from './OctReactUtils';
 
@@ -31,47 +31,50 @@ function VoteStats(props) {
   );
 }
 
-class ConfirmedFires extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+function ConfirmedFires() {
+  const [confirmedFires, setConfirmedFires] = useState(null);
 
-  async componentDidMount() {
-    const serverUrl = getServerUrl('/api/confirmedFires');
-    const resp = await serverGet(serverUrl);
-    const confirmedFires = await resp.json();
-    this.setState({ confirmedFires: confirmedFires });
-  }
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const serverUrl = getServerUrl('/api/confirmedFires');
+      const resp = await serverGet(serverUrl);
+      const fires = await resp.json();
+      if (!cancelled) {
+        setConfirmedFires(fires);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  render() {
-    return (
-      <div>
-        <h1 className="w3-padding-32 w3-row-padding">Confirmed Fires</h1>
-        <p>
-          This page shows recent potential fires that have been confirmed by
-          majority of the voting users. There is an inherent delay in waiting
-          for someone to vote and confirm a fire, so this page will never
-          display events as quickly as the{' '}
-          <Link href="/wildfirecheck">Potential Fires</Link> page. This page also
-          does not check potential fire locations against the your preferred
-          region of interest, but instead shows fires from all cameras. Finally,
-          this page also does does not automatically refresh on new detections.
-          Therefore, it is not suitable for monitoring for earliest notification
-          of potential fires. This page is intended for demonstrating the
-          capability of the system.
-        </p>
-        {this.state.confirmedFires &&
-          this.state.confirmedFires.map((potFire) => (
-            <FirePreview
-              key={potFire.annotatedUrl}
-              potFire={potFire}
-              childComponent={<VoteStats potFire={potFire} />}
-            />
-          ))}
-      </div>
-    );
-  }
+  return (
+    <div>
+      <h1 className="w3-padding-32 w3-row-padding">Confirmed Fires</h1>
+      <p>
+        This page shows recent potential fires that have been confirmed by
+        majority of the voting users. There is an inherent delay in waiting
+        for someone to vote and confirm a fire, so this page will never
+        display events as quickly as the{' '}
+        <Link href="/wildfirecheck">Potential Fires</Link> page. This page also
+        does not check potential fire locations against the your preferred
+        region of interest, but instead shows fires from all cameras. Finally,
+        this page also does does not automatically refresh on new detections.
+        Therefore, it is not suitable for monitoring for earliest notification
+        of potential fires. This page is intended for demonstrating the
+        capability of the system.
+      </p>
+      {confirmedFires &&
+        confirmedFires.map((potFire) => (
+          <FirePreview
+            key={potFire.annotatedUrl}
+            potFire={potFire}
+            childComponent={<VoteStats potFire={potFire} />}
+          />
+        ))}
+    </div>
+  );
 }
 
 export default ConfirmedFires;
