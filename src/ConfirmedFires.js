@@ -58,9 +58,9 @@ function ConfirmedFires() {
         for someone to vote and confirm a fire, so this page will never
         display events as quickly as the{' '}
         <Link href="/wildfirecheck">Potential Fires</Link> page. This page also
-        does not check potential fire locations against the your preferred
+        does not check potential fire locations against your preferred
         region of interest, but instead shows fires from all cameras. Finally,
-        this page also does does not automatically refresh on new detections.
+        this page also does not automatically refresh on new detections.
         Therefore, it is not suitable for monitoring for earliest notification
         of potential fires. This page is intended for demonstrating the
         capability of the system.

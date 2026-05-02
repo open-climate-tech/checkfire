@@ -77,7 +77,10 @@ function LabelImage(props) {
     const g = imgGeom.current;
     if (
       region &&
-      region.left &&
+      typeof region.left === 'number' &&
+      typeof region.top === 'number' &&
+      typeof region.right === 'number' &&
+      typeof region.bottom === 'number' &&
       eltRefs.current['img'] &&
       typeof g.left === 'number'
     ) {
@@ -255,7 +258,7 @@ function LabelImage(props) {
    */
   const saveAndAdvance = useCallback(async () => {
     const s = stateRef.current;
-    if (s.currentRegion && s.currentRegion.left) {
+    if (s.currentRegion && s.currentRegion.left != null) {
       const postParams = {
         fileName: s.imageName,
         minX: s.currentRegion.left,
@@ -271,7 +274,7 @@ function LabelImage(props) {
         fetchImage(60);
       } else {
         setImageMsg(
-          'Failed to save bounding box.  Please reload the page and retry. If the problem persits, notify administrator'
+          'Failed to save bounding box.  Please reload the page and retry. If the problem persists, notify administrator'
         );
       }
     }
