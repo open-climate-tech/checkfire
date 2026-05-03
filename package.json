@@ -54,7 +54,7 @@
     "dev": "NODE_ENV=development ts-node --project tsconfig.server.json server-main.ts",
     "build": "tsc -p tsconfig.server.json && next build --webpack",
     "gcp-build": "tsc -p tsconfig.server.json && next build --webpack",
-    "lint": "eslint pages src",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx pages src",
     "format": "prettier --write .",
     "test": "cross-env CI=true NODE_ENV=development npm run test-server",
     "test-server": "tsc -p tsconfig.server.json && nyc mocha --exit dist/server-src/test"

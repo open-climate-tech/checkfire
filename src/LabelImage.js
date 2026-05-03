@@ -283,16 +283,15 @@ function LabelImage(props) {
   useEffect(() => {
     const keyDown = (e) => {
       // Skip arrow/'s' shortcuts when the user is typing inside the camera
-      // picker, date-time picker, or notes input. Detected by inspecting
-      // document.activeElement (works without ReactDOM.findDOMNode, which
-      // was removed in React 19).
+      // picker, date-time picker, or notes input. Use .contains() on the
+      // wrapper divs so any focused child element (including inner buttons
+      // or divs inside react-select / react-datetime-picker) is detected.
       const ae = document.activeElement;
       if (
         ae &&
-        (ae.tagName === 'INPUT' ||
-          ae.tagName === 'TEXTAREA' ||
-          ae.tagName === 'SELECT' ||
-          ae.isContentEditable)
+        (['controlsWrapper', 'notesWrapper'].some(
+          (key) => eltRefs.current[key]?.contains(ae)
+        ))
       ) {
         return;
       }
@@ -342,7 +341,7 @@ function LabelImage(props) {
       <h1>Label images</h1>
       {props.validCookie ? (
         <div>
-          <div className="">
+          <div className="" ref={(e) => saveRef('controlsWrapper', e)}>
             <Select
               ref={(e) => saveRef('cameraPicker', e)}
               className="w3-col s4 w3-margin-left"
@@ -408,7 +407,7 @@ function LabelImage(props) {
                   ></div>
                 )}
               </div>
-              <div className="w3-padding">
+              <div className="w3-padding" ref={(e) => saveRef('notesWrapper', e)}>
                 <label>
                   Notes (optional - please enter 'test' when testing):
                   <input
