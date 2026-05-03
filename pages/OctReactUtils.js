@@ -100,14 +100,6 @@ export function ZoomableMaps(props) {
   const [index, setIndex] = React.useState(initialIndex);
   return (
     <div>
-      {/* <div className="w3-tooltip">
-        <p className="tooltip-text" style={{width: '280px', left: '25%'}}>
-          The map shows the view area visible from the time-lapse video highlighted by a red triangle.
-          When multiple cameras detect the same event, the intersection of all the triangles is highlighted in purple.
-          The map also depicts any known prescribed burns using an icon with flames and a red cross.
-        </p>
-        <p>View area</p>
-      </div> */}
       <p style={{ marginBottom: 0 }}>View area</p>
       <div className="w3-display-container" style={{ height: '280px' }}>
         <div className="w3-display-topmiddle" style={{ width: '280px' }}>

@@ -15,7 +15,7 @@ import {
   getServerUrl,
   serverGet,
   Legalese,
-} from '../src/OctReactUtils';
+} from './OctReactUtils';
 
 function FirePagesHeader({ validCookie }: { validCookie: boolean }) {
   const router = useRouter();
