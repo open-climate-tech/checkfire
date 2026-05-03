@@ -29,7 +29,7 @@ export default function Register(props) {
   const [errMessage, setErrMessage] = useState('');
 
   const router = useRouter();
-  const fwdPath = (router.query && router.query.fwdPath) || '/';
+  const fwdPath = ((router.query && router.query.fwdPath) as string) || '/';
   // console.log('Register fwdPath', fwdPath);
 
   const registerSubmit = async (event) => {

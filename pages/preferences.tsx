@@ -40,6 +40,8 @@ const maps = [
     rightLong: -115.83,
     pixelWidth: 1320,
     pixelHeight: 1150,
+    longWidth: -115.83 - (-122.08),
+    latHeight: 36.85 - 32.39,
   },
   {
     name: cams1110,
@@ -49,6 +51,8 @@ const maps = [
     rightLong: -115.8,
     pixelWidth: 1110,
     pixelHeight: 960,
+    longWidth: -115.8 - (-122.11),
+    latHeight: 36.86 - 32.38,
   },
   {
     name: cams930,
@@ -58,6 +62,8 @@ const maps = [
     rightLong: -115.8,
     pixelWidth: 930,
     pixelHeight: 810,
+    longWidth: -115.8 - (-122.15),
+    latHeight: 36.88 - 32.35,
   },
   {
     name: cams780,
@@ -67,6 +73,8 @@ const maps = [
     rightLong: -115.8,
     pixelWidth: 780,
     pixelHeight: 680,
+    longWidth: -115.8 - (-122.18),
+    latHeight: 36.9 - 32.33,
   },
 ];
 maps.forEach((mapInfo) => {
@@ -111,7 +119,7 @@ function Preferences(props) {
   const imgGeom = useRef({ left: null, top: null, right: null, bottom: null });
 
   // Snapshot of state for use inside callbacks/effects to avoid stale closures
-  const stateRef = useRef({});
+  const stateRef = useRef<Record<string, any>>({});
   useEffect(() => {
     stateRef.current = {
       mapIndex,
@@ -246,7 +254,7 @@ function Preferences(props) {
   const handleMouseUp = useCallback(() => {
     const s = stateRef.current;
     const mapInfo = maps[s.mapIndex];
-    const region = {};
+    const region: Record<string, number> = {};
     region.topLat =
       mapInfo.topLat -
       ((s.minY - imgGeom.current.top) / mapInfo.pixelHeight) *

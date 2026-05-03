@@ -150,7 +150,7 @@ function VoteFires(props) {
   // useEffect below reads window.location.search and applies real values.
   const [webNotify, setWebNotify] = useState(false);
   const [notifyTitle, setNotifyTitle] = useState('');
-  const [notifyOptions, setNotifyOptions] = useState('');
+  const [notifyOptions, setNotifyOptions] = useState<NotificationOptions | null>(null);
   const [locationID, setLocationID] = useState(null);
   const [userRegion, setUserRegion] = useState(null);
   const [showProto, setShowProto] = useState(false);
@@ -344,7 +344,7 @@ function VoteFires(props) {
     webNotifyRef.current = notifyStr ? webNotifyQP : false;
 
     // Setup SSE connection
-    const sseConfig = {};
+    const sseConfig: EventSourceInit = {};
     if (process.env.NODE_ENV === 'development') {
       sseConfig.withCredentials = true;
     }
