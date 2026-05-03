@@ -40,16 +40,19 @@ function FirePagesHeader({ validCookie }: { validCookie: boolean }) {
   return (
     <div>
       <div className="w3-bar w3-wide w3-padding w3-card">
+        <div className="w3-col s2 w3-button w3-block">
+          <Link href="/">Home</Link>
+        </div>
         <div className="w3-col s3 w3-button w3-block">
           <Link href="/wildfirecheck">Potential fires</Link>
         </div>
         <div className="w3-col s3 w3-button w3-block">
           <Link href="/confirmed">Confirmed fires</Link>
         </div>
-        <div className="w3-col s3 w3-button w3-block">
+        <div className="w3-col s2 w3-button w3-block">
           <Link href="/preferences">Preferences</Link>
         </div>
-        <div className="w3-col s3 w3-button w3-block">
+        <div className="w3-col s2 w3-button w3-block">
           {validCookie ? (
             <button className="w3-black w3-round-large" onClick={logout}>
               Sign off
