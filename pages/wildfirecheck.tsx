@@ -336,6 +336,13 @@ function VoteFires(props) {
     if (notifyStr && (notifyStr === 'true' || notifyStr === 'false')) {
       webNotifyQP = notifyStr === 'true';
     }
+    // Seed refs from URL params before opening SSE so handlers have the
+    // correct values from the very first event (before getUserPreferences
+    // resolves).
+    locationIDRef.current = initialLocationID;
+    userRegionRef.current = parsedRegion;
+    webNotifyRef.current = notifyStr ? webNotifyQP : false;
+
     // Setup SSE connection
     const sseConfig = {};
     if (process.env.NODE_ENV === 'development') {
@@ -347,10 +354,6 @@ function VoteFires(props) {
     es.addEventListener('newPotentialFire', newPotentialFire);
     es.addEventListener('closedConnection', stopUpdates);
 
-    // Update ref immediately so SSE handlers see the correct locationID
-    // before the async getUserPreferences() resolves.
-    locationIDRef.current = initialLocationID;
-
     // Apply user preferences (may override URL params)
     getUserPreferences().then((preferences) => {
       // Sync state inside async callback to avoid synchronous setState-in-effect
@@ -359,12 +362,14 @@ function VoteFires(props) {
       if (!parsedRegion || !latLongStr) {
         regionToUse = preferences.region;
       }
+      // Update refs to final resolved values so subsequent SSE events use them.
+      userRegionRef.current = regionToUse;
       setUserRegion(regionToUse);
-      setWebNotify(
-        notifyStr
-          ? webNotifyQP
-          : preferences.webNotify || Boolean(initialLocationID)
-      );
+      const resolvedWebNotify = notifyStr
+        ? webNotifyQP
+        : preferences.webNotify || Boolean(initialLocationID);
+      webNotifyRef.current = resolvedWebNotify;
+      setWebNotify(resolvedWebNotify);
       setShowProto(preferences.showProto);
       // re-filter existing fires based on new region. Use a functional
       // setState updater to read the latest fires committed so far,
