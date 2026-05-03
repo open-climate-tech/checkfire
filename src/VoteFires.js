@@ -145,11 +145,59 @@ function VoteFires(props) {
   const [numOldFires, setNumOldFires] = useState(0);
   const [showOldFires, setShowOldFires] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [webNotify, setWebNotify] = useState(false);
+  // Parse URL query params once via lazy initializer so locationID, userRegion,
+  // and webNotify can be initialized synchronously without setState in an effect.
+  const [initialUrlParams] = useState(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const initialLocationID = queryParams.get('locID');
+    const latLongStr = queryParams.get('latLong');
+    const notifyStr = queryParams.get('notify');
+    const twoPointOne = '([0-9]{2}(?:\\.[0-9])?)';
+    const negThreePointOne = '(-[0-9]{3}(?:\\.[0-9])?)';
+    const regexLatLong = RegExp(
+      '^' +
+        twoPointOne +
+        ',' +
+        twoPointOne +
+        ',' +
+        negThreePointOne +
+        ',' +
+        negThreePointOne +
+        '$'
+    );
+    const latLongParsed = regexLatLong.exec(latLongStr);
+    let parsedRegion = null;
+    if (latLongParsed) {
+      parsedRegion = {
+        bottomLat: parseFloat(latLongParsed[1]),
+        topLat: parseFloat(latLongParsed[2]),
+        leftLong: parseFloat(latLongParsed[3]),
+        rightLong: parseFloat(latLongParsed[4]),
+      };
+      if (
+        parsedRegion.topLat > 90 ||
+        parsedRegion.bottomLat > 90 ||
+        parsedRegion.topLat < parsedRegion.bottomLat + 0.3 ||
+        parsedRegion.leftLong < -180 ||
+        parsedRegion.rightLong < -180 ||
+        parsedRegion.rightLong < parsedRegion.leftLong + 0.3
+      ) {
+        parsedRegion = null;
+      }
+    }
+    let webNotifyQP = false;
+    if (notifyStr && (notifyStr === 'true' || notifyStr === 'false')) {
+      webNotifyQP = notifyStr === 'true';
+    }
+    return { initialLocationID, parsedRegion, latLongStr, notifyStr, webNotifyQP };
+  });
+  const [webNotify, setWebNotify] = useState(
+    initialUrlParams.webNotifyQP || Boolean(initialUrlParams.initialLocationID)
+  );
   const [notifyTitle, setNotifyTitle] = useState('');
   const [notifyOptions, setNotifyOptions] = useState('');
-  const [locationID, setLocationID] = useState(null);
-  const [userRegion, setUserRegion] = useState(null);
+  const [locationID, setLocationID] = useState(initialUrlParams.initialLocationID);
+  const [userRegion, setUserRegion] = useState(initialUrlParams.parsedRegion);
   const [showProto, setShowProto] = useState(false);
 
   // Refs for values consumed inside SSE handlers (to avoid stale closures
@@ -333,10 +381,6 @@ function VoteFires(props) {
     if (notifyStr && (notifyStr === 'true' || notifyStr === 'false')) {
       webNotifyQP = notifyStr === 'true';
     }
-    setLocationID(initialLocationID);
-    setUserRegion(parsedRegion);
-    setWebNotify(webNotifyQP || Boolean(initialLocationID));
-
     // Setup SSE connection
     const sseConfig = {};
     if (process.env.NODE_ENV === 'development') {

@@ -55,19 +55,21 @@ function LabelImage(props) {
 
   // Refs to current state for use inside keydown handler (registered once)
   const stateRef = useRef({});
-  stateRef.current = {
-    startX,
-    minX,
-    minY,
-    width,
-    height,
-    cameraID,
-    dateTimeVal,
-    imageUrl,
-    imageName,
-    notes,
-    currentRegion,
-  };
+  useEffect(() => {
+    stateRef.current = {
+      startX,
+      minX,
+      minY,
+      width,
+      height,
+      cameraID,
+      dateTimeVal,
+      imageUrl,
+      imageName,
+      notes,
+      currentRegion,
+    };
+  });
 
   /**
    * Display the bounding box region on image
@@ -282,17 +284,14 @@ function LabelImage(props) {
   // Install keyboard shortcuts on mount; load camera list
   useEffect(() => {
     const keyDown = (e) => {
-      // Skip arrow/'s' shortcuts when the user is typing inside the camera
-      // picker, date-time picker, or notes input. Use .contains() on the
-      // wrapper divs so any focused child element (including inner buttons
-      // or divs inside react-select / react-datetime-picker) is detected.
+      // Skip arrow/'s' shortcuts when the user is typing inside an input,
+      // textarea, or contenteditable element (covers the camera picker search
+      // field, date-time picker inputs, and the notes input). Using closest()
+      // handles nested focus inside custom components without needing wrapper
+      // refs, and avoids suppressing shortcuts when non-text controls (e.g.
+      // the "Fetch image" button) are focused via keyboard navigation.
       const ae = document.activeElement;
-      if (
-        ae &&
-        (['controlsWrapper', 'notesWrapper'].some(
-          (key) => eltRefs.current[key]?.contains(ae)
-        ))
-      ) {
+      if (ae && ae.closest('input, textarea, select, [contenteditable]')) {
         return;
       }
       const keyCodeToOffset = {
@@ -341,7 +340,7 @@ function LabelImage(props) {
       <h1>Label images</h1>
       {props.validCookie ? (
         <div>
-          <div className="" ref={(e) => saveRef('controlsWrapper', e)}>
+          <div className="">
             <Select
               ref={(e) => saveRef('cameraPicker', e)}
               className="w3-col s4 w3-margin-left"
@@ -407,7 +406,7 @@ function LabelImage(props) {
                   ></div>
                 )}
               </div>
-              <div className="w3-padding" ref={(e) => saveRef('notesWrapper', e)}>
+              <div className="w3-padding">
                 <label>
                   Notes (optional - please enter 'test' when testing):
                   <input

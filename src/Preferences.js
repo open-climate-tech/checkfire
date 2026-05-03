@@ -113,18 +113,20 @@ function Preferences(props) {
 
   // Snapshot of state for use inside callbacks/effects to avoid stale closures
   const stateRef = useRef({});
-  stateRef.current = {
-    mapIndex,
-    webNotify,
-    startX,
-    startY,
-    minX,
-    minY,
-    width,
-    height,
-    currentRegion,
-    savedRegion,
-  };
+  useEffect(() => {
+    stateRef.current = {
+      mapIndex,
+      webNotify,
+      startX,
+      startY,
+      minX,
+      minY,
+      width,
+      height,
+      currentRegion,
+      savedRegion,
+    };
+  });
 
   /**
    * Display the given geographical region on the map
