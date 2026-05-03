@@ -54,7 +54,7 @@ function LabelImage(props) {
   });
 
   // Refs to current state for use inside keydown handler (registered once)
-  const stateRef = useRef({});
+  const stateRef = useRef<Record<string, any>>({});
   useEffect(() => {
     stateRef.current = {
       startX,
@@ -178,7 +178,7 @@ function LabelImage(props) {
     if (s.minX) {
       const imgWidth = g.right - g.left;
       const imgHeight = g.bottom - g.top;
-      const region = {
+      const region: { left: number; top: number; right?: number; bottom?: number } = {
         left: Math.round(((s.minX - g.left) / imgWidth) * g.naturalWidth),
         top: Math.round(((s.minY - g.top) / imgHeight) * g.naturalHeight),
       };
@@ -342,14 +342,12 @@ function LabelImage(props) {
         <div>
           <div className="">
             <Select
-              ref={(e) => saveRef('cameraPicker', e)}
               className="w3-col s4 w3-margin-left"
-              value={cameraID}
+              values={cameraID || []}
               onChange={(v) => changeCameraID(v)}
               options={cameraOptions}
             />
             <DateTimePicker
-              ref={(e) => saveRef('dateTimePicker', e)}
               className="w3-col s4 w3-margin-left"
               onChange={(v) => changeDateTime(v)}
               value={dateTimeVal}
