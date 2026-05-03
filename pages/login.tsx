@@ -33,7 +33,13 @@ export default function Login(props) {
   const [errMessage, setErrMessage] = useState('');
 
   const router = useRouter();
-  const fwdPath = (router.query.fwdPath as string) || '/';
+  const fwdPathQuery = router.query.fwdPath;
+  const fwdPath =
+    typeof fwdPathQuery === 'string'
+      ? fwdPathQuery
+      : Array.isArray(fwdPathQuery)
+      ? fwdPathQuery[0] || '/'
+      : '/';
   console.log('Login fwdPath', fwdPath);
 
   async function loginPassword(event) {

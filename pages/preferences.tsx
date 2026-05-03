@@ -40,8 +40,6 @@ const maps = [
     rightLong: -115.83,
     pixelWidth: 1320,
     pixelHeight: 1150,
-    longWidth: -115.83 - (-122.08),
-    latHeight: 36.85 - 32.39,
   },
   {
     name: cams1110,
@@ -51,8 +49,6 @@ const maps = [
     rightLong: -115.8,
     pixelWidth: 1110,
     pixelHeight: 960,
-    longWidth: -115.8 - (-122.11),
-    latHeight: 36.86 - 32.38,
   },
   {
     name: cams930,
@@ -62,8 +58,6 @@ const maps = [
     rightLong: -115.8,
     pixelWidth: 930,
     pixelHeight: 810,
-    longWidth: -115.8 - (-122.15),
-    latHeight: 36.88 - 32.35,
   },
   {
     name: cams780,
@@ -73,10 +67,12 @@ const maps = [
     rightLong: -115.8,
     pixelWidth: 780,
     pixelHeight: 680,
-    longWidth: -115.8 - (-122.18),
-    latHeight: 36.9 - 32.33,
   },
-];
+] as Array<{
+  name: string; topLat: number; leftLong: number; bottomLat: number;
+  rightLong: number; pixelWidth: number; pixelHeight: number;
+  longWidth?: number; latHeight?: number;
+}>;
 maps.forEach((mapInfo) => {
   mapInfo.longWidth = mapInfo.rightLong - mapInfo.leftLong;
   mapInfo.latHeight = mapInfo.topLat - mapInfo.bottomLat;
