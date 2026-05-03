@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 
 export default function Home() {
   const [navOpen, setNavOpen] = useState(false);
@@ -18,8 +19,10 @@ export default function Home() {
             href="#"
             onClick={(e) => { e.preventDefault(); setNavOpen(!navOpen); }}
             title="Toggle Navigation Menu"
+            aria-label="Toggle navigation menu"
+            aria-expanded={navOpen}
           >
-            <i className="fa fa-bars"></i>
+            <i className="fa fa-bars" aria-hidden="true"></i>
           </a>
           <div className="w3-col s3">
             <a href="#home" className="w3-button w3-block">Home</a>
@@ -91,10 +94,10 @@ export default function Home() {
             displayed on the website in real-time for people to check and confirm whether they are
             real fires. For real fires, people may wish to inform local fire department. This system
             has successfully detected some fires before authorities were aware of them, but the
-            system also generates some false notificatons. Therefore, it is useful to have people
-            review the notificatons. Doing the same task without such a system would require a large
+            system also generates some false notifications. Therefore, it is useful to have people
+            review the notifications. Doing the same task without such a system would require a large
             number of people continuously staring at real-time images coming from the same cameras
-            and maintain high vigilence throughout. That is the main impediment why these cameras are
+            and maintain high vigilance throughout. That is the main impediment why these cameras are
             currently not used for detection, but only for verifying reported fires and for
             monitoring known fires.
           </p>
@@ -132,7 +135,7 @@ export default function Home() {
 
           <h5 className="w3-padding-16">Looks like smoke</h5>
           <p>
-            We trained a machine learning model for image object recognitionon (Inception V3) to
+            We trained a machine learning model for image object recognition (Inception V3) to
             detect if the image contains something that looks like smoke. Training requires many
             thousands of unique images containing real smoke as well as roughly equal number of
             unique images that do not contain smoke. The non-smoke images are carefully selected to
@@ -174,7 +177,7 @@ export default function Home() {
 
           <h5 className="w3-padding-16">Moves like smoke</h5>
           <p>
-            This machine learning based filter uses the same image object recognitionon model
+            This machine learning based filter uses the same image object recognition model
             (Inception V3) mentioned above, but this time the model was trained on specially prepared
             composite images that highlight changes between successive images (usually one minute
             apart) from the same view. Similar to the earlier model, this one was also trained on
@@ -219,16 +222,16 @@ export default function Home() {
           <p>
             The real-time potential wildfire notifications from the detection service are displayed
             on{' '}
-            <a href="/wildfirecheck">this live updating site</a>. The display for each potential
+            <Link href="/wildfirecheck">this live updating site</Link>. The display for each potential
             wildfire event is optimized so users can quickly determine if the event is real fire or a
             false positive. Each event includes a time-lapse video of previous few minutes of the
             same area as well as a map with a highligheted triangle indicating the view from the
             associated video.
           </p>
           <p>
-            The site allows users to vote on each notificaton to indicate whether it was a real fire
+            The site allows users to vote on each notification to indicate whether it was a real fire
             or not. The events where the majority of the users confirm a real fire are displayed on a
-            separate <a href="/confirmed">Confirmed Fires</a> tab. The votes are also helpful for
+            separate <Link href="/confirmed">Confirmed Fires</Link> tab. The votes are also helpful for
             improving the system by retraining the machine learning system with new images. Users can
             also specify a desired geographical region to limit the notifications to those that may
             overlap the specified region.
@@ -238,9 +241,9 @@ export default function Home() {
             informing the wildfire dispatch center to take appropriate action. Please note that this
             site does not alert the authorities directly.
           </p>
-          <a href="/wildfirecheck" className="w3-large w3-button w3-round-large w3-black">
+          <Link href="/wildfirecheck" className="w3-large w3-button w3-round-large w3-black">
             Check potential wildfires
-          </a>
+          </Link>
 
           <h3 className="w3-padding-16">Publications</h3>
           <ul>
@@ -266,7 +269,7 @@ export default function Home() {
 
           <h3 className="w3-padding-16">Source code</h3>
           <p>
-            This is an open source project with the code available on Github. The backend code for
+            This is an open source project with the code available on GitHub. The backend code for
             detecting fires is mostly written in Python and available{' '}
             <a href="https://github.com/open-climate-tech/firecam">here</a>. The frontend code for
             displaying and cheking potential wildfires is mostly written in Javascript and available{' '}
