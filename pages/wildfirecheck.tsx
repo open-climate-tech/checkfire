@@ -347,10 +347,14 @@ function VoteFires(props) {
     es.addEventListener('newPotentialFire', newPotentialFire);
     es.addEventListener('closedConnection', stopUpdates);
 
-    setLocationID(initialLocationID);
+    // Update ref immediately so SSE handlers see the correct locationID
+    // before the async getUserPreferences() resolves.
+    locationIDRef.current = initialLocationID;
 
     // Apply user preferences (may override URL params)
     getUserPreferences().then((preferences) => {
+      // Sync state inside async callback to avoid synchronous setState-in-effect
+      setLocationID(initialLocationID);
       let regionToUse = parsedRegion;
       if (!parsedRegion || !latLongStr) {
         regionToUse = preferences.region;

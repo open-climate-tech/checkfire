@@ -88,9 +88,7 @@ function generateStatelessUrl(region, webNotify) {
   const notifyStr = 'notify=' + webNotify.toString();
   const paramStr = [latLongStr, notifyStr].join('&');
   const pathStr = '/wildfirecheck/?' + paramStr;
-  // Guard against server-side rendering where window is not available
-  const url = (typeof window !== 'undefined' ? window.location.origin : '') + pathStr;
-  return url;
+  return pathStr;
 }
 
 function Preferences(props) {
