@@ -82,9 +82,9 @@ export function Legalese(props) {
   return (
     <div className="Disclaimer">
       <p>
-        <a href="/terms.html">Terms and Conditions</a>
+        <a href="/legal/terms.html">Terms and Conditions</a>
         &nbsp;|&nbsp;
-        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/legal/privacy.html">Privacy Policy</a>
       </p>
     </div>
   );

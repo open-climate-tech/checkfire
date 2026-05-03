@@ -94,7 +94,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <div className="App">
-      <FirePagesHeader validCookie={validCookie} />
+      {router.pathname !== '/' && <FirePagesHeader validCookie={validCookie} />}
       <Component {...pageProps} validCookie={validCookie} />
       <Legalese />
     </div>
