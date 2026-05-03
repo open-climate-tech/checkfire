@@ -50,7 +50,6 @@
     "winston": "^3.8.2"
   },
   "scripts": {
-    "postinstall": "npm rebuild sqlite3 --build-from-source",
     "start": "node dist/server-main.js",
     "dev": "NODE_ENV=development ts-node --project tsconfig.server.json server-main.ts",
     "build": "tsc -p tsconfig.server.json && next build --webpack",
