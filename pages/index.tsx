@@ -39,7 +39,7 @@ export default function Home() {
         </div>
 
         {/* Navbar on small screens */}
-        <div className={`w3-bar-block w3-white w3-hide-large w3-hide-medium w3-large${navOpen ? ' w3-show' : ''}`}>
+        <div className={`w3-bar-block w3-white w3-hide-large w3-hide-medium w3-large${navOpen ? ' w3-show' : ' w3-hide'}`}>
           <a href="#projects" className="w3-bar-item w3-button w3-padding-large">Projects</a>
           <a href="#about" className="w3-bar-item w3-button w3-padding-large">About</a>
           <a href="#contact" className="w3-bar-item w3-button w3-padding-large">Contact</a>
@@ -55,7 +55,7 @@ export default function Home() {
         <img
           className="w3-image oct-head-margin"
           src="https://storage.googleapis.com/oct-fire-public/website/oct-bk14x5.jpg"
-          alt="Nature"
+          alt="Open Climate Tech — wildfire monitoring cameras in California"
         />
         <div className="w3-display-middle w3-margin-top">
           <h1 className="w3-xxlarge w3-text-white">Open Climate Tech</h1>
@@ -126,7 +126,7 @@ export default function Home() {
             filters and multiple traditional non-machine-learning based algorithms. The three machine
             learning filters check for whether an image contains something that looks like smoke,
             moves like smoke, and whether the current weather conditions are likely to support
-            wildifires. Each of these three are briefly described below. Real-time images are
+            wildfires. Each of these three are briefly described below. Real-time images are
             collected from the cameras and checked by the filters. Images that fail any particular
             filter are discarded immediately, while images that are deemed by the filter to be likely
             fire are then checked by the next filter. Only images deemed to likely contain fire by
@@ -139,7 +139,7 @@ export default function Home() {
             detect if the image contains something that looks like smoke. Training requires many
             thousands of unique images containing real smoke as well as roughly equal number of
             unique images that do not contain smoke. The non-smoke images are carefully selected to
-            contain things that visually appear similar to smoke so the machine-learing model learns
+            contain things that visually appear similar to smoke so the machine-learning model learns
             to differentiate between them. We acquired images of smoke from early phases of
             historical wildfires from these same cameras and cropped them around the fire.
           </p>
@@ -214,7 +214,7 @@ export default function Home() {
           <p>
             This machine learning based filter uses the weather data (e.g., temperature, humidity,
             wind, visibility, etc...) at both the camera location as well as the location of the
-            potentail fire. It has been trained with thousands of datapoints of both real fires and
+            potential fire. It has been trained with thousands of datapoints of both real fires and
             situations when false positives were not caught by earlier filters.
           </p>
 
@@ -225,7 +225,7 @@ export default function Home() {
             <Link href="/wildfirecheck">this live updating site</Link>. The display for each potential
             wildfire event is optimized so users can quickly determine if the event is real fire or a
             false positive. Each event includes a time-lapse video of previous few minutes of the
-            same area as well as a map with a highligheted triangle indicating the view from the
+            same area as well as a map with a highlighted triangle indicating the view from the
             associated video.
           </p>
           <p>
@@ -272,7 +272,7 @@ export default function Home() {
             This is an open source project with the code available on GitHub. The backend code for
             detecting fires is mostly written in Python and available{' '}
             <a href="https://github.com/open-climate-tech/firecam">here</a>. The frontend code for
-            displaying and cheking potential wildfires is mostly written in Javascript and available{' '}
+            displaying and checking potential wildfires is mostly written in JavaScript and available{' '}
             <a href="https://github.com/open-climate-tech/checkfire">here</a>.
           </p>
         </div>
