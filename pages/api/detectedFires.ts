@@ -19,8 +19,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fireEvents = await Promise.all(
       dbRes.map(async (dbEntry: Record<string, any>) => {
         const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
-        fireEvent.avgVote = dbEntry.avgrf;
-        fireEvent.numVotes = dbEntry.ct;
+        if (Object.prototype.hasOwnProperty.call(dbEntry, 'avgrf')) {
+          fireEvent.avgVote = dbEntry.avgrf;
+        }
+        if (Object.prototype.hasOwnProperty.call(dbEntry, 'ct')) {
+          fireEvent.numVotes = dbEntry.ct;
+        }
         await oct_utils.augmentCameraInfo(db, config, fireEvent);
         return await oct_utils.augmentVotes(db, fireEvent, decoded.email);
       })

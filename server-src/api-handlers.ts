@@ -64,13 +64,15 @@ export async function apiWrapper(
   cb: (decoded: OCT_AuthDecoded) => Promise<void> | void
 ) {
   logger.info(apiDesc);
+  let decoded: OCT_AuthDecoded;
   try {
-    const decoded = await oct_utils.checkAuth(req, config);
-    await cb(decoded);
+    decoded = await oct_utils.checkAuth(req, config);
   } catch (err) {
-    logger.error('%s failure: %s', apiDesc, err);
+    logger.error('%s auth failure: %s', apiDesc, err);
     res.status(401).send('Unauthorized');
+    return;
   }
+  await cb(decoded);
 }
 
 

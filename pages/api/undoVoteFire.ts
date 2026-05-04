@@ -13,6 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await apiWrapper(req as any, res as any, config, 'POST undoVoteFire', async (decoded) => {
     assert(req.body.cameraID && req.body.timestamp);
     assert(typeof req.body.cameraID === 'string');
+    assert(/^[0-9a-zA-Z_-]+$/.test(req.body.cameraID));
     assert(typeof req.body.timestamp === 'number');
     assert(req.body.timestamp > 1510001000);
     assert(req.body.timestamp < new Date().valueOf() / 1000);

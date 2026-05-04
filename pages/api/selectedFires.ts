@@ -10,6 +10,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   logger.info('GET selectedFires');
   let fireName = 'comet';
   if (req.query.fireName && typeof req.query.fireName === 'string') {
+    if (!/^[a-zA-Z0-9 _-]+$/.test(req.query.fireName)) {
+      return res.status(400).send('Bad request');
+    }
     fireName = req.query.fireName;
   }
   const sqlStr = `select * from
