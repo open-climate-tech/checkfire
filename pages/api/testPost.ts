@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb, getConfig } from '../../server-src/services';
-import { testPostHandler } from '../../server-src/api-handlers';
+import * as oct_utils from '../../server-src/oct_utils';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const logger = oct_utils.getLogger('testPost');
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
-  const db = await getDb();
-  const config = await getConfig();
-  return testPostHandler(db, config, req as any, res as any);
+  logger.info('POST testPost');
+  res.status(200).send('success');
 }

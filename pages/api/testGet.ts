@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb, getConfig } from '../../server-src/services';
-import { testGetHandler } from '../../server-src/api-handlers';
+import * as oct_utils from '../../server-src/oct_utils';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const db = await getDb();
-  const config = await getConfig();
-  return testGetHandler(db, config, req as any, res as any);
+const logger = oct_utils.getLogger('testGet');
+
+export default function handler(_req: NextApiRequest, res: NextApiResponse) {
+  logger.info('GET testGet');
+  res.status(200).send('Hello, m24.1610 world!');
 }
