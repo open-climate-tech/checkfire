@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getDb, getConfig } from '../../server-src/services';
-import { logoutHandler } from '../../server-src/api-handlers';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const db = await getDb();
-  const config = await getConfig();
-  return logoutHandler(db, config, req as any, res as any);
+export default function handler(_req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader(
+    'Set-Cookie',
+    'cf_token=; Path=/; HttpOnly; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  );
+  res.status(200).send('success');
 }
