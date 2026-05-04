@@ -35,14 +35,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(400).send('Bad request');
       return;
     }
+    if (typeof req.query.dateTime !== 'string') {
+      res.status(400).send('Bad request');
+      return;
+    }
+    if (typeof req.query.direction !== 'string' ||
+        !['positive', 'negative', ''].includes(req.query.direction)) {
+      res.status(400).send('Bad request');
+      return;
+    }
     assert(cameraHpwrenRegex.test(req.query.cameraID));
     const dateTime = DateTime.fromISO(req.query.dateTime).setZone(config.timeZone);
     assert(dateTime.isValid);
-    assert(
-      req.query.direction === 'positive' ||
-        req.query.direction === 'negative' ||
-        req.query.direction === ''
-    );
     const yearStr = dateTime.year.toString();
     const monthStr = dateTime.month.toString().padStart(2, '0');
     const dateStr = dateTime.day.toString().padStart(2, '0');
