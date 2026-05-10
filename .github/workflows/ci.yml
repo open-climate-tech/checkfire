@@ -29,4 +29,6 @@ jobs:
         run: npm run lint
 
       - name: Test
+        env:
+          OCT_FIRE_SETTINGS: server-src/test/test-settings.json
         run: npm test
