@@ -1,0 +1,37 @@
+# Git
+.git
+.gitignore
+
+# Build outputs (rebuilt inside Docker)
+/dist
+/.next
+/out
+/build
+*.tsbuildinfo
+
+# Dependencies (reinstalled inside Docker)
+node_modules
+
+# Dev / test artefacts
+.nyc_output
+coverage
+cypress/videos
+cypress/screenshots
+
+# Env / secrets (never bake into image)
+.env
+.env.local
+.env*.local
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode
+
+# Docs / CI config that don't belong in the image
+README.md
+LICENSE
+*.md
+
+# App Engine config (not needed in Cloud Run image)
+app.yaml
