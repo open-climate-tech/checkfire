@@ -1,0 +1,92 @@
+# Cloud Run service definition for checkfire
+#
+# Build & deploy:
+#   export PROJECT_ID=<your-gcp-project-id>
+#   export REGION=us-west1          # change to your preferred region
+#   export IMAGE=gcr.io/$PROJECT_ID/checkfire
+#
+#   gcloud auth configure-docker gcr.io   # one-time setup per machine
+#   docker build -t $IMAGE .
+#   docker push $IMAGE
+#
+#   # Substitute the image URL, then deploy:
+#   sed "s|IMAGE_URL|$IMAGE|g" cloudrun.yaml | \
+#     gcloud run services replace - --region=$REGION
+#
+# Or use the one-liner without the YAML:
+#   gcloud run deploy checkfire \
+#     --image=$IMAGE \
+#     --region=$REGION \
+#     --platform=managed \
+#     --service-account=checkfire-cloudrun@${PROJECT_ID}.iam.gserviceaccount.com \
+#     --min-instances=1 \
+#     --max-instances=2 \
+#     --timeout=3000 \
+#     --cpu=1 \
+#     --memory=1Gi \
+#     --port=8080 \
+#     --set-env-vars="OCT_FIRE_SETTINGS=gs://oct-fire-configs/config-gcp.json" \
+#     --allow-unauthenticated
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: checkfire
+  # annotations:
+  #   run.googleapis.com/launch-stage: BETA  # uncomment if using beta features
+spec:
+  template:
+    metadata:
+      annotations:
+        # Always keep at least 1 instance warm (eliminates cold starts, required
+        # for long-lived SSE connections and the Pub/Sub pull subscription).
+        autoscaling.knative.dev/minScale: "1"
+        autoscaling.knative.dev/maxScale: "2"
+
+        # Use second-generation execution environment (better networking perf,
+        # and supports streaming / SSE without buffering issues).
+        run.googleapis.com/execution-environment: gen2
+
+        # Direct VPC Egress: routes private-range traffic (10.x, 172.16.x, 192.168.x)
+        # through the default VPC so Cloud Run can reach the Cloud SQL private IP.
+        # Matches the 'network: default' in the old app.yaml.
+        run.googleapis.com/network-interfaces: '[{"network":"default","subnetwork":"default"}]'
+        run.googleapis.com/vpc-egress: private-ranges-only
+
+    spec:
+      serviceAccountName: checkfire-cloudrun@oct-p1.iam.gserviceaccount.com
+      # SSE connections are held for up to 50 minutes (matching the
+      # request.setTimeout(50 * 60 * 1000) in sse.ts). Cloud Run max is 3600s.
+      timeoutSeconds: 3000
+
+      containers:
+        - image: IMAGE_URL   # replaced by sed / gcloud during deploy
+          ports:
+            - name: http1
+              containerPort: 8080   # Cloud Run auto-sets PORT=8080
+
+          env:
+            - name: OCT_FIRE_SETTINGS
+              value: gs://oct-fire-configs/config-gcp.json
+            # NODE_ENV is set to "production" in the Dockerfile.
+
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          # Liveness: Cloud Run restarts the container if this fails.
+          # The root path returns a Next.js page (200), so it works as a probe.
+          livenessProbe:
+            httpGet:
+              path: /
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+
+          startupProbe:
+            httpGet:
+              path: /
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 18   # allow up to 210s (30 + 18×10) for cold start

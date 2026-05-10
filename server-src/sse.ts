@@ -141,7 +141,21 @@ function updateFromDetect(db: DbMgr, config: OCT_Config, messageData: string) {
 export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
   app.get('/fireEvents', async (request: Request, response: Response) => {
     request.setTimeout(50 * 60 * 1000); // extend default timeout of 2 minutes to 50 mins (1 hour is max)
+
+    // Heartbeat interval: send an SSE comment every 30s.
+    // This serves two purposes:
+    //   1. Forces Cloud Run's proxy to start streaming the response body immediately
+    //      (without this, the proxy buffers until it sees data, keeping the
+    //      browser in "Pending" state).
+    //   2. Keeps the TCP connection alive through idle-timeout firewalls/proxies.
+    const heartbeat = setInterval(() => {
+      if (!response.writableEnded) {
+        response.write(': heartbeat\n\n');
+      }
+    }, 30000);
+
     request.on('close', () => {
+      clearInterval(heartbeat);
       if (!response.writableEnded) {
         response.end();
         logger.info('Stopped sending events.');
@@ -158,7 +172,9 @@ export function initSSE(config: OCT_Config, app: Application, db: DbMgr) {
     response.setHeader('Cache-Control', 'no-cache');
     response.setHeader('X-Accel-Buffering', 'no');
     response.writeHead(200);
-    response.flushHeaders(); // flush the headers to establish SSE with client
+    // Write an SSE comment immediately to flush the response body through
+    // Cloud Run's proxy before any async work begins.
+    response.write(': connected\n\n');
 
     const connectionInfo: ConnectionInfo = {
       response: response,
