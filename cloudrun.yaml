@@ -1,9 +1,11 @@
-# Cloud Run service definition for checkfire
+# Cloud Run service definition for checkfire (project: oct-p1)
+#
+# This file is oct-p1-specific. To use in another project, replace all
+# occurrences of 'oct-p1' with the target project ID.
 #
 # Build & deploy:
-#   export PROJECT_ID=<your-gcp-project-id>
 #   export REGION=us-west1          # change to your preferred region
-#   export IMAGE=gcr.io/$PROJECT_ID/checkfire
+#   export IMAGE=gcr.io/oct-p1/checkfire
 #
 #   gcloud auth configure-docker gcr.io   # one-time setup per machine
 #   docker build -t $IMAGE .
@@ -18,7 +20,7 @@
 #     --image=$IMAGE \
 #     --region=$REGION \
 #     --platform=managed \
-#     --service-account=checkfire-cloudrun@${PROJECT_ID}.iam.gserviceaccount.com \
+#     --service-account=checkfire-cloudrun@oct-p1.iam.gserviceaccount.com \
 #     --min-instances=1 \
 #     --max-instances=2 \
 #     --timeout=3000 \
