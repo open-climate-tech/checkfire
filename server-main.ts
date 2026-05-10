@@ -34,85 +34,107 @@ const projRootDir = process.cwd();
 const nextApp = next({ dev, dir: projRootDir });
 const nextHandler = nextApp.getRequestHandler();
 
+// Create the Express app synchronously so it can be exported for tests before
+// async initialization completes. Tests attach an 'app_ready' listener and wait
+// for it to fire before running requests.
+const app = express();
+
+// Sticky 'app_ready' event: if a listener is registered after the event has
+// already fired (race condition), invoke it immediately on the next tick.
+// We operate on the underlying EventEmitter to avoid Express's narrow type for
+// app.on(), which only accepts 'mount'.
+import { EventEmitter } from 'events';
+const _emitter: EventEmitter = app as unknown as EventEmitter;
+const _realEmitterOn = _emitter.on.bind(_emitter);
+let _appReady = false;
+_emitter.on = function (event: string, listener: (...args: any[]) => void) {
+  if (event === 'app_ready' && _appReady) {
+    process.nextTick(listener);
+    return _emitter;
+  }
+  return _realEmitterOn(event, listener);
+};
+
+// ---------------------------------------------------------------------------
+// Logging + dev CORS
+// ---------------------------------------------------------------------------
+app.use(function (req: Request, res: Response, next: NextFunction) {
+  const headers = Object.assign({}, req.headers);
+  headers.url = req.originalUrl || req.url;
+  logger.info('request Headers: %s', JSON.stringify(headers));
+  if (process.env.NODE_ENV === 'development') {
+    if (req.header('origin')) {
+      res.setHeader('Access-Control-Allow-Origin', req.header('origin') || '');
+    }
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
+  }
+  next();
+});
+
+// ---------------------------------------------------------------------------
+// Security headers (CSP relaxed in dev for Next.js HMR)
+// ---------------------------------------------------------------------------
+app.use(helmet());
+const trusted = ["'self'"];
+if (process.env.NODE_ENV === 'development') {
+  trusted.push('http://localhost:*');
+}
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: trusted,
+      scriptSrc: [
+        "'unsafe-inline'",
+        "'unsafe-eval'", // required by Next.js dev mode
+        'https://www.googletagmanager.com',
+        '*.googletagmanager.com',
+        'unpkg.com',
+      ].concat(trusted),
+      styleSrc: [
+        "'unsafe-inline'",
+        '*.w3schools.com',
+        'cdnjs.cloudflare.com',
+        'unpkg.com',
+      ].concat(trusted),
+      imgSrc: [
+        'data:',
+        'blob:',
+        'www.googletagmanager.com',
+        'storage.googleapis.com',
+        '*.openstreetmap.org',
+      ].concat(trusted),
+      mediaSrc: ['storage.googleapis.com'].concat(trusted),
+      connectSrc: ['www.google-analytics.com'].concat(trusted),
+    },
+  })
+);
+app.use(helmet.crossOriginEmbedderPolicy({ policy: 'credentialless' }));
+
+// ---------------------------------------------------------------------------
+// Body / cookies / https redirect
+// ---------------------------------------------------------------------------
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.use(function (req: Request, res: Response, next: NextFunction) {
+  if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === 'http') {
+    return res.redirect(['https://', req.get('Host'), req.url].join(''));
+  }
+  next();
+});
+
+// ---------------------------------------------------------------------------
+// Static webroot pages (terms.html, privacy.html, disclaimer.html, ...)
+// ---------------------------------------------------------------------------
+app.use('/legal', express.static(path.join(projRootDir, 'webroot')));
+
+// ---------------------------------------------------------------------------
+// Async initialization: Next.js prepare, services, then signal ready.
+// ---------------------------------------------------------------------------
 async function main() {
   await nextApp.prepare();
-
-  const app = express();
-
-  // ---------------------------------------------------------------------------
-  // Logging + dev CORS
-  // ---------------------------------------------------------------------------
-  app.use(function (req: Request, res: Response, next: NextFunction) {
-    const headers = Object.assign({}, req.headers);
-    headers.url = req.originalUrl || req.url;
-    logger.info('request Headers: %s', JSON.stringify(headers));
-    if (process.env.NODE_ENV === 'development') {
-      if (req.header('origin')) {
-        res.setHeader('Access-Control-Allow-Origin', req.header('origin') || '');
-      }
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Headers', 'origin, content-type, accept');
-    }
-    next();
-  });
-
-  // ---------------------------------------------------------------------------
-  // Security headers (CSP relaxed in dev for Next.js HMR)
-  // ---------------------------------------------------------------------------
-  app.use(helmet());
-  const trusted = ["'self'"];
-  if (process.env.NODE_ENV === 'development') {
-    trusted.push('http://localhost:*');
-  }
-  app.use(
-    helmet.contentSecurityPolicy({
-      directives: {
-        defaultSrc: trusted,
-        scriptSrc: [
-          "'unsafe-inline'",
-          "'unsafe-eval'", // required by Next.js dev mode
-          'https://www.googletagmanager.com',
-          '*.googletagmanager.com',
-          'unpkg.com',
-        ].concat(trusted),
-        styleSrc: [
-          "'unsafe-inline'",
-          '*.w3schools.com',
-          'cdnjs.cloudflare.com',
-          'unpkg.com',
-        ].concat(trusted),
-        imgSrc: [
-          'data:',
-          'blob:',
-          'www.googletagmanager.com',
-          'storage.googleapis.com',
-          '*.openstreetmap.org',
-        ].concat(trusted),
-        mediaSrc: ['storage.googleapis.com'].concat(trusted),
-        connectSrc: ['www.google-analytics.com'].concat(trusted),
-      },
-    })
-  );
-  app.use(helmet.crossOriginEmbedderPolicy({ policy: 'credentialless' }));
-
-  // ---------------------------------------------------------------------------
-  // Body / cookies / https redirect
-  // ---------------------------------------------------------------------------
-  app.use(cookieParser());
-  app.use(bodyParser.urlencoded({ extended: false }));
-  app.use(bodyParser.json());
-
-  app.use(function (req: Request, res: Response, next: NextFunction) {
-    if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] === 'http') {
-      return res.redirect(['https://', req.get('Host'), req.url].join(''));
-    }
-    next();
-  });
-
-  // ---------------------------------------------------------------------------
-  // Static webroot pages (terms.html, privacy.html, disclaimer.html, ...)
-  // ---------------------------------------------------------------------------
-  app.use('/legal', express.static(path.join(projRootDir, 'webroot')));
 
   // ---------------------------------------------------------------------------
   // Initialize services: db, passport, pubsub, sse + Express-only API routes.
@@ -126,6 +148,10 @@ async function main() {
     return nextHandler(req, res);
   });
 
+  // Signal to tests (and any other listeners) that the app is fully ready.
+  _appReady = true;
+  app.emit('app_ready');
+
   app.listen(PORT, () => {
     logger.info(`WildfireCheck listening on port ${PORT}`);
     logger.info('Press Ctrl+C to quit.');
@@ -136,3 +162,5 @@ main().catch((err) => {
   logger.error('Fatal startup error: %s', err && err.stack ? err.stack : err);
   process.exit(1);
 });
+
+module.exports = app;

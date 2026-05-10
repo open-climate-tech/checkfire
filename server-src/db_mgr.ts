@@ -19,7 +19,7 @@
 // SQL DB accessor that interfaces to either SQLite or Postgres
 
 import util from 'util';
-import { Database as SQLiteDb, OPEN_READWRITE as SQLite_RW } from 'sqlite3';
+import { Database as SQLiteDb, OPEN_READWRITE as SQLite_RW, OPEN_URI as SQLite_URI, OPEN_CREATE as SQLite_CREATE } from 'sqlite3';
 import { Pool } from 'pg';
 import * as oct_utils from './oct_utils';
 import { OCT_Config } from './oct_types';
@@ -39,13 +39,18 @@ export class DbMgr {
     this.dbType = 'nop'; // missing DB
 
     if (process.env.CI) {
-      // temporary memory DB for testing
-      config.db_file = ':memory:';
+      // Use a named shared-cache in-memory database so that all module contexts
+      // in the same process (Express bundle + Next.js/turbopack bundle) share
+      // the same SQLite instance and the same test tables.
+      config.db_file = 'file:testdb?mode=memory&cache=shared';
     }
     if (config.db_file) {
       // SQLite
       this.dbType = 'sqlite';
-      this.sqlite = new SQLiteDb(config.db_file, SQLite_RW, (err) => {
+      const openFlags = config.db_file.startsWith('file:')
+        ? SQLite_RW | SQLite_CREATE | SQLite_URI
+        : SQLite_RW;
+      this.sqlite = new SQLiteDb(config.db_file, openFlags, (err) => {
         if (err) {
           logger.error(err.message);
         }
