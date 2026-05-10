@@ -6,5 +6,6 @@
   "webOauthClientSecret": "test-google-client-secret",
   "facebookCallbackURL": "http://localhost:3000/oauth2FbCallback",
   "facebookAppID": "test-facebook-app-id",
-  "facebookAppSecret": "test-facebook-app-secret"
+  "facebookAppSecret": "test-facebook-app-secret",
+  "prodTypes": "camera"
 }
