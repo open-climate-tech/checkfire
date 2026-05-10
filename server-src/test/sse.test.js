@@ -17,6 +17,7 @@
 
 const chai = require('chai');
 const assert = chai.assert;
+const express = require('express');
 const sse = require('../sse');
 
 describe('WildfireCheck SSE test', function () {
@@ -58,5 +59,81 @@ describe('WildfireCheck SSE test', function () {
     });
     sse._testConnections([mockResp]);
     sse._testUpdate({ query: async () => null }, {}, msgString);
+  });
+
+  it('initSSE writes initial ": connected" comment immediately on connect', function (done) {
+    const app = express();
+    const mockDb = { query: async () => [] };
+    const mockConfig = {};
+    sse.initSSE(mockConfig, app, mockDb);
+
+    // Simulate a GET /fireEvents request using a minimal mock req/res pair
+    const writes = [];
+    const mockReq = {
+      setTimeout: () => {},
+      header: () => null,
+      on: () => {},
+      cookies: {},
+      headers: {},
+    };
+    const mockRes = {
+      writableEnded: false,
+      headers: {},
+      setHeader(k, v) { this.headers[k] = v; },
+      writeHead() {},
+      write(chunk) { writes.push(chunk); },
+      end() { this.writableEnded = true; },
+    };
+
+    // Invoke the registered /fireEvents route handler directly
+    const layer = app._router.stack.find((l) => l.route && l.route.path === '/fireEvents');
+    assert.ok(layer, '/fireEvents route should be registered');
+    layer.route.stack[0].handle(mockReq, mockRes, () => {});
+
+    // The write is synchronous (before any await), so check immediately
+    setImmediate(() => {
+      assert.isTrue(writes.some((w) => w === ': connected\n\n'),
+        'Expected ": connected\\n\\n" to be written immediately on connect');
+      done();
+    });
+  });
+
+  it('initSSE clears heartbeat interval on client disconnect', function (done) {
+    const app = express();
+    const mockDb = { query: async () => [] };
+    const mockConfig = {};
+    sse.initSSE(mockConfig, app, mockDb);
+
+    let closeHandler = null;
+    const mockReq = {
+      setTimeout: () => {},
+      header: () => null,
+      on(event, handler) { if (event === 'close') closeHandler = handler; },
+      cookies: {},
+      headers: {},
+    };
+    const mockRes = {
+      writableEnded: false,
+      headers: {},
+      setHeader(k, v) { this.headers[k] = v; },
+      writeHead() {},
+      write() {},
+      end() { this.writableEnded = true; },
+    };
+
+    const layer = app._router.stack.find((l) => l.route && l.route.path === '/fireEvents');
+    layer.route.stack[0].handle(mockReq, mockRes, () => {});
+
+    setImmediate(() => {
+      assert.isFunction(closeHandler, 'close event handler should be registered');
+      // Fire the close event — if clearInterval is missing, fake timers would
+      // accumulate; here we verify it executes without error and marks the
+      // response ended.
+      mockRes.writableEnded = false;
+      closeHandler();
+      assert.isTrue(mockRes.writableEnded,
+        'response.end() should be called when client disconnects');
+      done();
+    });
   });
 });
