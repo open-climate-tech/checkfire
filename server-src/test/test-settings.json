@@ -1,0 +1,10 @@
+{
+  "db_file": "",
+  "cookieJwtSecret": "test-secret-for-ci",
+  "webOauthCallbackURL": "http://localhost:3000/oauth2callback",
+  "webOauthClientID": "test-google-client-id",
+  "webOauthClientSecret": "test-google-client-secret",
+  "facebookCallbackURL": "http://localhost:3000/oauth2FbCallback",
+  "facebookAppID": "test-facebook-app-id",
+  "facebookAppSecret": "test-facebook-app-secret"
+}
