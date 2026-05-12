@@ -55,7 +55,7 @@ async function ensureInitialized(): Promise<void> {
   _initPromise = (async () => {
     const cfg = await oct_utils.getConfig();
     _config = cfg;
-    _db = new DbMgr(cfg);
+    _db = new DbMgr(cfg, !!cfg.psqlSocket);
     logger.info('Services singletons initialized');
   })();
   return _initPromise;
