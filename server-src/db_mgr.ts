@@ -56,7 +56,7 @@ export class DbMgr {
         }
         logger.info('Using sqlite %s', config.db_file);
       });
-    } else if (config.psqlHost) {
+    } else if (config.psqlHost || config.psqlSocket) {
       // Postgres
       this.dbType = 'psql';
       // initialize a pool
