@@ -28,6 +28,7 @@
 #     --memory=1Gi \
 #     --port=8080 \
 #     --set-env-vars="OCT_FIRE_SETTINGS=gs://oct-fire-configs/config-gcp.json" \
+#     --add-cloudsql-instances=oct-p1:us-west1:oct-firecam \
 #     --allow-unauthenticated
 
 apiVersion: serving.knative.dev/v1
@@ -49,11 +50,8 @@ spec:
         # and supports streaming / SSE without buffering issues).
         run.googleapis.com/execution-environment: gen2
 
-        # Direct VPC Egress: routes private-range traffic (10.x, 172.16.x, 192.168.x)
-        # through the default VPC so Cloud Run can reach the Cloud SQL private IP.
-        # Matches the 'network: default' in the old app.yaml.
-        run.googleapis.com/network-interfaces: '[{"network":"default","subnetwork":"default"}]'
-        run.googleapis.com/vpc-egress: private-ranges-only
+        # Cloud SQL Auth Proxy sidecar: connects via Unix socket, no VPC needed.
+        run.googleapis.com/cloudsql-instances: oct-p1:us-west1:oct-firecam
 
     spec:
       serviceAccountName: checkfire-cloudrun@oct-p1.iam.gserviceaccount.com
