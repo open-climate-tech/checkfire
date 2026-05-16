@@ -75,41 +75,42 @@ app.use(function (req: Request, res: Response, next: NextFunction) {
 // ---------------------------------------------------------------------------
 // Security headers (CSP relaxed in dev for Next.js HMR)
 // ---------------------------------------------------------------------------
-app.use(helmet());
 const trusted = ["'self'"];
 if (process.env.NODE_ENV === 'development') {
   trusted.push('http://localhost:*');
 }
 app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: trusted,
-      scriptSrc: [
-        "'unsafe-inline'",
-        "'unsafe-eval'", // required by Next.js dev mode
-        'https://www.googletagmanager.com',
-        '*.googletagmanager.com',
-        'unpkg.com',
-      ].concat(trusted),
-      styleSrc: [
-        "'unsafe-inline'",
-        '*.w3schools.com',
-        'cdnjs.cloudflare.com',
-        'unpkg.com',
-      ].concat(trusted),
-      imgSrc: [
-        'data:',
-        'blob:',
-        'www.googletagmanager.com',
-        'storage.googleapis.com',
-        '*.openstreetmap.org',
-      ].concat(trusted),
-      mediaSrc: ['storage.googleapis.com'].concat(trusted),
-      connectSrc: ['www.google-analytics.com'].concat(trusted),
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: trusted,
+        scriptSrc: [
+          "'unsafe-inline'",
+          "'unsafe-eval'", // required by Next.js dev mode
+          'https://www.googletagmanager.com',
+          '*.googletagmanager.com',
+          'unpkg.com',
+        ].concat(trusted),
+        styleSrc: [
+          "'unsafe-inline'",
+          '*.w3schools.com',
+          'cdnjs.cloudflare.com',
+          'unpkg.com',
+        ].concat(trusted),
+        imgSrc: [
+          'data:',
+          'blob:',
+          'www.googletagmanager.com',
+          'storage.googleapis.com',
+          '*.openstreetmap.org',
+        ].concat(trusted),
+        mediaSrc: ['storage.googleapis.com'].concat(trusted),
+        connectSrc: ['www.google-analytics.com'].concat(trusted),
+      },
     },
+    crossOriginEmbedderPolicy: { policy: 'credentialless' },
   })
 );
-app.use(helmet.crossOriginEmbedderPolicy({ policy: 'credentialless' }));
 
 // ---------------------------------------------------------------------------
 // Body / cookies / https redirect
