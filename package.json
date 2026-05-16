@@ -31,7 +31,7 @@
     "luxon": "^3.2.1",
     "next": "16.2.6",
     "node-fetch": "^2.6.6",
-    "passport": "^0.6.0",
+    "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
