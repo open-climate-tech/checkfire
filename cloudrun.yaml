@@ -54,8 +54,11 @@ spec:
         # Cloud SQL Auth Proxy sidecar: connects via Unix socket, no VPC needed.
         run.googleapis.com/cloudsql-instances: oct-p1:us-west1:oct-firecam
 
-        # Instance-based billing: cheaper than request-based when the instance is
-        # active >72% of the time (SSE connections keep it at ~100% active).
+        # Disable CPU throttling so CPU stays allocated even when there are no
+        # active requests. This switches billing to instance-based rates
+        # ($0.000018/vCPU-s vs $0.000024/vCPU-s active), which is cheaper when
+        # the instance is active >72% of the time. SSE connections keep this
+        # instance at ~100% active. See: https://cloud.google.com/run/pricing
         run.googleapis.com/cpu-throttling: "false"
 
     spec:
