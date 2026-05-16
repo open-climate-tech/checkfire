@@ -86,7 +86,8 @@ describe('WildfireCheck SSE test', function () {
     };
 
     // Invoke the registered /fireEvents route handler directly
-    const layer = app._router.stack.find((l) => l.route && l.route.path === '/fireEvents');
+    const routerStack = (app._router && app._router.stack) || (app.router && app.router.stack) || [];
+    const layer = routerStack.find((l) => l.route && l.route.path === '/fireEvents');
     assert.ok(layer, '/fireEvents route should be registered');
     layer.route.stack[0].handle(mockReq, mockRes, () => {});
 
@@ -121,7 +122,8 @@ describe('WildfireCheck SSE test', function () {
       end() { this.writableEnded = true; },
     };
 
-    const layer = app._router.stack.find((l) => l.route && l.route.path === '/fireEvents');
+    const routerStack = (app._router && app._router.stack) || (app.router && app.router.stack) || [];
+    const layer = routerStack.find((l) => l.route && l.route.path === '/fireEvents');
     layer.route.stack[0].handle(mockReq, mockRes, () => {});
 
     setImmediate(() => {

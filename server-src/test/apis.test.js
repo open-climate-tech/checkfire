@@ -21,12 +21,12 @@ const chaiHttp = require('chai-http');
 const app = require('../../server-main');
 const test_db = require('./test_db');
 
-chai.use(chaiHttp);
+chai.use(chaiHttp.default || chaiHttp);
 chai.should();
 
 describe('WildfireCheck API test', function () {
   function checkRoute(url, method = 'get') {
-    const chaiApp = chai.request(app);
+    const chaiApp = chaiHttp.request.execute(app);
     if (method === 'get') {
       return chaiApp.get(url);
     } else if (method === 'post') {

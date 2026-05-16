@@ -145,7 +145,7 @@ async function main() {
   // ---------------------------------------------------------------------------
   // Hand everything else off to Next.js (pages + pages/api + static assets).
   // ---------------------------------------------------------------------------
-  app.all('*', (req: Request, res: Response) => {
+  app.use((req: Request, res: Response) => {
     return nextHandler(req, res);
   });
 
