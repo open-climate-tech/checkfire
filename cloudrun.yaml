@@ -29,6 +29,7 @@
 #     --port=8080 \
 #     --set-env-vars="OCT_FIRE_SETTINGS=gs://oct-fire-configs/config-gcp.json" \
 #     --add-cloudsql-instances=oct-p1:us-west1:oct-firecam \
+#     --no-cpu-throttling \
 #     --allow-unauthenticated
 
 apiVersion: serving.knative.dev/v1
@@ -52,6 +53,10 @@ spec:
 
         # Cloud SQL Auth Proxy sidecar: connects via Unix socket, no VPC needed.
         run.googleapis.com/cloudsql-instances: oct-p1:us-west1:oct-firecam
+
+        # Instance-based billing: cheaper than request-based when the instance is
+        # active >72% of the time (SSE connections keep it at ~100% active).
+        run.googleapis.com/cpu-throttling: "false"
 
     spec:
       serviceAccountName: checkfire-cloudrun@oct-p1.iam.gserviceaccount.com
