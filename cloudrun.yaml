@@ -22,9 +22,9 @@
 #     --platform=managed \
 #     --service-account=checkfire-cloudrun@oct-p1.iam.gserviceaccount.com \
 #     --min-instances=1 \
-     --max-instances=1 \
-     --timeout=3000 \
-     --cpu=500m \
+#     --max-instances=1 \
+#     --timeout=3000 \
+#     --cpu=500m \
 #     --memory=1Gi \
 #     --port=8080 \
 #     --set-env-vars="OCT_FIRE_SETTINGS=gs://oct-fire-configs/config-gcp.json" \
