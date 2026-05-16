@@ -5,7 +5,7 @@
 #
 # Build & deploy:
 #   export REGION=us-west1          # change to your preferred region
-#   export IMAGE=gcr.io/oct-p1/checkfire
+#   export IMAGE=gcr.io/oct-p1/checkfire:$(git rev-parse --short HEAD)
 #
 #   gcloud auth configure-docker gcr.io   # one-time setup per machine
 #   docker build -t $IMAGE .
@@ -14,6 +14,11 @@
 #   # Substitute the image URL, then deploy:
 #   sed "s|IMAGE_URL|$IMAGE|g" cloudrun.yaml | \
 #     gcloud run services replace - --region=$REGION
+#
+#   NOTE: always use a tagged image (e.g. git SHA above) rather than an
+#   untagged/latest image. If the image URL is identical to the currently
+#   deployed revision, 'gcloud run services replace' is a no-op and no new
+#   revision is created.
 #
 # Or use the one-liner without the YAML:
 #   gcloud run deploy checkfire \
