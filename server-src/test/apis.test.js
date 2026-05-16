@@ -17,14 +17,19 @@
 
 const chai = require('chai');
 const { assert, expect, should } = chai;
-const chaiHttp = require('chai-http');
 const app = require('../../server-main');
 const test_db = require('./test_db');
 
-chai.use(chaiHttp.default || chaiHttp);
 chai.should();
 
+let chaiHttp;
+
 describe('WildfireCheck API test', function () {
+  before(async function () {
+    const importedChaiHttp = await import('chai-http');
+    chaiHttp = importedChaiHttp;
+  });
+
   function checkRoute(url, method = 'get') {
     const chaiApp = chaiHttp.request.execute(app);
     if (method === 'get') {
