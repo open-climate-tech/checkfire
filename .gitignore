@@ -22,7 +22,6 @@ npm-debug.log*
 .DS_Store
 .idea
 /.vscode/
-!/.vscode/settings.json
 
 # Test / coverage
 .nyc_output
