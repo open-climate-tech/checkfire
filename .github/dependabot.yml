@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    # Maintainer note: @google-cloud/storage still resolves through gaxios 6.x,
+    # which pulls uuid 9.x. Do not force gaxios/uuid major overrides here;
+    # wait for an upstream @google-cloud/storage release that widens gaxios.
     versioning-strategy: "increase-if-necessary"
     open-pull-requests-limit: 10
     groups:
