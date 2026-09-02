@@ -77,8 +77,6 @@
   },
   "overrides": {
     "serialize-javascript": "^7.0.5",
-    "teeny-request": "^11.0.1",
-    "gaxios": "^8.0.0",
-    "uuid": "^14.0.0"
+    "teeny-request": "^11.0.1"
   }
 }
