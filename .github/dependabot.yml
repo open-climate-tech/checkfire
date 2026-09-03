@@ -9,6 +9,9 @@ updates:
     # wait for an upstream @google-cloud/storage release that widens gaxios.
     versioning-strategy: 'increase-if-necessary'
     open-pull-requests-limit: 10
+    allow:
+      - dependency-type: 'production'
+      - dependency-type: 'development'
     groups:
       npm-dependencies:
         patterns:
@@ -17,7 +20,6 @@ updates:
           - 'minor'
           - 'patch'
     ignore:
-      - dependency-name: 'uuid'
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
 
