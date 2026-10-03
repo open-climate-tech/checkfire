@@ -14,14 +14,19 @@ updates:
       - dependency-type: 'development'
     groups:
       npm-dependencies:
+        applies-to: 'version-updates'
         patterns:
           - '*'
         update-types:
           - 'minor'
           - 'patch'
-    ignore:
-      - dependency-name: '*'
-        update-types: ['version-update:semver-major']
+      npm-security-dependencies:
+        applies-to: 'security-updates'
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
 
   - package-ecosystem: 'docker'
     directory: '/'
