@@ -36,7 +36,7 @@
     "react": "^19.0.0",
     "react-datetime-picker": "^7.0.2",
     "react-dom": "^19.0.0",
-    "react-dropdown-select": "^4.9.3",
+    "react-dropdown-select": "^5.0.6",
     "react-resize-observer": "^1.1.1",
     "react-responsive": "^10.0.1",
     "react-web-notification": "^0.8.0",
