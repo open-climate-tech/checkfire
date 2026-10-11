@@ -28,5 +28,6 @@ jobs:
           # incurs the provider's standard billing, so this key should be set
           # only if you are comfortable with the provider's usage fees.
           OPENROUTER__KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          MODEL: deepseek/deepseek-v4.1-flash
+          OPENROUTER__API_BASE: https://openrouter.ai/api/v1
+          MODEL: openrouter/deepseek/deepseek-v4.1-flash
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
