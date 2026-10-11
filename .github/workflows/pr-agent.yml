@@ -28,6 +28,14 @@ jobs:
           # incurs the provider's standard billing, so this key should be set
           # only if you are comfortable with the provider's usage fees.
           OPENROUTER__KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          OPENROUTER__API_BASE: https://openrouter.ai/api/v1
-          MODEL: openrouter/deepseek/deepseek-v4.1-flash
+          # `MODEL` is not a PR-Agent setting, so it was ignored and PR-Agent
+          # fell back to its default OpenAI model, looking for [ADDRESS].
+          # The setting is `config.model`, and the id must carry the
+          # `openrouter/` prefix so LiteLLM routes via OpenRouter and uses
+          # OPENROUTER__KEY.
+          config.model: "openrouter/deepseek/deepseek-v4.1-flash"
+          config.fallback_models: '["openrouter/deepseek/deepseek-v4.1-flash"]'
+          # This id is not in PR-Agent's MAX_TOKENS table, so set the context
+          # window explicitly.
+          config.custom_model_max_tokens: "64000"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
