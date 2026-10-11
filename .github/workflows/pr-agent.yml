@@ -25,7 +25,32 @@ jobs:
       issues: write
 
     steps:
+      # PR-Agent filters out lockfiles as auto-generated, so a PR that only
+      # bumps a lockfile (e.g. Dependabot) yields an empty diff and the tool
+      # errors out ("No PR diff fits the /review request"), failing the check.
+      # Detect that case and skip the review instead of reporting a red X.
+      - name: Check for reviewable changes
+        id: reviewable
+        if: github.event_name == 'pull_request_target'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          files=$(gh api \
+            "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --paginate --jq '.[].filename')
+          lockfiles='(^|/)(package-lock\.json|npm-shrinkwrap\.json|yarn\.lock|pnpm-lock\.yaml|composer\.lock|Gemfile\.lock|poetry\.lock|go\.sum|Cargo\.lock|Pipfile\.lock|uv\.lock|bun\.lockb)$'
+          count=$(printf '%s\n' "$files" | grep -vE "$lockfiles" | sed '/^[[:space:]]*$/d' | wc -l)
+          if [ "$count" -gt 0 ]; then
+            echo "has_reviewable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_reviewable=false" >> "$GITHUB_OUTPUT"
+            echo "Only lockfiles changed; skipping PR-Agent review."
+          fi
+
       - name: Run PR Agent review
+        # Always run for an explicit /review comment; otherwise only when the PR
+        # has at least one non-lockfile change.
+        if: github.event_name == 'issue_comment' || steps.reviewable.outputs.has_reviewable == 'true'
         uses: the-pr-agent/pr-agent@main
         env:
           # Public GitHub repos do not incur GitHub Actions charges, and
