@@ -1,7 +1,12 @@
 name: PR Agent
 
 on:
-  pull_request:
+  # Use pull_request_target (not pull_request) so the workflow definition is
+  # always read from the BASE branch (main). With `pull_request`, GitHub runs
+  # the workflow file from the PR's merge ref, which is only recomputed when the
+  # PR branch is pushed to. A PR opened before a workflow change keeps running
+  # the OLD workflow until it is rebased/updated.
+  pull_request_target:
     types: [opened, reopened, synchronize, ready_for_review]
   issue_comment:
     types: [created]
@@ -9,7 +14,7 @@ on:
 jobs:
   pr_agent:
     if: |
-      github.event_name == 'pull_request' ||
+      github.event_name == 'pull_request_target' ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
        contains(github.event.comment.body, '/review'))
