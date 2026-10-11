@@ -24,6 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       on nfv.cameraname=detections.cameraname and nfv.timestamp=detections.timestamp
                     order by detections.sortId desc, nfv.timestamp desc`;
   const dbRes = await db.query(sqlStr);
+  const a = 123;
+  console.log(a, dbRes.length);
+  console.log('dbRes[0]', dbRes[0]);
   const fireEvents = await Promise.all(
     dbRes.map(async (dbEntry: Record<string, any>) => {
       const fireEvent = oct_utils.dbAlertToUiObj(dbEntry);
