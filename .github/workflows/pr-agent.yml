@@ -59,8 +59,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment "${{ steps.reviewable.outputs.pr }}" --body \
-            "🤖 PR-Agent skipped: this PR only changes lockfiles/minified assets, which PR-Agent treats as auto-generated and excludes from review."
+          gh pr comment "${{ steps.reviewable.outputs.pr }}" \
+            --repo "${{ github.repository }}" \
+            --body "🤖 PR-Agent skipped: this PR only changes lockfiles/minified assets, which PR-Agent treats as auto-generated and excludes from review."
 
       - name: Run PR Agent review
         if: steps.reviewable.outputs.has_reviewable == 'true'
