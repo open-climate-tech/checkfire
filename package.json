@@ -78,5 +78,11 @@
   "overrides": {
     "serialize-javascript": "^7.0.5",
     "teeny-request": "^11.0.1"
+  },
+  "allowScripts": {
+    "sqlite3": true,
+    "unrs-resolver": true,
+    "protobufjs": true,
+    "core-js": false
   }
 }
