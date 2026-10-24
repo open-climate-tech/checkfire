@@ -155,6 +155,9 @@ async function main() {
 
   app.listen(PORT, () => {
     logger.info(`WildfireCheck listening on port ${PORT}`);
+    logger.info(
+      `node ${process.version} | v8 ${process.versions.v8} | ${process.platform}/${process.arch}`
+    );
     logger.info('Press Ctrl+C to quit.');
   });
 }
