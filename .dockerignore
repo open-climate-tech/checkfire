@@ -33,5 +33,3 @@ README.md
 LICENSE
 *.md
 
-# App Engine config (not needed in Cloud Run image)
-app.yaml
